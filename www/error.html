@@ -1,0 +1,21 @@
+<div ng-controller="errorAppCtl">
+    <div ng-if="!isLoading" class="row">
+        <div class="card-panel grey lighten-5 z-depth-1 hoverable">
+            <h5 class="center-align red-text"> Error encounter! </h5>
+            <div class="row valign-wrapper">
+                <div class="col s3 m2">
+                    <img src="images/favicon.ico" alt="" class="circle responsive-img"> <!-- notice the "circle" class -->
+                </div>
+                <div class="col s9 m10">
+                    <blockquote class="red-text">
+                        <i class="material-icons left">error</i> This is the error info!
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+        <div class="row"></div>
+        <div class="row center-align">
+            <a href="javascript:window.history.back()" class="red waves-effect waves-light btn"><i class="material-icons left">arrow_back</i> Back </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: url(open-sans-v13-latin-regular.eot); /* For IE6-8 */
+    src: local('Open Sans'), local('OpenSans'),
+    url(open-sans-v13-latin-regular.eot) format('embedded-opentype'),
+    url(open-sans-v13-latin-regular.woff) format('woff'),
+    url(open-sans-v13-latin-regular.woff2) format('woff2'),
+    url(open-sans-v13-latin-regular.ttf) format('truetype'),
+    url(open-sans-v13-latin-regular.svg) format('svg');
+}
+@font-face {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    src: url(roboto-v15-latin-regular.eot); /* For IE6-8 */
+    src: local('Roboto'),
+    url(roboto-v15-latin-regular.eot) format('embedded-opentype'),
+    url(roboto-v15-latin-regular.woff) format('woff'),
+    url(roboto-v15-latin-regular.woff2) format('woff2'),
+    url(roboto-v15-latin-regular.ttf) format('truetype'),
+    url(roboto-v15-latin-regular.svg) format('svg');
+}
+@font-face {
+    font-family: 'Baloo Bhai';
+    font-style: normal;
+    font-weight: 400;
+    src: url(baloo-bhai-v1-latin-regular.eot); /* For IE6-8 */
+    src: local('Baloo Bhai'), local('BalooBhai'),
+        url(baloo-bhai-v1-latin-regular.eot) format('embedded-opentype'),
+        url(baloo-bhai-v1-latin-regular.woff) format('woff'),
+        url(baloo-bhai-v1-latin-regular.woff2) format('woff2'),
+        url(baloo-bhai-v1-latin-regular.ttf) format('truetype'),
+        url(baloo-bhai-v1-latin-regular.svg) format('svg');
+}
+@font-face {
+    font-family: 'Indie Flower';
+    font-style: normal;
+    font-weight: 400;
+    src: url(indie-flower-v8-latin-regular.eot); /* For IE6-8 */
+    src: local('Indie Flower'), local('IndieFlower'),
+        url(indie-flower-v8-latin-regular.eot) format('embedded-opentype'),
+        url(indie-flower-v8-latin-regular.woff) format('woff'),
+        url(indie-flower-v8-latin-regular.woff2) format('woff2'),
+        url(indie-flower-v8-latin-regular.ttf) format('truetype'),
+        url(indie-flower-v8-latin-regular.svg) format('svg');
+}

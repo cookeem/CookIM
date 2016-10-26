@@ -1,0 +1,20 @@
+{
+  "name": "distributed-web-chat",
+  "version": "1.0.0",
+  "description": "distributed web chat",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "angular": "1.5.8",
+    "angular-animate": "1.5.8",
+    "angular-route": "1.5.8",
+    "jquery": "3.1.0",
+    "spark-md5": "2.0.2",
+    "materialize-css": "0.97.7",
+    "font-awesome": "4.6.3"
+  },
+  "author": "cookeem",
+  "license": "ISC"
+}

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<title>WebSocket Test</title>
+<script src="node_modules/spark-md5/spark-md5.js"></script>
+<script language="javascript" type="text/javascript">
+    var querys = window.location.search.replace('?','').split("&");
+    var username = "";
+    var chatid = 0;
+    for(var i = 0; i < querys.length; i++) {
+        var paramkv = querys[i].split("=");
+        if (paramkv.length == 2) {
+            var paramk = paramkv[0].trim();
+            var paramv = paramkv[1].trim();
+            if (paramk == "username") {
+                username = paramv;
+            }
+            if (paramk == "chatid" && parseInt(paramv)) {
+                chatid = parseInt(paramv);
+            }
+        }
+    }
+    var host = window.location.host;
+    var wsUri = "ws://" + host + "/ws-chat/"+chatid+"/"+username;
+//    var wsUri = "ws://" + host + "/ws-echo";
+
+    var output;
+    //用于接收字符串消息
+    var websocket = new WebSocket(wsUri);
+    websocket.binaryType = 'arraybuffer';
+
+    function init() {
+        output = document.getElementById("output");
+        listenWebsocket(websocket);
+    }
+    function listenWebsocket(ws) {
+        ws.onopen = function(evt) {
+            onOpen(evt)
+        };
+        ws.onclose = function(evt) {
+            onClose(evt)
+        };
+        ws.onmessage = function(evt) {
+            onMessage(evt)
+        };
+        ws.onerror = function(evt) {
+            onError(evt)
+        };
+    }
+
+    function onOpen(evt) {
+        showMessage("CONNECTED");
+    }
+
+    function onClose(evt) {
+        i = i + 1;
+        showMessage("DISCONNECTED");
+        if (i < 3) {
+            listenWebsocket();
+        }
+    }
+
+    function onMessage(evt) {
+        if (event.data instanceof ArrayBuffer) {
+            //假如是二进制消息
+            showBinaryImage(evt.data);
+        } else {
+            //假如是字符串消息
+            showMessage('<span style="color: blue;">' + evt.data + '</span>');
+        }
+    }
+
+    function onError(evt) {
+        showMessage('<span style="color: red;">ERROR:</span> ' + evt.data);
+    }
+
+    //send message through websocket
+    function sendMessage(message) {
+        var jsonMessage = {
+          nickname: username,
+          time: Date.now(),
+          message: message
+        };
+        websocket.send(JSON.stringify(jsonMessage));
+    }
+
+    //send file through websocket
+    function sendFile() {
+        var file = document.getElementById('filename').files[0];
+        var isImage = file.type.startsWith("image/");
+        var isFitSize = file.size < 2048 * 1024;
+        if (isImage && isFitSize) {
+            var md5Str = "";
+            var readerMd5 = new FileReader();
+            readerMd5.readAsBinaryString(file);
+            readerMd5.onloadend = function() {
+                var spark = new SparkMD5();
+                spark.appendBinary(readerMd5.result);
+                md5Str = spark.end();
+            };
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onloadend = function() {
+                var jsonMessage = {
+                    nickname: username,
+                    time: Date.now(),
+                    filename: file.name,
+                    filesize: file.size,
+                    filetype: file.type,
+                    filemd5: md5Str
+                };
+                websocket.send(JSON.stringify(jsonMessage));
+                sendMessage('upload finish! filetype:' + file.type + ', filesize:' + file.size);
+            };
+            reader.onload = function(e) {
+                websocket.send(e.target.result);
+            };
+        } else if (! isImage) {
+            alert('file type must be image!');
+        } else {
+            alert('file size limit 2048 * 1024!');
+        }
+    }
+
+    //显示文本的消息
+    function showMessage(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        output.appendChild(pre);
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    //显示二进制图片
+    function showBinaryImage(binary) {
+        var bytes = new Uint8Array(binary);
+        var blob = new Blob( [ bytes ], { type: "image/png" } );
+        console.log('blob size is:'+blob.size);
+        var urlCreator = window.URL || window.webkitURL;
+        var imageUrl = urlCreator.createObjectURL( blob );
+        var img = document.createElement("img");
+        img.src = imageUrl;
+        output.appendChild(img);
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    //generate uuid
+    function guid() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                s4() + '-' + s4() + s4() + s4();
+    }
+    //    var uuid = guid();
+    //    console.log(uuid);
+
+    //window init
+    window.addEventListener("load", init, false);
+</script>
+<h2>File Upload</h2>
+Select file
+<input type="file" id="filename" />
+<br>
+<input type="button" value="Upload" onclick="sendFile()" />
+<h2>WebSocket Test</h2>
+<div>请输入信息：
+    <input type="text" name="msg"><input type="submit" value="Send"  onclick="sendMessage(document.all.msg.value)">
+</div>
+<div id="output"></div>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Distributed webchat</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+
+    <!--icon-->
+    <link rel="shortcut icon"  href="images/favicon.ico">
+
+    <!--font css-->
+    <link href="fonts/Material_Icon/material-icons.css" rel="stylesheet">
+    <link href="fonts/fonts.css" rel="stylesheet">
+
+    <!--materialize css-->
+    <link href="node_modules/materialize-css/dist/css/materialize.min.css" rel="stylesheet">
+
+    <!--main style sheet-->
+    <link href="css/index.css" rel="stylesheet">
+</head>
+<body ng-app="app" ng-class="animation">
+<header ng-controller="headerCtl">
+    <!--顶部导航栏-->
+    <nav id="top-navbar">
+        <div class="nav-wrapper yellow">
+            <a ng-show="showNavbar" href="#" data-activates="nav-mobile" class="button-collapse hide-on-large-only text-black">
+                <i class="material-icons black-text">menu</i>
+            </a>
+
+            <!--顶部导航栏下拉菜单-->
+            <ul id="header-dropdown" class="dropdown-content">
+                <li><a href="index.html#!/changePwd" class="red-text">修改密码</a></li>
+                <li class="divider"></li>
+                <li><a href="index.html#!/logout" class="grey-text">退出登录</a></li>
+            </ul>
+            <div class="center-align">
+                <a class="black-text"><img src="images/favicon.ico" class="top-navbar-icon">Distributed Webchat</a>
+            </div>
+        </div>
+    </nav>
+    <!--左侧导航菜单-->
+    <ul ng-show="showNavbar" id="nav-mobile" class="side-nav fixed">
+        <li class="no-padding">
+            <ul class="collapsible collapsible-accordion">
+                <li class="bold active yellow">
+                    <a class="collapsible-header active waves-effect waves-light"><i class="material-icons">view_comfy</i>Main menu</a>
+                    <div class="collapsible-body" style="">
+                        <ul>
+                            <li ng-repeat="menuItem in menuItems"><a href="{{menuItem.url}}" class="black-text">{{menuItem.menuName}} &nbsp; <span class="chip red white-text">10</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+            <ul class="collapsible collapsible-accordion">
+                <li class="bold yellow">
+                    <a class="collapsible-header waves-effect waves-light"><i class="material-icons">people</i>Account menu</a>
+                    <div class="collapsible-body" style="">
+                        <ul>
+                            <li ng-repeat="menuItem in accountMenuItems"><a href="{{menuItem.url}}" class="black-text">{{menuItem.menuName}} &nbsp; <span class="chip red white-text">10</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</header>
+<main ng-controller="contentCtl">
+    <div id="main-content" class="col s12" style="padding: 20px;">
+        <div ng-if="isLoading == true" class="row center spinner-fade">
+            <div class="preloader-wrapper big active">
+                <div class="spinner-layer spinner-blue">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div><div class="gap-patch">
+                    <div class="circle"></div>
+                </div><div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+                </div>
+
+                <div class="spinner-layer spinner-red">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div><div class="gap-patch">
+                    <div class="circle"></div>
+                </div><div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+                </div>
+
+                <div class="spinner-layer spinner-yellow">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div><div class="gap-patch">
+                    <div class="circle"></div>
+                </div><div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+                </div>
+
+                <div class="spinner-layer spinner-green">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div><div class="gap-patch">
+                    <div class="circle"></div>
+                </div><div class="circle-clipper right">
+                    <div class="circle"></div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div ng-view class="view">
+            </div>
+        </div>
+    </div>
+</main>
+<footer ng-if="showMessageArea" class="page-footer yellow bottom-fixed" style="padding-top: 0;">
+    <div class="row" style="margin-bottom: 0">
+        <div class="input-field col s2 center-align">
+            <div class="fixed-action-btn click-to-toggle" style="position: initial; padding-top: 0px;">
+                <a class="btn-floating waves-effect waves-light black "><i class="material-icons">add</i></a>
+                <ul>
+                    <li><a class="btn-floating red"><i class="material-icons">insert_chart</i></a></li>
+                    <li><a class="btn-floating yellow darken-1"><i class="material-icons">format_quote</i></a></li>
+                    <li><a class="btn-floating green"><i class="material-icons">publish</i></a></li>
+                    <li><a class="btn-floating blue"><i class="material-icons">attach_file</i></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="input-field col s8 right-align">
+            <!--<input type="text">-->
+            <textarea id="textarea1" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
+        </div>
+        <div class="input-field col s2 center-align">
+            <a class="btn-floating waves-effect waves-light black"><i class="material-icons">send</i></a>
+        </div>
+    </div>
+</footer>
+<footer ng-if="!showMessageArea" class="page-footer yellow" style="padding-top: 0px;">
+    <div class="footer-copyright">
+        <div class="container black-text" align="center">
+            © 2016 Copyright cookeem.com
+        </div>
+    </div>
+</footer>
+</body>
+<!--jquery js-->
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+
+<!-- angular js -->
+<script src="node_modules/angular/angular.min.js"></script>
+<script src="node_modules/angular-route/angular-route.min.js"></script>
+<script src="node_modules/angular-animate/angular-animate.min.js"></script>
+
+<!-- materialize js -->
+<script src="node_modules/materialize-css/dist/js/materialize.min.js"></script>
+
+<!--app script-->
+<script src="js/index.js"></script>
+<script src="js/error.js"></script>
+<script src="js/login.js"></script>
+<script src="js/register.js"></script>
+<script src="js/chatlist.js"></script>
+<script src="js/chatsession.js"></script>
+<script src="js/changeinfo.js"></script>
+<script src="js/changepwd.js"></script>
+</html>

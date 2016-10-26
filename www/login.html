@@ -1,0 +1,42 @@
+<div ng-controller="loginAppCtl">
+    <div ng-if="!isLoading" class="row">
+        <div class="card-panel grey lighten-5 z-depth-1 hoverable">
+            <h5 class="center-align black-text"> User login </h5>
+            <div class="row">
+                <div class="col s12 m8 offset-m2 l8 offset-l2">
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">account_circle</i>
+                            <input id="loginname" type="email" class="validate" minlength="8" maxlength="32">
+                            <label for="loginname" data-error="login account is email address">login email</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">vpn_key</i>
+                            <input id="password" type="password" class="validate" minlength="6" maxlength="18">
+                            <label for="password" data-error="login password 6-18 characters">login password</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <input type="checkbox" id="remember"/>
+                            <label for="remember">remember login</label>
+                        </div>
+                    </div>
+                    <div class="row"></div>
+                    <div class="container">
+                        <div class="row center-align">
+                            <div class="col s6">
+                                <a href="javascript:history.back()" class="blue waves-effect waves-light btn"><i class="material-icons left">person</i> login </a>
+                            </div>
+                            <div class="col s6">
+                                <a href="javascript:history.back()" class="green waves-effect waves-light btn"><i class="material-icons left">person_add</i> new </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

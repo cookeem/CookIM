@@ -1,0 +1,150 @@
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    font-family: "Roboto";
+    font-style: normal;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.yellow {
+    background-color: #FFDE00 !important;
+}
+
+.top-navbar-icon {
+    vertical-align: middle;
+    margin-right: 10px;
+    width: 32px;
+    height: 32px;
+}
+
+/*左侧导航栏菜单占位符*/
+header, main, footer {
+    padding-left: 0px;
+}
+@media only screen and (max-width : 992px) {
+    header, main, footer {
+        padding-left: 0;
+    }
+}
+
+/* 页面切换 */
+.view {
+    position: relative;
+    /*top: 100px;*/
+    /*width: 100%;*/
+    transition: 300ms;
+}
+
+/* 页面切换向左滑动动画 */
+.animation-slideleft .view.ng-enter{
+    left: -100%;
+}
+
+.animation-slideleft .view.ng-enter.ng-enter-active{
+    left: 0%;
+}
+
+.animation-slideleft .view.ng-leave{
+    left: 0%;
+}
+
+.animation-slideleft .view.ng-leave.ng-leave-active{
+    left: 100%;
+}
+
+/* 页面切换向右滑动动画 */
+.animation-slideright .view.ng-enter{
+    left: 100%;
+}
+
+.animation-slideright .view.ng-enter.ng-enter-active{
+    left: 0%;
+}
+
+.animation-slideright .view.ng-leave{
+    left: 0%;
+}
+
+.animation-slideright .view.ng-leave.ng-leave-active{
+    left: -100%;
+}
+
+/* 页面切换向上滑动动画 */
+.animation-slidetop .view.ng-enter{
+    top: 100%;
+}
+
+.animation-slidetop .view.ng-enter.ng-enter-active{
+    top: 0%;
+}
+
+.animation-slidetop .view.ng-leave{
+    top: 0%;
+}
+
+.animation-slidetop .view.ng-leave.ng-leave-active{
+    top: -100%;
+}
+
+/* 页面切换淡入淡出动画 */
+.animation-fadein .view.ng-enter{
+    opacity: 0;
+}
+
+.animation-fadein .view.ng-enter.ng-enter-active{
+    opacity: 100;
+}
+
+.animation-fadein .view.ng-leave{
+    opacity: 100;
+}
+
+.animation-fadein .view.ng-leave.ng-leave-active{
+    opacity: 0;
+}
+
+
+/* label color */
+.input-field label {
+    color: #000;
+}
+/* label focus color */
+.input-field input[type=text][type=password]:focus + label {
+    color: #000;
+}
+/* label underline focus color */
+.input-field input[type=text]:focus, .input-field input[type=password]:focus, .input-field input[type=number]:focus, .input-field input[type=email]:focus {
+    border-bottom: 1px solid #2196F3;
+    box-shadow: 0 1px 0 0 #2196F3;
+}
+/* valid color */
+.input-field input[type=text].valid, .input-field input[type=password].valid, .input-field input[type=number].valid, .input-field input[type=email].valid {
+    border-bottom: 1px solid #4CAF50;
+    box-shadow: 0 1px 0 0 #4CAF50;
+}
+/* invalid color */
+.input-field input[type=text].invalid, .input-field input[type=password].invalid, .input-field input[type=number].invalid, .input-field input[type=email].invalid {
+    border-bottom: 1px solid #F44336;
+    box-shadow: 0 1px 0 0 #F44336;
+}
+/* icon prefix focus color */
+.input-field .prefix.active {
+    color: #2196F3;
+}
+
+/*search bar style*/
+div.search .search-wrapper{margin:0 12px;transition:margin .25s ease}
+div.search .search-wrapper.focused{margin:0}
+div.search .search-wrapper input#search{display:block;font-size:16px;font-weight:300;width:80%;height:45px;margin:0;padding:0 45px 0 15px;border:0}
+div.search .search-wrapper input#search:not:focus{outline:none;}
+div.search .search-wrapper i.material-icons{position:absolute;top:10px;right:10px;cursor:pointer}
+
+.bottom-fixed {
+    width: 100%;
+    bottom: 0;
+    position: fixed;
+}
