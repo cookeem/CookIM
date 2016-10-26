@@ -23,6 +23,8 @@ libraryDependencies ++= {
     "com.sksamuel.scrimage" %% "scrimage-io-extra" % "2.1.1",
     "redis.clients" % "jedis" % "2.8.1",  //redis for java
     "com.softwaremill.akka-http-session" %% "core" % "0.2.6",
+    "com.esotericsoftware" % "kryo" % "3.0.3",
+    "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1",
     "commons-cli" % "commons-cli" % "1.3.1",
     "org.reactivemongo" %% "reactivemongo" % "0.11.14",
     "org.reactivemongo" %% "reactivemongo-play-json" % "0.11.14"
