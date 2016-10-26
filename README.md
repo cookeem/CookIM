@@ -1,3 +1,21 @@
+### CookIM 是一个分布式的websocket聊天程序
+
+
+分别打开不同终端，运行以下命令：
+
+```
+sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
+
+sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
+```
+
+浏览器访问：
+
+```
+http://localhost:8080/websocket.html?username=cookeem&chatid=1
+
+http://localhost:8081/websocket.html?username=faith&chatid=1
+```
 ### 1. akka node port支持自动递增
 
 ---
@@ -80,7 +98,7 @@ recvBinary {
 ### 12. 支持用户修改个人资料，包括头像信息
 
 ---
-### 13. 修改前端界面，支持angularjs、jquery、semantic。
+### 13. 修改前端界面，支持angularjs、jquery、materializeCss。
 
 ### 14. 用户登录界面
 

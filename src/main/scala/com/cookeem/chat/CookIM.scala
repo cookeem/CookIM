@@ -12,7 +12,7 @@ import org.apache.commons.cli.{DefaultParser, HelpFormatter, Options, Option => 
 /**
   * Created by cookeem on 16/9/25.
   */
-object DistributedWebChat extends App {
+object CookIM extends App {
   val options = new Options()
   //单参数选项
   options.addOption(
@@ -62,7 +62,7 @@ object DistributedWebChat extends App {
       }
 
       Http().bindAndHandle(route, "0.0.0.0", httpPort)
-      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/?username=cookeem&chatid=room01")
+      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/websocket.html?username=cookeem&chatid=1")
     }
   } catch {
     case e: Throwable =>
