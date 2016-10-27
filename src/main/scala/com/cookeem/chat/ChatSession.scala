@@ -10,7 +10,7 @@ import akka.stream._
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import com.cookeem.chat.common.CommonUtils._
-import com.cookeem.chat.ChatMessageType._
+import com.cookeem.chat.event._
 import com.sksamuel.scrimage.Image
 import com.sksamuel.scrimage.nio.PngWriter
 import org.apache.commons.io.FileUtils

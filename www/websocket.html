@@ -6,7 +6,7 @@
 <script language="javascript" type="text/javascript">
     var querys = window.location.search.replace('?','').split("&");
     var username = "";
-    var chatid = 0;
+    var chatid = "";
     for(var i = 0; i < querys.length; i++) {
         var paramkv = querys[i].split("=");
         if (paramkv.length == 2) {
@@ -15,8 +15,8 @@
             if (paramk == "username") {
                 username = paramv;
             }
-            if (paramk == "chatid" && parseInt(paramv)) {
-                chatid = parseInt(paramv);
+            if (paramk == "chatid") {
+                chatid = paramv;
             }
         }
     }

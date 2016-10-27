@@ -2,7 +2,7 @@ package com.cookeem.chat
 
 import akka.actor.ActorRef
 import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
-import com.cookeem.chat.ChatMessageType._
+import com.cookeem.chat.event._
 import com.cookeem.chat.common.CommonUtils._
 
 /**

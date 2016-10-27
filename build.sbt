@@ -26,17 +26,17 @@ libraryDependencies ++= {
     "com.esotericsoftware" % "kryo" % "3.0.3",
     "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1",
     "commons-cli" % "commons-cli" % "1.3.1",
-    "org.reactivemongo" %% "reactivemongo" % "0.11.14",
-    "org.reactivemongo" %% "reactivemongo-play-json" % "0.11.14"
+    "org.reactivemongo" %% "reactivemongo" % "0.12.0",
+    "org.reactivemongo" %% "reactivemongo-play-json" % "0.12.0"
  )
 }
 
 //sbt使用代理
-// javaOptions in console ++= Seq(
+//javaOptions in console ++= Seq(
 //  "-Dhttp.proxyHost=cmproxy-sgs.gmcc.net",
 //  "-Dhttp.proxyPort=8081"
-// )
-// javaOptions in run ++= Seq(
+//)
+//javaOptions in run ++= Seq(
 //  "-Dhttp.proxyHost=cmproxy-sgs.gmcc.net",
 //  "-Dhttp.proxyPort=8081"
-// )
+//)

@@ -11,6 +11,8 @@ import play.api.libs.json.{JsArray, JsNumber, JsString, JsValue}
   * Created by cookeem on 16/9/25.
   */
 object CommonUtils {
+  case class CustomException(message: String = "", cause: Throwable = null) extends Exception(message, cause)
+
   val config = ConfigFactory.parseFile(new File("conf/application.conf"))
 
   def consoleLog(logType: String, msg: String) = {
@@ -47,5 +49,7 @@ object CommonUtils {
     ret
   }
 
-  case class CustomException(message: String = "", cause: Throwable = null) extends Exception(message, cause)
+  def sha1(str: String) = MessageDigest.getInstance("SHA-1").digest(str.getBytes).map("%02x".format(_)).mkString
+
+  def md5(str: String) = MessageDigest.getInstance("MD5").digest(str.getBytes).map("%02x".format(_)).mkString
 }
