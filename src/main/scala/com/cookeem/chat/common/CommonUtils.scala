@@ -52,4 +52,9 @@ object CommonUtils {
   def sha1(str: String) = MessageDigest.getInstance("SHA-1").digest(str.getBytes).map("%02x".format(_)).mkString
 
   def md5(str: String) = MessageDigest.getInstance("MD5").digest(str.getBytes).map("%02x".format(_)).mkString
+
+  def isEmail(email: String): Boolean = {
+    """(\w+)@([\w\.]+)""".r.unapplySeq(email).isDefined
+  }
+
 }
