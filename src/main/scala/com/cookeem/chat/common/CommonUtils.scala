@@ -11,9 +11,18 @@ import play.api.libs.json.{JsArray, JsNumber, JsString, JsValue}
   * Created by cookeem on 16/9/25.
   */
 object CommonUtils {
-  case class CustomException(message: String = "", cause: Throwable = null) extends Exception(message, cause)
-
   val config = ConfigFactory.parseFile(new File("conf/application.conf"))
+
+  val configMongo = config.getConfig("mongodb")
+  val configMongoDbname = configMongo.getString("dbname")
+  val configMongoUri = configMongo.getString("uri")
+
+  val configRedis = config.getConfig("redis")
+  val configRedisHost = configRedis.getString("redis-host")
+  val configRedisPort = configRedis.getInt("redis-port")
+  var configRedisPass = configRedis.getString("redis-pass")
+
+  case class CustomException(message: String = "", cause: Throwable = null) extends Exception(message, cause)
 
   def consoleLog(logType: String, msg: String) = {
     val timeStr = new DateTime().toString("yyyy-MM-dd HH:mm:ss")
@@ -54,7 +63,14 @@ object CommonUtils {
   def md5(str: String) = MessageDigest.getInstance("MD5").digest(str.getBytes).map("%02x".format(_)).mkString
 
   def isEmail(email: String): Boolean = {
-    """(\w+)@([\w\.]+)""".r.unapplySeq(email).isDefined
+    """(?=[^\s]+)(?=(\w+)@([\w\.]+))""".r.findFirstIn(email).isDefined
+  }
+
+  def classToMap(c: AnyRef): Map[String, String] = {
+    c.getClass.getDeclaredFields.map{ f =>
+      f.setAccessible(true)
+      f.getName -> f.get(c).toString
+    }.toMap
   }
 
 }

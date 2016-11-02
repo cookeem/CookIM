@@ -84,18 +84,18 @@ users： 用户表
 *login（登录邮箱）
 nickname（昵称）
 password（密码SHA1）
-dateline（注册时间，timstamp）
-lastlogin（最后登录时间，timstamp）
-logincount(登录次数)
 gender（性别：未知：0，男生：1，女生：2）
 avatar（头像，绝对路径，/upload/avatar/201610/26/xxxx.JPG）
+lastlogin（最后登录时间，timstamp）
+logincount(登录次数)
 sessions（用户相关的会话列表：[{sessionid: 会话id}]）
 friends（用户的好友列表：[{uuid: 好友uuid}]）
+dateline（注册时间，timstamp）
 ```
 sessions： 会话表（记录所有群聊私聊的会话信息）
 ===
 ```
-*creatoruid（创建者的uuid）
+*senduid（创建者的uuid）
 sessiontype（会话类型：0：私聊，1：群聊）
 visabletype（可见类型：0：不可见，1：公开可见）
 jointype（加入类型：0：所有人可以加入，1：群里用户邀请才能加入）
@@ -106,8 +106,28 @@ uids（会话对应的用户uuid数组：[{uuid: 用户uuid}]）
 messages： 消息表（记录会话中的消息记录）
 ===
 ```
-*uid（消息发送者的uuid）
+*senduid（消息发送者的uuid）
 *sessionid（所在的会话id）
+msgtype（消息类型：0：文字消息，1：图片消息，2：语音消息，3：视频消息，4：文件消息，5：语音聊天，6：视频聊天）
+content（消息内容）
+fileinfo（文件内容）
+{
+    *fileid（文件id）
+    filepath（文件路径）
+    filename（文件名）
+    filetype（文件mimetype）
+    filemd5（文件的md5）
+    size（文件大小）
+    dateline（创建日期，timestamp）
+}
+dateline（创建日期，timestamp）
+```
+inbox： 收件箱（每个用户没有收取的信息会放在这里）
+===
+```
+*recvuid（消息接收者的uuid）
+*sessionid（所在的会话id）
+senduid（消息发送者的uuid）
 msgtype（消息类型：0：文字消息，1：图片消息，2：语音消息，3：视频消息，4：文件消息，5：语音聊天，6：视频聊天）
 dateline（创建日期，timestamp）
 content（消息内容）
@@ -122,6 +142,7 @@ fileinfo（文件内容）
     dateline（创建日期，timestamp）
 }
 ```
+
 ### 8. 使用redis保存会话信息、用户信息
 
 cookim:onlineusers（在线用户表，set类型）
@@ -129,7 +150,7 @@ cookim:onlineusers（在线用户表，set类型）
 ```
 *uuid（用户的唯一标识uuid）
 ```
-cookim:users:uuid:xxxxx:info（用户表，hash类型）
+cookim:users:uid:xxxxx:info（用户表，hash类型）
 ===
 ```
 nickname（昵称）
