@@ -228,3 +228,20 @@ msgid（消息的id）
 ### 23. 支持用户不在线的时候消息缓存到队列，用户上线的时候，把队列中的消息发送给用户
 
 ### 24. 支持查看历史消息
+
+
+### jwt验证流程
+
+jwt用于保存服务端返回给用户的资源信息，这些资源通过明文传输，但是传输过程不可以篡改。
+在jwt里边保存过期日期即可
+
+jwt应该放在request的header中
+
+浏览器（输入login -> 提交username，password）
+服务器（验证username，password -> 输出jwt(uid)）
+浏览器（获取jwt(uid)并保存到程序中，请求uid对应的会话列表界面 -> 提交jwt(uid)）
+服务器（验证jwt(uid)是否有效 -> 输出jwt(uid)以及session列表信息）
+浏览器（显示会话列表页面，点击某个会话 -> 提交jwt(uid)以及sessionid信息）
+服务器（验证jwt(uid)是否有效 -> 输出jwt(uid, sessionid)以及session中的消息）
+浏览器（展示会话消息查看页面，通过websocket通道提交发送消息 -> 提交jwt(uid, sessionid)以及消息内容）
+服务器（通过websocket通道，验证jwt(uid, sessionid)是否有效，如果有效，表示uid有在sessionid中发消息的权限 -> 通过websocket通道发送消息）

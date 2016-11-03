@@ -17,15 +17,16 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-stream" % akkaV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
     "com.typesafe.play" %% "play-json" % "2.5.8",
-    "org.slf4j" % "slf4j-simple" % "1.7.10",
-    "org.scala-lang.modules" %% "scala-async" % "0.9.5",
+//    "org.slf4j" % "slf4j-simple" % "1.7.10",
+//    "org.scala-lang.modules" %% "scala-async" % "0.9.5",
     "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.1",
     "com.sksamuel.scrimage" %% "scrimage-io-extra" % "2.1.1",
     "redis.clients" % "jedis" % "2.8.1",  //redis for java
-    "com.softwaremill.akka-http-session" %% "core" % "0.2.6",
+//    "com.softwaremill.akka-http-session" %% "core" % "0.2.6",
     "com.esotericsoftware" % "kryo" % "3.0.3",
     "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1",
     "commons-cli" % "commons-cli" % "1.3.1",
+    "io.jsonwebtoken" % "jjwt" % "0.7.0",
     "org.reactivemongo" %% "reactivemongo" % "0.12.0",
     "org.reactivemongo" %% "reactivemongo-play-json" % "0.12.0"
  )

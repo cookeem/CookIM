@@ -2,10 +2,9 @@ package com.cookeem.chat
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatchers
 import akka.stream.ActorMaterializer
 import com.cookeem.chat.common.CommonUtils._
+import com.cookeem.chat.restful.Route
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.cli.{DefaultParser, HelpFormatter, Options, Option => CliOption}
 
@@ -47,22 +46,8 @@ object CookIM extends App {
       implicit val system = ActorSystem("chat-cluster", configCluster)
       implicit val materializer = ActorMaterializer()
       import system.dispatcher
-
-      val route = get {
-        pathPrefix("ws-chat" / Segment) { chatId =>
-          path(PathMatchers.Segment) { username =>
-            val chatSession = new ChatSession(username, chatId)
-            handleWebSocketMessages(chatSession.chatService(username))
-          }
-        } ~ pathSingleSlash {
-          getFromFile("www/index.html")
-        } ~ pathPrefix("") {
-          getFromDirectory("www")
-        }
-      }
-
-      Http().bindAndHandle(route, "0.0.0.0", httpPort)
-      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/websocket.html?username=cookeem&chatid=1")
+      Http().bindAndHandle(Route.logRoute, "0.0.0.0", httpPort)
+      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/websocket.html?username=cookeem&chatid=room01")
     }
   } catch {
     case e: Throwable =>
