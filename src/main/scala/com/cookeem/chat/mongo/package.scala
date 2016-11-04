@@ -1,5 +1,7 @@
 package com.cookeem.chat
 
+import java.util.Date
+
 /**
   * Created by cookeem on 16/11/1.
   */
@@ -16,6 +18,8 @@ package object mongo {
   case class Message(var _id: String, senduid: String, sessionid: String, msgtype: Int, content: String, fileInfo: FileInfo, dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
 
   case class Inbox(var _id: String, recvuid: String, senduid: String, sessionid: String, msgtype: Int, content: String, fileInfo: FileInfo, dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
+
+  case class Online(var _id: String, uid: String, dateline: Date = new Date()) extends BaseMongoObj
 
   case class UpdateResult(n: Int, errmsg: String)
   

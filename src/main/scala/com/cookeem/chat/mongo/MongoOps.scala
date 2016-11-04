@@ -21,6 +21,7 @@ object MongoOps {
   val colSessionsName = "sessions"
   val colMessagesName = "messages"
   val colInboxName = "inbox"
+  val colOnlineName = "online"
 
   implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(50))
   val mongoUri = configMongoUri
@@ -34,30 +35,43 @@ object MongoOps {
   val sessionsCollection = cookimDB.map(_.collection[BSONCollection](colSessionsName))
   val messagesCollection = cookimDB.map(_.collection[BSONCollection](colMessagesName))
   val inboxCollection = cookimDB.map(_.collection[BSONCollection](colInboxName))
+  val onlineCollection = cookimDB.map(_.collection[BSONCollection](colOnlineName))
 
   implicit def userHandler = Macros.handler[User]
   implicit def sessionHandler = Macros.handler[Session]
   implicit def fileInfoHandler = Macros.handler[FileInfo]
   implicit def messageHandler = Macros.handler[Message]
   implicit def inboxHandler = Macros.handler[Inbox]
+  implicit def onlineHandler = Macros.handler[Online]
 
   //create collection and index
   /**
   * @param colName: String, collection name to create
-  * @param indexSettings: Array[(indexField: String, sort: Int, unique: Boolean)], index setting
+  * @param indexSettings: Array[(indexField: String, sort: Int, unique: Boolean, expireAfterSeconds: Int)], index setting
   * @return Future[errmsg: String], if no error, errmsg is empty
   */
-  def createIndex(colName: String, indexSettings: Array[(String, Int, Boolean)]): Future[String] = {
+  def createIndex(colName: String, indexSettings: Array[(String, Int, Boolean, Int)]): Future[String] = {
     var errmsg = ""
     var indexSettingDoc = array()
-    indexSettings.foreach { case (indexCol, indexMode, unique) =>
-      indexSettingDoc = indexSettingDoc.add(
-        document(
-          "key" -> document(indexCol -> indexMode),
-          "name" -> s"index-$colName-$indexCol",
-          "unique" -> BSONBoolean(unique)
+    indexSettings.foreach { case (indexCol, indexMode, unique, expireAfterSeconds) =>
+      if (expireAfterSeconds > 0) {
+        indexSettingDoc = indexSettingDoc.add(
+          document(
+            "key" -> document(indexCol -> indexMode),
+            "name" -> s"index-$colName-$indexCol",
+            "unique" -> unique,
+            "expireAfterSeconds" -> expireAfterSeconds
+          )
         )
-      )
+      } else {
+        indexSettingDoc = indexSettingDoc.add(
+          document(
+            "key" -> document(indexCol -> indexMode),
+            "name" -> s"index-$colName-$indexCol",
+            "unique" -> unique
+          )
+        )
+      }
     }
     val createResult = for {
       db <- cookimDB
@@ -78,7 +92,7 @@ object MongoOps {
       errmsg
     }
     createResult.recover { case e: Throwable =>
-        s"create index error: ${e.getClass}, ${e.getMessage}, ${e.getCause}, ${e.getStackTrace.mkString("\n")}"
+        s"create index error: $e"
     }
   }
 
@@ -105,7 +119,27 @@ object MongoOps {
       (id, errmsg)
     }
     insertResult.recover { case e: Throwable =>
-      ("", s"insert ${record.getClass} record error")
+      ("", s"insert ${record.getClass} record error: $e")
+    }
+  }
+
+  def bulkInsertCollection[T <: BaseMongoObj](futureCollection: Future[BSONCollection], records: List[T])(implicit handler: BSONDocumentReader[T] with BSONDocumentWriter[T] with BSONHandler[BSONDocument, T]) = {
+    val recordsIns = records.map { record =>
+      val recordIns = record
+      recordIns._id = BSONObjectID.generate().stringify
+      recordIns
+    }
+    val bulkResult = for {
+      col <- futureCollection
+      mwr <- {
+        val docs = recordsIns.map(implicitly[col.ImplicitlyDocumentProducer](_))
+        col.bulkInsert(ordered = false)(docs: _*)
+      }
+    } yield {
+      UpdateResult(n = mwr.n, errmsg = mwr.errmsg.getOrElse(""))
+    }
+    bulkResult.recover { case e: Throwable =>
+      ("", s"bulk insert records error: $e")
     }
   }
 
@@ -150,7 +184,7 @@ object MongoOps {
     updateResult.recover { case e: Throwable =>
       UpdateResult(
         n = 0,
-        errmsg = s"update collection error: ${e.getClass}, ${e.getMessage}, ${e.getCause}, ${e.getStackTrace.mkString("\n")}"
+        errmsg = s"update collection error: $e"
       )
     }
   }
@@ -175,7 +209,7 @@ object MongoOps {
     removeResult.recover { case e: Throwable =>
       UpdateResult(
         n = 0,
-        errmsg = s"remove collection item error: ${e.getClass}, ${e.getMessage}, ${e.getCause}, ${e.getStackTrace.mkString("\n")}"
+        errmsg = s"remove collection item error: $e"
       )
     }
   }
