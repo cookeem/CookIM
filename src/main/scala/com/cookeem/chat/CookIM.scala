@@ -52,7 +52,7 @@ object CookIM extends App {
   } catch {
     case e: Throwable =>
       val formatter = new HelpFormatter()
-      consoleLog("ERROR", s"${e.getClass}, ${e.getMessage}, ${e.getCause}")
+      consoleLog("ERROR", s"$e")
       formatter.printHelp("Start distributed chat cluster node.\n", options, true)
   }
 }

@@ -58,6 +58,28 @@ object CommonUtils {
     ret
   }
 
+  //从参数Map中获取Int
+  def paramsGetInt(params: Map[String, String], key: String, default: Int): Int = {
+    var ret = default
+    if (params.contains(key)) {
+      try {
+        ret = params(key).toInt
+      } catch {
+        case e: Throwable =>
+      }
+    }
+    ret
+  }
+
+  //从参数Map中获取String
+  def paramsGetString(params: Map[String, String], key: String, default: String): String = {
+    var ret = default
+    if (params.contains(key)) {
+      ret = params(key)
+    }
+    ret
+  }
+
   def sha1(str: String) = MessageDigest.getInstance("SHA-1").digest(str.getBytes).map("%02x".format(_)).mkString
 
   def md5(str: String) = MessageDigest.getInstance("MD5").digest(str.getBytes).map("%02x".format(_)).mkString

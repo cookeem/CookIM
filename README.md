@@ -143,25 +143,15 @@ fileinfo（文件内容）
 }
 ```
 
+online（在线用户表）
+===
+```
+*id（唯一标识）
+*uid（在线用户uid）
+time（更新时间戳）
+```
 ### 8. 使用redis保存会话信息、用户信息
 
-cookim:onlineusers（在线用户表，set类型）
-===
-```
-*uuid（用户的唯一标识uuid）
-```
-cookim:users:uid:xxxxx:info（用户表，hash类型）
-===
-```
-nickname（昵称）
-gender（性别：未知：0，男生：1，女生：2）
-avatar（头像，绝对路径，/upload/avatar/201610/26/xxxx.JPG）
-```
-cookim:sessions:sessionid:xxxxx:msgid（会话消息表，list类型）
-===
-```
-msgid（消息的id）
-```
 ---
 ### 9. 支持用户注册和登录
 
@@ -245,3 +235,27 @@ jwt应该放在request的header中
 服务器（验证jwt(uid)是否有效 -> 输出jwt(uid, sessionid)以及session中的消息）
 浏览器（展示会话消息查看页面，通过websocket通道提交发送消息 -> 提交jwt(uid, sessionid)以及消息内容）
 服务器（通过websocket通道，验证jwt(uid, sessionid)是否有效，如果有效，表示uid有在sessionid中发消息的权限 -> 通过websocket通道发送消息）
+
+
+#常规mongodb读写操作
+用户注册    registerUser
+用户登录    loginAction
+用户注销    logoutAction
+用户修改密码  changePwd
+显示个人资料  getUserInfo
+修改个人资料  updateUserInfo
+查看公开会话列表（群聊）    listPublicSessions
+查看加入的会话（查看全部列表、查看私聊列表、查看群聊列表）   listJoinedSessions
+加入群聊会话  joinSession
+创建群聊会话  createSession
+查看群聊资料（显示参与者列表） getSessionInfo
+修改群聊信息  updateSessionInfo
+离开群聊会话  leaveSession
+查看群聊消息
+
+创建私聊会话
+私聊界面（显示对方用户信息）
+
+在websocket的keepalive上增加更新online动作
+过期检测，用户发送消息的时候先检测是否online
+
