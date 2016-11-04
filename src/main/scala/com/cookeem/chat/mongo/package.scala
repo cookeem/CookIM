@@ -11,7 +11,7 @@ package object mongo {
 
   case class User(var _id: String, login: String, nickname: String, password: String, gender: Int, avatar: String, lastlogin: Long = 0, logincount: Int = 0, sessions: List[String] = List(), friends: List[String] = List(), dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
 
-  case class Session(var _id: String, senduid: String, sessiontype: Int, visabletype: Int, jointype: Int, name: String, uids: List[String] = List(), dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
+  case class Session(var _id: String, senduid: String, recvuid: String, sessiontype: Int, visabletype: Int, jointype: Int, name: String, uids: List[String] = List(), dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
 
   case class FileInfo(var _id: String, filepath: String, filename: String, filetype: String, filemd5: String, size: Long, dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
 

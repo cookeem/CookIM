@@ -151,10 +151,14 @@ object MongoOps {
     * @param sort: BSONDocument = document(), sort
     * @return Future[List[T] ], return the record list
     */
-  def findCollection[T <: BaseMongoObj](futureCollection: Future[BSONCollection], selector: BSONDocument, count: Int = -1, sort: BSONDocument = document())(implicit handler: BSONDocumentReader[T] with BSONDocumentWriter[T] with BSONHandler[BSONDocument, T]): Future[List[T]] = {
+  def findCollection[T <: BaseMongoObj](futureCollection: Future[BSONCollection], selector: BSONDocument, count: Int = -1, page: Int = 1, sort: BSONDocument = document())(implicit handler: BSONDocumentReader[T] with BSONDocumentWriter[T] with BSONHandler[BSONDocument, T]): Future[List[T]] = {
+    var queryOpts = QueryOpts()
+    if (count > 0 && page > 0) {
+      queryOpts = QueryOpts(skipN = (page - 1) * count)
+    }
     val findResult = for {
       col <- futureCollection
-      rs <- col.find(selector).sort(sort).cursor[T]().collect(count, Cursor.FailOnError[List[T]]())
+      rs <- col.find(selector).options(queryOpts).sort(sort).cursor[T]().collect(count, Cursor.FailOnError[List[T]]())
     } yield {
       rs
     }
