@@ -65,38 +65,38 @@ app.controller('headerCtl', function($rootScope) {
     $rootScope.menuItems = [
         {
             "menuName": "Error",
-            "url": "/#!/error"
+            "url": "#!/error"
         },
         {
             "menuName": "Login",
-            "url": "/#!/login"
+            "url": "#!/login"
         },
         {
             "menuName": "Register",
-            "url": "/#!/register"
+            "url": "#!/register"
         },
         {
             "menuName": "ChatList",
-            "url": "/#!/chatlist"
+            "url": "#!/chatlist"
         },
         {
             "menuName": "ChatSession",
-            "url": "/#!/chatsession"
+            "url": "#!/chatsession"
         },
     ];
 
     $rootScope.accountMenuItems = [
         {
             "menuName": "ChangePwd",
-            "url": "/#!/changepwd"
+            "url": "#!/changepwd"
         },
         {
             "menuName": "ChangeInfo",
-            "url": "/#!/changeinfo"
+            "url": "#!/changeinfo"
         },
         {
             "menuName": "Logout",
-            "url": "/#!/logout"
+            "url": "#!/logout"
         },
     ];
 
