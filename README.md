@@ -95,7 +95,8 @@ dateline（注册时间，timstamp）
 sessions： 会话表（记录所有群聊私聊的会话信息）
 ===
 ```
-*senduid（创建者的uuid）
+*senduid（创建者的uid）
+*recvuid（接收者的uid，只有当私聊的时候才有效）
 sessiontype（会话类型：0：私聊，1：群聊）
 visabletype（可见类型：0：不可见，1：公开可见）
 jointype（加入类型：0：所有人可以加入，1：群里用户邀请才能加入）
@@ -150,55 +151,7 @@ online（在线用户表）
 *uid（在线用户uid）
 time（更新时间戳）
 ```
-### 8. 使用redis保存会话信息、用户信息
-
----
-### 9. 支持用户注册和登录
-
----
-### 10. 支持把群聊内容保存到mongodb
-
----
 ### 11. 文件支持保存到本地目录，并自动命名文件。并且能够根据客户端发送的文件md5信息与服务端文件md5信息进行比较，建立文件与消息id对应关系
-
----
-### 12. 支持用户修改个人资料，包括头像信息
-
----
-### 13. 修改前端界面，支持angularjs、jquery、materializeCss。
-
-### 14. 用户登录界面
-
-### 15. 用户注册界面
-
----
-昵称
-登录邮箱
-密码
-性别
-头像（支持选择和上传）
-
-### 16. 用户修改资料界面
-
----
-昵称
-性别
-头像（支持选择和上传）
-
-### 17. 用户修改密码界面
-
----
-修改密码，需要输入原密码
-
-### 18. 聊天列表界面
-
----
-支持私聊以及群聊
-
-### 19. 聊天界面、支持瀑布式以及私聊左右气泡式
-
----
-群聊为瀑布式、私聊为左右气泡式
 
 ### 20. 支持显示状态： 在线、隐身、离开、忙碌
 
@@ -237,7 +190,7 @@ jwt应该放在request的header中
 服务器（通过websocket通道，验证jwt(uid, sessionid)是否有效，如果有效，表示uid有在sessionid中发消息的权限 -> 通过websocket通道发送消息）
 
 
-#常规mongodb读写操作
+# mongodb读写操作
 用户注册    registerUser
 用户登录    loginAction
 用户注销    logoutAction
@@ -247,15 +200,15 @@ jwt应该放在request的header中
 查看公开会话列表（群聊）    listPublicSessions
 查看加入的会话（查看全部列表、查看私聊列表、查看群聊列表）   listJoinedSessions
 加入群聊会话  joinSession
-创建群聊会话  createSession
-查看群聊资料（显示参与者列表） getSessionInfo
+创建群聊会话  createGroupSession
 修改群聊信息  updateSessionInfo
 离开群聊会话  leaveSession
-查看群聊消息
+查看历史消息（分页排序）    listHistoryMessages
+创建私聊会话  createPrivateSession
+查看群聊私聊资料（显示参与者列表） getSessionInfo
 
-创建私聊会话
-私聊界面（显示对方用户信息）
-
+# websocket操作
 在websocket的keepalive上增加更新online动作
 过期检测，用户发送消息的时候先检测是否online
+消息批量入库
 
