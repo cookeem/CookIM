@@ -16,33 +16,16 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
   * Created by cookeem on 16/10/27.
   */
 object MongoOps {
-  val dbName = configMongoDbname
-  val colUsersName = "users"
-  val colSessionsName = "sessions"
-  val colMessagesName = "messages"
-  val colInboxName = "inbox"
-  val colOnlineName = "online"
 
   implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(50))
+
+  val dbName = configMongoDbname
   val mongoUri = configMongoUri
   val driver = MongoDriver()
   val parsedUri = MongoConnection.parseURI(mongoUri)
   val connection = parsedUri.map(driver.connection)
   val futureConnection = Future.fromTry(connection)
   val cookimDB = futureConnection.map(_.database(dbName)).flatMap(f => f)
-
-  val usersCollection = cookimDB.map(_.collection[BSONCollection](colUsersName))
-  val sessionsCollection = cookimDB.map(_.collection[BSONCollection](colSessionsName))
-  val messagesCollection = cookimDB.map(_.collection[BSONCollection](colMessagesName))
-  val inboxCollection = cookimDB.map(_.collection[BSONCollection](colInboxName))
-  val onlineCollection = cookimDB.map(_.collection[BSONCollection](colOnlineName))
-
-  implicit def userHandler = Macros.handler[User]
-  implicit def sessionHandler = Macros.handler[Session]
-  implicit def fileInfoHandler = Macros.handler[FileInfo]
-  implicit def messageHandler = Macros.handler[Message]
-  implicit def inboxHandler = Macros.handler[Inbox]
-  implicit def onlineHandler = Macros.handler[Online]
 
   //create collection and index
   /**

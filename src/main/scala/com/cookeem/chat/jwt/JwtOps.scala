@@ -14,16 +14,26 @@ object JwtOps {
   val expireMs = 15 * 60 * 1000L
 
   def encodeJwt(payload: Map[String, Any], expireMs: Long = expireMs): String = {
-    val jwtBuilder = Jwts.builder()
-      .setHeaderParams(payload.asInstanceOf[Map[String, AnyRef]])
-      .signWith(SignatureAlgorithm.HS512, key)
-    if (expireMs > 0) {
-      jwtBuilder.setExpiration(new Date(System.currentTimeMillis() + expireMs))
+    try {
+      val jwtBuilder = Jwts.builder()
+        .setHeaderParams(payload.asInstanceOf[Map[String, AnyRef]])
+        .signWith(SignatureAlgorithm.HS512, key)
+      if (expireMs > 0) {
+        jwtBuilder.setExpiration(new Date(System.currentTimeMillis() + expireMs))
+      }
+      jwtBuilder.compact()
+    } catch {
+      case e: Throwable =>
+        ""
     }
-    jwtBuilder.compact()
   }
 
   def decodeJwt(jwtStr: String): Map[String, Any] = {
-    Jwts.parser().setSigningKey(key).parse(jwtStr).getHeader.entrySet().map { t => (t.getKey, t.getValue)}.toMap[String, Any]
+    try {
+      Jwts.parser().setSigningKey(key).parse(jwtStr).getHeader.entrySet().map { t => (t.getKey, t.getValue)}.toMap[String, Any]
+    } catch {
+      case e: Throwable =>
+        Map[String, Any]()
+    }
   }
 }

@@ -12,58 +12,11 @@ sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 浏览器访问：
 
 ```
-http://localhost:8080/websocket.html?username=cookeem&chatid=room01
+http://localhost:8080/chat/websocket.html?username=cookeem&chatid=room01
 
-http://localhost:8081/websocket.html?username=faith&chatid=room01
+http://localhost:8081/chat/websocket.html?username=faith&chatid=room01
 ```
-### 1. akka node port支持自动递增
-
 ---
-### 2. 消息发送接收支持json格式
-
----
-```
-sendMessage { 
-    nickname: string, 
-    uuid: string, 
-    time: long, 
-    msg: string
-}
-
-recvMessage { 
-    nickname: string, 
-    uuid: string, 
-    time: long, 
-    size: long,
-    msgid: string,
-    msg: string
-}
-
-#发送二进制消息的时候附带的信息
-sendBinary {
-    nickname: string, 
-    uuid: string, 
-    filename: string,
-    filetype: string,
-    filemd5: string,
-    size: long,
-    time: long, 
-    msg: string
-}
-
-recvBinary { 
-    nickname: string, 
-    uuid: string, 
-    filename: string,
-    filetype: string,
-    filemd5: string,
-    size: long,
-    time: long, 
-    msgid: string,
-    msg: string
-}
-
-```
 ### 3. 客户端支持显示用户名，发送时间
 
 ---
@@ -88,7 +41,7 @@ gender（性别：未知：0，男生：1，女生：2）
 avatar（头像，绝对路径，/upload/avatar/201610/26/xxxx.JPG）
 lastlogin（最后登录时间，timstamp）
 logincount(登录次数)
-sessions（用户相关的会话列表：[{sessionid: 会话id}]）
+sessionsstatus（用户相关的会话状态列表：[{sessionid: 会话id, newcount: 未读的新消息数量}]）
 friends（用户的好友列表：[{uuid: 好友uuid}]）
 dateline（注册时间，timstamp）
 ```
@@ -102,7 +55,9 @@ visabletype（可见类型：0：不可见，1：公开可见）
 jointype（加入类型：0：所有人可以加入，1：群里用户邀请才能加入）
 name（群描述）
 dateline（创建日期，timestamp）
-uids（会话对应的用户uuid数组：[{uuid: 用户uuid}]）
+usersstatus（会话对应的用户uuid数组：[{uid: 用户uuid, online: 是否在线（true：在线，false：离线）}]）
+lastmsgid（最新发送的消息id）
+dateline（新建时间）
 ```
 messages： 消息表（记录会话中的消息记录）
 ===
@@ -113,7 +68,6 @@ msgtype（消息类型：0：文字消息，1：图片消息，2：语音消息�
 content（消息内容）
 fileinfo（文件内容）
 {
-    *fileid（文件id）
     filepath（文件路径）
     filename（文件名）
     filetype（文件mimetype）
@@ -122,26 +76,6 @@ fileinfo（文件内容）
     dateline（创建日期，timestamp）
 }
 dateline（创建日期，timestamp）
-```
-inbox： 收件箱（每个用户没有收取的信息会放在这里）
-===
-```
-*recvuid（消息接收者的uuid）
-*sessionid（所在的会话id）
-senduid（消息发送者的uuid）
-msgtype（消息类型：0：文字消息，1：图片消息，2：语音消息，3：视频消息，4：文件消息，5：语音聊天，6：视频聊天）
-dateline（创建日期，timestamp）
-content（消息内容）
-fileinfo（文件内容）
-{
-    *fileid（文件id）
-    filepath（文件路径）
-    filename（文件名）
-    filetype（文件mimetype）
-    filemd5（文件的md5）
-    size（文件大小）
-    dateline（创建日期，timestamp）
-}
 ```
 
 online（在线用户表）
@@ -207,8 +141,134 @@ jwt应该放在request的header中
 创建私聊会话  createPrivateSession
 查看群聊私聊资料（显示参与者列表） getSessionInfo
 
-# websocket操作
-在websocket的keepalive上增加更新online动作
-过期检测，用户发送消息的时候先检测是否online
-消息批量入库
 
+# websocket存在三个channel：
+UserTokenChannel：用于从服务端推送UserToken到客户端，UserToken包含如下信息：uid、nickname、avatar，在keepalive中发送UserToken给客户端
+SessionTokenChannel：当用户打开某个会话页面的时候，从服务端推送SessionToken到客户端，SessionToken包含如下信息：sessionid，表明用户有权在这个session中发送消息，在keepalive中发送SessionToken
+MessageChannel：用于接收用户消息，以及向用户发送消息。当用户向服务端发送消息的时候，必须提供UserToken以及SessionToken，当这两个token验证都通过的情况下，用户可以发送消息，否则拒绝用户发送消息，并回送错误消息给用户。
+
+# MessageChannel消息
+## browser -> cluster（上行）
+## （消息中必须包含UserToken以及SessionToken，用于验证权限，如果鉴权失败，则下发Notice(reject)）
+用户进入会话（UserOnline）
+UserOnline(userToken, sessionToken, actorRef)
+{
+    "userToken": "",
+    "sessionToken": ""
+}
+先验证userToken以及sessionToken，如果不通过，则让actorRef关闭。
+如果通过，则设置对应的sessions.usersstatus以及users.sessionsstatus，并把Notice(online)发送到各个节点,
+
+---
+
+用户离开会话（UserOffline），设置对应的sessions.usersstatus以及users.sessionsstatus
+{
+    "userToken": "",
+    "sessionToken": ""
+}
+用户发送文本消息（UserText）
+{
+    "userToken": "",
+    "sessionToken": "",
+    "message": ""
+}
+用户发送文件消息（UserBinary），把文件信息放到UserBinary中
+{
+    "userToken": "",
+    "sessionToken": "",
+    "fileInfo": {
+        "fileName": "",
+        "fileSize": 0,
+        "fileType": ""
+    }
+}<#fileInfo#>Binary
+## cluster -> browser（下行）
+向用户下发的文字消息（ChatText），保存对应的messages，更新users.sessionsstatus
+{
+    "uid": "",
+    "nickname": "",
+    "avatar": "",
+    "msgType": "text",
+    "time": "",
+    "message": ""
+}
+集群间发布的消息（ClusterText），用于集群间的订阅发布
+{
+    "uid": "",
+    "nickname": "",
+    "avatar": "",
+    "msgType": "text",
+    "time": "",
+    "message": ""
+}
+向用户下发的文件消息（ChatBinaryInfo），保存对应的messages，更新users.sessionsstatus
+{
+    "uid": "",
+    "nickname": "",
+    "avatar": "",
+    "msgType": "binary",
+    "time": "",
+    "fileInfo": {
+        "filePath": "",
+        "fileName": "",
+        "fileSize": 0,
+        "fileType": ""
+    }
+}
+集群间发布的消息（ClusterBinaryInfo），用于集群间的订阅发布
+{
+    "uid": "",
+    "nickname": "",
+    "avatar": "",
+    "msgType": "binary",
+    "time": "",
+    "fileInfo": {
+        "filePath": "",
+        "fileName": "",
+        "fileSize": 0,
+        "fileType": ""
+    }
+}
+由系统下发消息（ChatNotice）
+{
+    "uid": "",
+    "nickname": "system",
+    "avatar": "",
+    "msgType": "notice",
+    "noticeType": "reject",  //reject, online, offline, join, leave, keepAlive
+    "time": "",
+    "message": ""
+}
+集群间发布的系统消息（ClusterNotice），用于集群间的订阅发布
+{
+    "uid": "",
+    "nickname": "system",
+    "avatar": "",
+    "msgType": "notice",
+    "noticeType": "reject",  //reject, online, offline, join, leave, keepAlive
+    "time": "",
+    "message": ""
+}
+
+## cluster -> browser（下行keepAlive消息）
+系统下发的KeepAlive消息（KeepAliveUser），keepAlive包含UserToken（uid，nickname，avatar）
+{
+    "userToken": ""
+}
+系统下发的KeepAlive消息（KeepAliveSession），keepAlive包含SessionToken（sessionid）
+{
+    "sessionToken": ""
+}
+
+
+users表需要记录用户参与的session以及参与的session的最新消息
+sessions表需要记录会话的参与者的当前是否在线状态
+
+在会话中发送消息，消息要批量入库到mongodb
+会话中发送消息的时候，浏览器通过ws发送jwt以及消息体给服务端，服务端要验证jwt（jwt中包含如下信息：uid,nickname,avatar），如果jwt不正确要回送错误提示而不进行群发，修改ChatSessionActor中的逻辑
+在websocket的keepalive上增加更新刷新online动作，更新online并回送jwt
+用户上线的时候读取session的历史消息即可
+用户发送图片的时候，使用TextMessage下发消息回浏览器
+
+
+# 用户最多当前在一个session中在线
