@@ -17,7 +17,7 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-stream" % akkaV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
     "com.typesafe.play" %% "play-json" % "2.5.8",
-//    "org.slf4j" % "slf4j-simple" % "1.7.10",
+    "org.slf4j" % "slf4j-simple" % "1.7.10",
 //    "org.scala-lang.modules" %% "scala-async" % "0.9.5",
     "com.sksamuel.scrimage" %% "scrimage-core" % "2.1.1",
     "com.sksamuel.scrimage" %% "scrimage-io-extra" % "2.1.1",

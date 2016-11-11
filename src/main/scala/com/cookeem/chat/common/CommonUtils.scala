@@ -2,6 +2,8 @@ package com.cookeem.chat.common
 
 import java.io.File
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.TimeZone
 
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
@@ -86,6 +88,11 @@ object CommonUtils {
 
   def isEmail(email: String): Boolean = {
     """(?=[^\s]+)(?=(\w+)@([\w\.]+))""".r.findFirstIn(email).isDefined
+  }
+
+  def timeToStr(time: Long = System.currentTimeMillis()) = {
+    val sdf = new SimpleDateFormat("MM-dd HH:mm")
+    sdf.format(time)
   }
 
   def classToMap(c: AnyRef): Map[String, String] = {

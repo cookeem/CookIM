@@ -2,7 +2,6 @@
 <html>
 <meta charset="utf-8" />
 <title>WebSocket Test</title>
-<script src="node_modules/spark-md5/spark-md5.js"></script>
 <script language="javascript" type="text/javascript">
     var querys = window.location.search.replace('?','').split("&");
     var username = "";
@@ -29,9 +28,14 @@
     var websocket = new WebSocket(wsUri);
     websocket.binaryType = 'arraybuffer';
 
+    var websocketUserToken = new WebSocket("ws://" + host + "/ws-user/5825085049000049009d87c1");
+    var websocketSessionToken = new WebSocket("ws://" + host + "/ws-session/5825085049000049009d87c1/sessionid");
+
     function init() {
         output = document.getElementById("output");
         listenWebsocket(websocket);
+        listenWebsocket(websocketUserToken);
+        listenWebsocket(websocketSessionToken);
     }
     function listenWebsocket(ws) {
         ws.onopen = function(evt) {
@@ -84,36 +88,62 @@
         websocket.send(JSON.stringify(jsonMessage));
     }
 
+    function utf8StringToArrayBuffer(s) {
+        var escstr = encodeURIComponent(s);
+        var binstr = escstr.replace(/%([0-9A-F]{2})/g, function(match, p1) {
+            return String.fromCharCode('0x' + p1);
+        });
+        var ua = new Uint8Array(binstr.length);
+        Array.prototype.forEach.call(binstr, function (ch, i) {
+            ua[i] = ch.charCodeAt(0);
+        });
+        return ua;
+    }
+
+    function arrayBufferToUtf8String(ua) {
+        var binstr = Array.prototype.map.call(ua, function (ch) {
+            return String.fromCharCode(ch);
+        }).join('');
+        var escstr = binstr.replace(/(.)/g, function (m, p) {
+            var code = p.charCodeAt(p).toString(16).toUpperCase();
+            if (code.length < 2) {
+                code = '0' + code;
+            }
+            return '%' + code;
+        });
+        return decodeURIComponent(escstr);
+    }
+
+    function concatenateBuffers(buffA, buffB) {
+        var byteLength = buffA.byteLength + buffB.byteLength;
+        var resultBuffer = new ArrayBuffer(byteLength);
+        var resultView = new Uint8Array(resultBuffer);
+        var viewA = new Uint8Array(buffA);
+        var viewB = new Uint8Array(buffB);
+        resultView.set(viewA);
+        resultView.set(viewB, viewA.byteLength);
+        return resultView.buffer
+    }
+
     //send file through websocket
     function sendFile() {
         var file = document.getElementById('filename').files[0];
         var isImage = file.type.startsWith("image/");
         var isFitSize = file.size < 2048 * 1024;
         if (isImage && isFitSize) {
-            var md5Str = "";
-            var readerMd5 = new FileReader();
-            readerMd5.readAsBinaryString(file);
-            readerMd5.onloadend = function() {
-                var spark = new SparkMD5();
-                spark.appendBinary(readerMd5.result);
-                md5Str = spark.end();
-            };
             var reader = new FileReader();
             reader.readAsArrayBuffer(file);
             reader.onloadend = function() {
-                var jsonMessage = {
-                    nickname: username,
-                    time: Date.now(),
+                var fileInfo = {
                     filename: file.name,
                     filesize: file.size,
-                    filetype: file.type,
-                    filemd5: md5Str
+                    filetype: file.type
                 };
-                websocket.send(JSON.stringify(jsonMessage));
-                sendMessage('upload finish! filetype:' + file.type + ', filesize:' + file.size);
-            };
-            reader.onload = function(e) {
-                websocket.send(e.target.result);
+                var fileInfoStr = JSON.stringify(fileInfo) + "<#fileInfo#>";
+                var fileInfoBuf = utf8StringToArrayBuffer(fileInfoStr);
+                var fileBuf = reader.result;
+                var mixBuf = concatenateBuffers(fileInfoBuf, fileBuf);
+                websocket.send(mixBuf);
             };
         } else if (! isImage) {
             alert('file type must be image!');
@@ -135,7 +165,6 @@
     function showBinaryImage(binary) {
         var bytes = new Uint8Array(binary);
         var blob = new Blob( [ bytes ], { type: "image/png" } );
-        console.log('blob size is:'+blob.size);
         var urlCreator = window.URL || window.webkitURL;
         var imageUrl = urlCreator.createObjectURL( blob );
         var img = document.createElement("img");
@@ -144,20 +173,6 @@
         window.scrollTo(0, document.body.scrollHeight);
     }
 
-    //generate uuid
-    function guid() {
-        function s4() {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-        }
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                s4() + '-' + s4() + s4() + s4();
-    }
-    //    var uuid = guid();
-    //    console.log(uuid);
-
-    //window init
     window.addEventListener("load", init, false);
 </script>
 <h2>File Upload</h2>

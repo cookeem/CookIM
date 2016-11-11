@@ -1,9 +1,8 @@
-package com.cookeem.chat
+package com.cookeem.chat.websocket
 
 import akka.actor.Actor
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
-
 import com.cookeem.chat.common.CommonUtils._
 
 /**

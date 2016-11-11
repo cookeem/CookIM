@@ -47,7 +47,7 @@ object CookIM extends App {
       implicit val materializer = ActorMaterializer()
       import system.dispatcher
       Http().bindAndHandle(Route.logRoute, "0.0.0.0", httpPort)
-      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/websocket.html?username=cookeem&chatid=room01")
+      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/chat/websocket.html?username=cookeem&chatid=room01")
     }
   } catch {
     case e: Throwable =>
