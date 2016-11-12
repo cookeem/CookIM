@@ -151,28 +151,18 @@ MessageChannel：用于接收用户消息，以及向用户发送消息。当用
 ## browser -> cluster（上行）
 ## （消息中必须包含UserToken以及SessionToken，用于验证权限，如果鉴权失败，则下发Notice(reject)）
 用户进入会话（UserOnline）
-UserOnline(userToken, sessionToken, actorRef)
-{
-    "userToken": "",
-    "sessionToken": ""
-}
+---
 先验证userToken以及sessionToken，如果不通过，则让actorRef关闭。
 如果通过，则设置对应的sessions.usersstatus以及users.sessionsstatus，并把Notice(online)发送到各个节点,
 
+用户离开会话（UserOffline）
 ---
+设置对应的sessions.usersstatus以及users.sessionsstatus
 
-用户离开会话（UserOffline），设置对应的sessions.usersstatus以及users.sessionsstatus
-{
-    "userToken": "",
-    "sessionToken": ""
-}
 用户发送文本消息（UserText）
-{
-    "userToken": "",
-    "sessionToken": "",
-    "message": ""
-}
+---
 用户发送文件消息（UserBinary），把文件信息放到UserBinary中
+---
 {
     "userToken": "",
     "sessionToken": "",
