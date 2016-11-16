@@ -23,16 +23,13 @@ object Controller {
       }
     } else {
       val avatar = gender match {
-        case 1 => "avatar/boy.png"
-        case 2 => "avatar/girl.png"
-        case _ => "avatar/unknown.png"
+        case 1 => "images/avatar/boy.jpg"
+        case 2 => "images/avatar/girl.jpg"
+        case _ => "images/avatar/unknown.jpg"
       }
-      registerUser(login, nickname, password, gender, avatar).map { case (uid, errmsg) =>
-        var token = ""
+      registerUser(login, nickname, password, gender, avatar).map { case (uid, token, errmsg) =>
         var successmsg = ""
         if (uid != "") {
-          val payload = Map[String, Any]("uid" -> uid)
-          token = encodeJwt(payload)
           successmsg = "register user success, thank you for join us"
         }
         Json.obj(
@@ -57,12 +54,9 @@ object Controller {
         )
       }
     } else {
-      loginAction(login, password).map { uid =>
-        var token = ""
+      loginAction(login, password).map { case (uid, token) =>
         var successmsg = ""
         if (uid != "") {
-          val payload = Map[String, Any]("uid" -> uid)
-          token = encodeJwt(payload)
           successmsg = "login in success"
         } else {
           errmsg = "user not exist or password not match"
@@ -70,6 +64,7 @@ object Controller {
         Json.obj(
           "uid" -> uid,
           "errmsg" -> errmsg,
+          "successmsg" -> successmsg,
           "token" -> token
         )
       }
@@ -119,7 +114,7 @@ object Controller {
     }
   }
 
-  def changePwdCtl(userTokenStr: String, oldPwd: String, newPwd: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+  def changePwdCtl(userTokenStr: String, oldPwd: String, newPwd: String, renewPwd: String)(implicit ec: ExecutionContext): Future[JsObject] = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
       Future(
@@ -130,7 +125,7 @@ object Controller {
       )
     } else {
       val uid = userToken.uid
-      changePwd(uid, oldPwd, newPwd).map { updateResult =>
+      changePwd(uid, oldPwd, newPwd, renewPwd).map { updateResult =>
         if (updateResult.errmsg != "") {
           Json.obj(
             "errmsg" -> updateResult.errmsg,

@@ -54,7 +54,7 @@ object Route {
         val mapPattern = Seq("chat")
         var isIgnore = false
         mapPattern.foreach(pattern =>
-          isIgnore = isIgnore || rawUri.startsWith(s"/$pattern/")
+          isIgnore = isIgnore || rawUri.startsWith(s"/$pattern")
         )
         if (!isIgnore) {
           println(s"# $currentTimeStr ${ctx.request.uri} [$remoteAddress] [${ctx.request.method.name}] [${resp.status.value}] [$userAgent] took: ${duration}ms")

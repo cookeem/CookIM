@@ -7,20 +7,20 @@
                     <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">account_circle</i>
-                            <input id="loginname" type="email" class="validate" minlength="8" maxlength="32">
+                            <input ng-model="loginData.login" id="loginname" type="email" class="validate" minlength="8" maxlength="32">
                             <label for="loginname" data-error="login account is email address">login email</label>
                         </div>
                     </div>
                     <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">vpn_key</i>
-                            <input id="password" type="password" class="validate" minlength="6" maxlength="18">
+                            <input ng-model="loginData.password" id="password" type="password" class="validate" minlength="6" maxlength="18">
                             <label for="password" data-error="login password 6-18 characters">login password</label>
                         </div>
                     </div>
                     <div class="row">
                         <div class="input-field col s12">
-                            <input type="checkbox" id="remember"/>
+                            <input ng-model="loginData.remember" type="checkbox" id="remember"/>
                             <label for="remember">remember login</label>
                         </div>
                     </div>
@@ -28,10 +28,10 @@
                     <div class="container">
                         <div class="row center-align">
                             <div class="col s6">
-                                <a href="javascript:history.back()" class="blue waves-effect waves-light btn"><i class="material-icons left">person</i> login </a>
+                                <a ng-click="loginSubmit()" class="blue waves-effect waves-light btn"><i class="material-icons left">person</i> login </a>
                             </div>
                             <div class="col s6">
-                                <a href="javascript:history.back()" class="green waves-effect waves-light btn"><i class="material-icons left">person_add</i> new </a>
+                                <a href="#!/register" class="green waves-effect waves-light btn"><i class="material-icons left">person_add</i> new </a>
                             </div>
                         </div>
                     </div>

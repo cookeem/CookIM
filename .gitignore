@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+/www/node_modules/
+.DS_Store
+/.idea/
+/project/project/
+/project/target/
+/target/
+/upload/
+/dump.rdb

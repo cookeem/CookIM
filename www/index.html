@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Distributed webchat</title>
+    <title>CookIM</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
 
@@ -28,12 +28,6 @@
                 <i class="material-icons black-text">menu</i>
             </a>
 
-            <!--顶部导航栏下拉菜单-->
-            <ul id="header-dropdown" class="dropdown-content">
-                <li><a href="index.html#!/changePwd" class="red-text">修改密码</a></li>
-                <li class="divider"></li>
-                <li><a href="index.html#!/logout" class="grey-text">退出登录</a></li>
-            </ul>
             <div class="center-align">
                 <a class="black-text"><img src="images/favicon.ico" class="top-navbar-icon">CookIM</a>
             </div>
@@ -55,7 +49,7 @@
             </ul>
             <ul class="collapsible collapsible-accordion">
                 <li class="bold yellow">
-                    <a class="collapsible-header waves-effect waves-light"><i class="material-icons">people</i>Account menu</a>
+                    <a class="collapsible-header active waves-effect waves-light"><i class="material-icons">people</i>Account menu</a>
                     <div class="collapsible-body" style="">
                         <ul>
                             <li ng-repeat="menuItem in accountMenuItems"><a href="{{menuItem.url}}" class="black-text">{{menuItem.menuName}} &nbsp; <span class="chip red white-text">10</span></a>
@@ -155,6 +149,7 @@
 <script src="node_modules/angular/angular.min.js"></script>
 <script src="node_modules/angular-route/angular-route.min.js"></script>
 <script src="node_modules/angular-animate/angular-animate.min.js"></script>
+<script src="node_modules/angular-cookies/angular-cookies.min.js"></script>
 
 <!-- materialize js -->
 <script src="node_modules/materialize-css/dist/js/materialize.min.js"></script>
@@ -163,6 +158,7 @@
 <script src="js/index.js"></script>
 <script src="js/error.js"></script>
 <script src="js/login.js"></script>
+<script src="js/logout.js"></script>
 <script src="js/register.js"></script>
 <script src="js/chatlist.js"></script>
 <script src="js/chatsession.js"></script>

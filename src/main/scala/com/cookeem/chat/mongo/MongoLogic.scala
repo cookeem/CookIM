@@ -67,51 +67,55 @@ object MongoLogic {
   def createOnlinesCollection(): Future[String] = {
     val indexSettings = Array(
       ("uid", 1, true, 0),
-      ("time", -1, false, 15 * 60)
+      ("dateline", -1, false, 15 * 60)
     )
     createIndex(colOnlinesName, indexSettings)
   }
 
   //register new user
-  def registerUser(login: String, nickname: String, password: String, gender: Int, avatar: String): Future[(String, String)] = {
+  def registerUser(login: String, nickname: String, password: String, gender: Int, avatar: String): Future[(String, String, String)] = {
     var errmsg = ""
+    val token = ""
     if (!isEmail(login)) {
       errmsg = "login must be email"
     } else if (nickname.getBytes.length < 4) {
       errmsg = "nickname must at least 4 charactors"
     } else if (password.length < 6) {
       errmsg = "password must at least 6 charactors"
-    } else if (!(gender == 0 || gender == 1 || gender == 2)) {
-      errmsg = "gender must be 0 or 1 or 2"
+    } else if (!(gender == 1 || gender == 2)) {
+      errmsg = "gender must be boy or girl"
     } else if (avatar.length < 6) {
       errmsg = "avatar must at least 6 charactors"
     }
     if (errmsg != "") {
-      Future(("", errmsg))
+      Future(("", token, errmsg))
     } else {
       for {
-        users <- findCollection[User](usersCollection, document("login" -> login), count = 1)
-        (uid, errmsg) <- {
-          if (users.nonEmpty) {
+        user <- findCollectionOne[User](usersCollection, document("login" -> login))
+        (uid, token, errmsg) <- {
+          if (user != null) {
             errmsg = "user already exist"
-            Future((users.head._id, errmsg))
+            Future((user._id, token, errmsg))
           } else {
             val newUser = User("", login, nickname, sha1(password), gender, avatar)
-            insertCollection[User](usersCollection, newUser)
+            insertCollection[User](usersCollection, newUser).map { case (iuid, ierrmsg) =>
+              if (iuid != "") {
+                loginUpdate(iuid)
+                createUserToken(iuid).map { token => (iuid, token, ierrmsg) }
+              } else {
+                Future((iuid, token, ierrmsg))
+              }
+            }.flatMap(f => f)
           }
         }
       } yield {
-        (uid, errmsg)
+        (uid, token, errmsg)
       }
     }
   }
 
   def getUserInfo(uid: String): Future[User] = {
-    for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid), count = 1)
-    } yield {
-      users.headOption.orNull
-    }
+    findCollectionOne[User](usersCollection, document("_id" -> uid))
   }
 
   //update users info
@@ -122,10 +126,17 @@ object MongoLogic {
     if (nickname.getBytes.length >= 4) {
       sets = sets.merge(document("nickname" -> nickname))
     }
-    if (gender == 0 || gender == 1 || gender == 2) {
+    if (gender == 1 || gender == 2) {
       sets = sets.merge(document("gender" -> gender))
     }
-    if (avatar.length >= 6) {
+    if (avatar.startsWith("images/")) {
+      val avatarDefault = gender match {
+        case 1 => "images/avatar/boy.jpg"
+        case 2 => "images/avatar/girl.jpg"
+        case _ => "images/avatar/unknown.jpg"
+      }
+      sets = sets.merge(document("avatar" -> avatarDefault))
+    } else if (avatar.length >= 16) {
       sets = sets.merge(document("avatar" -> avatar))
     }
     if (sets == document()) {
@@ -136,31 +147,37 @@ object MongoLogic {
     if (errmsg != "") {
       Future(UpdateResult(n = 0, errmsg = errmsg))
     } else {
-      updateCollection(usersCollection, document("uid" -> uid), update)
+      updateCollection(usersCollection, document("_id" -> uid), update)
     }
   }
 
-  def loginAction(login: String, pwd: String): Future[String] = {
+  def loginAction(login: String, pwd: String): Future[(String, String)] = {
     for {
-      users <- findCollection[User](usersCollection, document("login" -> login), count = 1)
-    } yield {
-      var uid = ""
-      if (users.nonEmpty) {
-        val user = users.head
-        val pwdSha1 = user.password
-        if (pwdSha1 != "" && sha1(pwd) == pwdSha1) {
-          uid = user._id
-          loginUpdate(uid)
+      user <- findCollectionOne[User](usersCollection, document("login" -> login))
+      (uid, token) <- {
+        var uid = ""
+        if (user != null) {
+          val pwdSha1 = user.password
+          if (pwdSha1 != "" && sha1(pwd) == pwdSha1) {
+            uid = user._id
+            loginUpdate(uid)
+          }
+        }
+        if (uid != "") {
+          createUserToken(uid).map { token => (uid, token) }
+        } else {
+          Future("", "")
         }
       }
-      uid
+    } yield {
+      (uid, token)
     }
   }
 
   def logoutAction(userTokenStr: String): Future[UpdateResult] = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid != "") {
-      removeCollection(usersCollection, document("uid" -> userToken.uid))
+      removeCollection(onlinesCollection, document("uid" -> userToken.uid))
     } else {
       Future(UpdateResult(n = 0, errmsg = "no privilege to logout"))
     }
@@ -170,16 +187,16 @@ object MongoLogic {
   def updateOnline(uid: String): Future[String] = {
     val selector = document("uid" -> uid)
     for {
-      onlines <- findCollection[Online](onlinesCollection, selector, count = 1)
+      online <- findCollectionOne[Online](onlinesCollection, selector)
       errmsg <- {
-        if (onlines.nonEmpty) {
+        if (online == null) {
           // time expire after 15 minutes
           val onlineNew = Online("", uid, new Date())
           insertCollection[Online](onlinesCollection, onlineNew).map { case (id, errmsg) =>
             errmsg
           }
         } else {
-          val update = document("time" -> new Date())
+          val update = document("$set" -> document("dateline" -> new Date()))
           updateCollection(onlinesCollection, selector, update).map { ur =>
             ur.errmsg
           }
@@ -191,15 +208,15 @@ object MongoLogic {
   }
 
   //check and change password
-  def changePwd(uid: String, oldPwd: String, newPwd: String): Future[UpdateResult] = {
+  def changePwd(uid: String, oldPwd: String, newPwd: String, renewPwd: String): Future[UpdateResult] = {
     var errmsg = ""
     if (oldPwd.length < 6) {
       errmsg = "old password must at least 6 charactors"
-    }
-    if (newPwd.length < 6) {
+    } else if (newPwd.length < 6) {
       errmsg = "new password must at least 6 charactors"
-    }
-    if (newPwd == oldPwd) {
+    } else if (newPwd != renewPwd) {
+      errmsg = "new password and repeat password must be same"
+    } else if (newPwd == oldPwd) {
       errmsg = "new password and old password can not be same"
     }
     if (errmsg != "") {
@@ -241,13 +258,13 @@ object MongoLogic {
   def joinFriend(uid: String, fuid: String): Future[UpdateResult] = {
     var errmsg = ""
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid, "friends" -> document("$ne" -> fuid)), count = 1)
-      friends <- findCollection[User](usersCollection, document("_id" -> fuid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid, "friends" -> document("$ne" -> fuid)))
+      friend <- findCollectionOne[User](usersCollection, document("_id" -> fuid))
       updateResult <- {
-        if (users.isEmpty) {
+        if (user == null) {
           errmsg = "user not exist or already your friend"
         }
-        if (friends.isEmpty) {
+        if (friend == null) {
           errmsg = "user friend not exists"
         }
         var ret = Future(UpdateResult(n = 0, errmsg = errmsg))
@@ -266,9 +283,9 @@ object MongoLogic {
   def removeFriend(uid: String, fuid: String): Future[UpdateResult] = {
     var errmsg = ""
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid, "friends" -> document("$eq" -> fuid)), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid, "friends" -> document("$eq" -> fuid)))
       ret <- {
-        if (users.isEmpty) {
+        if (user == null) {
           errmsg = "user not exists or friend not in your friends"
           Future(UpdateResult(n = 0, errmsg = errmsg))
         } else {
@@ -281,20 +298,19 @@ object MongoLogic {
     }
   }
 
-  def listFriend(uid: String): Future[List[User]] = {
+  def listFriends(uid: String, page: Int = 1, count: Int = 10): Future[List[User]] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
       friends <- {
         var friends = Future(List[User]())
-        if (users.nonEmpty) {
-          val user = users.head
+        if (user != null) {
           val fuids = user.friends
           val selector = document(
             "_id" -> document(
               "$in" -> fuids
             )
           )
-          friends = findCollection[User](usersCollection, selector, count = -1)
+          friends = findCollection[User](usersCollection, selector, page = page, count = count)
         }
         friends
       }
@@ -308,9 +324,9 @@ object MongoLogic {
     var errmsg = ""
     val selector = document("_id" -> uid)
     for {
-      users <- findCollection[User](usersCollection, selector, count = 1)
+      user <- findCollectionOne[User](usersCollection, selector)
       (sessionid, errmsg) <- {
-        if (users.isEmpty) {
+        if (user == null) {
           errmsg = "user not exists"
           Future("", errmsg)
         } else if (!(sessiontype == 0 || sessiontype == 1)) {
@@ -348,31 +364,30 @@ object MongoLogic {
   //create private session if not exist or get private session
   def createPrivateSession(uid: String, ouid: String): Future[(String, String)] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid), count = 1)
-      ousers <- findCollection[User](usersCollection, document("_id" -> ouid), count = 1)
-      (sessions, errmsgUserNotExist) <- {
-        var sessions = List[Session]()
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
+      ouser <- findCollectionOne[User](usersCollection, document("_id" -> ouid))
+      (session, errmsgUserNotExist) <- {
         var errmsg = ""
-        var ret = Future(sessions, errmsg)
-        if (users.nonEmpty && ousers.nonEmpty) {
+        var ret = Future[(Session, String)](null, errmsg)
+        if (user != null && ouser != null) {
           val selector = document(
             "$or" -> array(
               document("senduid" -> uid, "recvuid" -> ouid),
               document("senduid" -> ouid, "recvuid" -> uid)
             )
           )
-          ret = findCollection[Session](sessionsCollection, selector, count = 1).map {s => (s, "")}
+          ret = findCollectionOne[Session](sessionsCollection, selector).map {s => (s, "")}
         } else {
           errmsg = "send user or recv user not exist"
-          ret = Future(sessions, errmsg)
+          ret = Future(null, errmsg)
         }
         ret
       }
       (sessionid, errmsg) <- {
         var ret = Future("", errmsgUserNotExist)
         if (errmsgUserNotExist == "") {
-          if (sessions.nonEmpty) {
-            ret = Future(sessions.head._id, "")
+          if (session != null) {
+            ret = Future(session._id, "")
           } else {
             val newSession = Session("", senduid = uid, recvuid = "", sessiontype = 0, visabletype = 0, jointype = 0, name = "")
             ret = insertCollection[Session](sessionsCollection, newSession)
@@ -406,17 +421,17 @@ object MongoLogic {
   //get session info and users who join this session
   def getSessionInfo(sessionid: String): Future[(Session, List[User])] = {
     for {
-      sessions <- findCollection[Session](sessionsCollection, document("_id" -> sessionid), count = 1)
+      session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid))
       users <- {
         var users = Future(List[User]())
-        if (sessions.nonEmpty) {
-          val uids = sessions.head.usersstatus.map(_.uid)
-          users = findCollection[User](usersCollection, document("_id" -> document("$in" -> array(uids))), count = 1)
+        if (session != null) {
+          val uids = session.usersstatus.map(_.uid)
+          users = findCollection[User](usersCollection, document("_id" -> document("$in" -> array(uids))))
         }
         users
       }
     } yield {
-      (sessions.headOption.orNull, users)
+      (session, users)
     }
   }
 
@@ -442,9 +457,9 @@ object MongoLogic {
     var ret = Future(UpdateResult(n = 0, errmsg = errmsg))
     if (errmsg == "") {
       ret = for {
-        sessions <- findCollection[Session](sessionsCollection, document("_id" -> sessionid, "senduid" -> uid), count = 1)
+        session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid, "senduid" -> uid))
         updateResult <- {
-          if (sessions.isEmpty) {
+          if (session == null) {
             Future(UpdateResult(n = 0, errmsg = "no privilege to update session info"))
           } else {
             updateCollection(sessionsCollection, document("_id" -> sessionid), update)
@@ -462,15 +477,14 @@ object MongoLogic {
   //join new session
   def joinSession(uid: String, sessionid: String): Future[UpdateResult] = {
     var errmsg = ""
-    val selector = document("_id" -> uid, "sessionsstatus.sessionid" -> document("$ne" -> sessionid))
     for {
-      users <- findCollection[User](usersCollection, selector, count = 1)
-      sessions <- findCollection[Session](sessionsCollection, document("_id" -> sessionid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid, "sessionsstatus.sessionid" -> document("$ne" -> sessionid)))
+      session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid))
       updateResult <- {
-        if (users.isEmpty) {
+        if (user == null) {
           errmsg = "user not exists or already join session"
         }
-        if (sessions.isEmpty) {
+        if (session == null) {
           errmsg = "session not exists"
         }
         var ret = Future(UpdateResult(n = 0, errmsg = errmsg))
@@ -500,22 +514,22 @@ object MongoLogic {
   //leave session
   def leaveSession(uid: String, sessionid: String): Future[UpdateResult] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid, "sessionsstatus.sessionid" -> sessionid), count = 1)
-      sessions <- findCollection[Session](sessionsCollection, document("_id" -> sessionid, "usersstatus.uid" -> uid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid, "sessionsstatus.sessionid" -> sessionid))
+      session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid, "usersstatus.uid" -> uid))
       ret <- {
-        if (users.isEmpty || sessions.isEmpty) {
+        if (user == null || session == null) {
           val errmsg = "user not exists or not join the session"
           Future(UpdateResult(n = 0, errmsg = errmsg))
         } else {
           for {
             ur1 <- {
-              val sessionstatus = users.head.sessionsstatus.filter(_.sessionid == sessionid).head
+              val sessionstatus = user.sessionsstatus.filter(_.sessionid == sessionid).head
               val docSessionStatus = document("sessionid" -> sessionstatus.sessionid, "newcount" -> sessionstatus.newcount)
               val update1 = document("$pull" -> document("sessionsstatus" -> docSessionStatus))
               updateCollection(usersCollection, document("_id" -> uid), update1)
             }
             ur2 <- {
-              val userstatus = sessions.head.usersstatus.filter(_.uid == uid).head
+              val userstatus = session.usersstatus.filter(_.uid == uid).head
               val docUserStatus = document("uid" -> userstatus.uid, "online" -> userstatus.online)
               val update2 = document("$pull" -> document("usersstatus" -> docUserStatus))
               updateCollection(sessionsCollection, document("_id" -> sessionid), update2)
@@ -531,13 +545,12 @@ object MongoLogic {
   }
 
   //list all session public and user not joined yet
-  def listPublicSessions(uid: String): Future[List[Session]] = {
+  def listPublicSessions(uid: String, page: Int = 1, count: Int = 10): Future[List[Session]] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
       sessions <- {
         var sessions = Future(List[Session]())
-        if (users.nonEmpty) {
-          val user = users.head
+        if (user != null) {
           val sessionids = user.sessionsstatus.map(_.sessionid)
           var ba = array()
           sessionids.foreach { sessionid =>
@@ -552,7 +565,7 @@ object MongoLogic {
             )
           )
           if (ba.size > 0) {
-            sessions = findCollection[Session](sessionsCollection, selector)
+            sessions = findCollection[Session](sessionsCollection, selector, sort = document("dateline" -> -1), page = page, count = count)
           }
         }
         sessions
@@ -564,14 +577,13 @@ object MongoLogic {
 
 
   // list my sessions, showType: (0: private, 1:group , 2:all)
-  def listJoinedSessions(uid: String, showType: Int): Future[List[Session]] = {
+  def listJoinedSessions(uid: String, showType: Int, page: Int = 1, count: Int = 10): Future[List[Session]] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
       sessions <- {
-        val sessionids = if (users.isEmpty) {
+        val sessionids = if (user == null) {
           List[String]()
         } else {
-          val user = users.head
           user.sessionsstatus.map(_.sessionid)
         }
         var ba = array()
@@ -592,7 +604,7 @@ object MongoLogic {
         }
         var sessions = Future(List[Session]())
         if (ba.size > 0) {
-          sessions = findCollection[Session](sessionsCollection, selector, count = -1)
+          sessions = findCollection[Session](sessionsCollection, selector, sort = document("dateline" -> -1), page = page, count = count)
         }
         sessions
       }
@@ -604,10 +616,10 @@ object MongoLogic {
   //verify user is in session
   def verifySession(senduid: String, sessionid: String): Future[String] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> senduid, "sessionsstatus.sessionid" -> sessionid), count = 1)
-      sessions <- findCollection[Session](sessionsCollection, document("_id" -> sessionid, "usersstatus.uid" -> senduid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> senduid, "sessionsstatus.sessionid" -> sessionid))
+      session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid, "usersstatus.uid" -> senduid))
     } yield {
-      if (users.nonEmpty && sessions.nonEmpty) {
+      if (user != null && session != null) {
         ""
       } else {
         "no privilege to send message in this session"
@@ -616,13 +628,17 @@ object MongoLogic {
   }
 
   //create a new message
-  def createMessage(uid: String, sessionid: String, msgtype: String, noticetype: String, message: String, fileinfo: FileInfo): Future[(String, String)] = {
+  def createMessage(userTokenStr: String, sessionTokenStr: String, msgtype: String, noticetype: String, message: String, fileinfo: FileInfo): Future[(String, String)] = {
     for {
-      errmsg <- verifySession(uid, sessionid)
       (msgid, errmsg) <- {
-        if (errmsg != "") {
+        var errmsg = ""
+        val userSessionInfo = verifyUserSessionToken(userTokenStr, sessionTokenStr)
+        if (userSessionInfo.uid == "") {
+          errmsg = "no privilege to send message"
           Future(("", errmsg))
         } else {
+          val uid = userSessionInfo.uid
+          val sessionid = userSessionInfo.sessionid
           val newMessage = Message("", uid, sessionid, msgtype, noticetype = noticetype, message = message, fileinfo = fileinfo)
           insertCollection[Message](messagesCollection, newMessage)
         }
@@ -638,25 +654,18 @@ object MongoLogic {
       Future((null, null))
     } else {
       for {
-        messages <- findCollection[Message](messagesCollection, document("_id" -> msgid, "sessionid" -> sessionid), count = 1)
-        (message, users) <- {
-          var message: Message = null
-          if (messages.nonEmpty) {
-            message = messages.head
-            findCollection[User](usersCollection, document("_id" -> message.senduid)).map { user =>
+        message <- findCollectionOne[Message](messagesCollection, document("_id" -> msgid, "sessionid" -> sessionid))
+        (message, user) <- {
+          if (message != null) {
+            findCollectionOne[User](usersCollection, document("_id" -> message.senduid)).map { user =>
               (message, user)
             }
           } else {
-            Future((message, List[User]()))
+            Future((message, null))
           }
         }
       } yield {
-        if (message != null && users.nonEmpty) {
-          val user = users.head
-          (message, user)
-        } else {
-          (null, null)
-        }
+        (message, user)
       }
     }
   }
@@ -665,35 +674,23 @@ object MongoLogic {
     val UserToken(uid, nickname, avatar) = verifyUserToken(userTokenStr)
     if (uid != "") {
       for {
-        sessions <- findCollection[Session](sessionsCollection, document("_id" -> sessionid), count = 1)
-        (session, messages) <- {
-          var session: Session = null
-          if (sessions.nonEmpty) {
-            session = sessions.head
-            findCollection[Message](messagesCollection, document("_id" -> session.lastmsgid)).map { messages =>
-              (session, messages)
-            }
+        session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid))
+        message <- {
+          if (session != null) {
+            findCollectionOne[Message](messagesCollection, document("_id" -> session.lastmsgid))
           } else {
-            Future(null, List[Message]())
+            null
           }
         }
-        (session, message, users) <- {
-          if (messages.nonEmpty) {
-            val message = messages.head
-            findCollection[User](usersCollection, document("_id" -> message.senduid), count = 1).map { users =>
-              (session, message, users)
-            }
+        user <- {
+          if (message != null) {
+            findCollectionOne[User](usersCollection, document("_id" -> message.senduid))
           } else {
-            Future(null, null, List[User]())
+            Future(null)
           }
         }
       } yield {
-        if (users.nonEmpty) {
-          val user = users.head
-          (session, message, user)
-        } else {
-          (session, null, null)
-        }
+        (session, message, user)
       }
     } else {
       Future(null, null, null)
@@ -707,7 +704,7 @@ object MongoLogic {
       messages <- {
         var messages = Future(List[Message]())
         if (errmsg == "") {
-          messages = findCollection[Message](messagesCollection, document("sessionid" -> sessionid), count = count, page = page, sort = sort)
+          messages = findCollection[Message](messagesCollection, document("sessionid" -> sessionid), sort = sort, page = page, count = count)
         }
         messages
       }
@@ -719,11 +716,10 @@ object MongoLogic {
   //create user token, include uid, nickname, avatar
   def createUserToken(uid: String): Future[String] = {
     for {
-      users <- findCollection[User](usersCollection, document("_id" -> uid), count = 1)
+      user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
     } yield {
       var token = ""
-      if (users.nonEmpty) {
-        val user = users.head
+      if (user != null) {
         val payload = Map[String, Any](
           "uid" -> user._id,
           "nickname" -> user.nickname,

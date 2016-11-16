@@ -160,93 +160,10 @@ object MongoOps {
       col <- futureCollection
       rs <- col.find(selector).cursor[T]().collect(1, Cursor.FailOnError[List[T]]())
     } yield {
-      rs.headOption.orNull
+      rs.headOption.getOrElse(null.asInstanceOf[T])
     }
     findResult.recover { case e: Throwable =>
       null.asInstanceOf[T]
-    }
-  }
-
-  //join col1 to col2 with col1._id = id1 and col2._id = col1.colName1 in collection return one record
-  /**
-    * @param futureCollection1: Future[BSONCollection], col1
-    * @param futureCollection2: Future[BSONCollection], col2
-    * @param colName1: String, col2._id = col1.colName
-    * @param id1: String, col1._id = id
-    * @return Future[T], return the record, if not found return null
-    */
-  def joinCollectionOneOne[T1 <: BaseMongoObj, T2 <: BaseMongoObj](futureCollection1: Future[BSONCollection], futureCollection2: Future[BSONCollection], colName1: String = "", id1: String)(implicit handler1: BSONDocumentReader[T1] with BSONDocumentWriter[T1] with BSONHandler[BSONDocument, T1], handler2: BSONDocumentReader[T2] with BSONDocumentWriter[T2] with BSONHandler[BSONDocument, T2]): Future[(T1, T2)] = {
-    for {
-      t1 <- findCollectionOne[T1](futureCollection1, document("_id" -> id1))
-      t2 <- {
-        var ret = Future[T2](null.asInstanceOf[T2])
-        if (t1 != null) {
-          val m = classToMap(t1)
-          if (m.get(colName1).orNull != null) {
-            ret = findCollectionOne[T2](futureCollection2, document("_id" -> m.getOrElse(colName1, "")))
-          }
-        }
-        ret
-      }
-    } yield {
-      (t1, t2)
-    }
-  }
-
-  //join col1 to col2 with col1 in selector1 and col2._id = col1.colName1 in collection return multiple records
-  /**
-    * @param futureCollection1: Future[BSONCollection], col1
-    * @param futureCollection2: Future[BSONCollection], col2
-    * @param selector1: BSONDocument, col1 selector1
-    * @param colName1: String, col2._id = col1.colName
-    * @return Future[List[(T1, T2)] ], return the records with col1 and col2
-    */
-  def joinCollectionMultiOne[T1 <: BaseMongoObj, T2 <: BaseMongoObj](futureCollection1: Future[BSONCollection], futureCollection2: Future[BSONCollection], selector1: BSONDocument, colName1: String = "")(implicit handler1: BSONDocumentReader[T1] with BSONDocumentWriter[T1] with BSONHandler[BSONDocument, T1], handler2: BSONDocumentReader[T2] with BSONDocumentWriter[T2] with BSONHandler[BSONDocument, T2]): Future[List[(T1, T2)]] = {
-    for {
-      t1s <- findCollection[T1](futureCollection1, selector1)
-      t1t2s <- {
-        Future.sequence(
-          t1s.map { t1 =>
-            var ret = Future[T2](null.asInstanceOf[T2])
-            val m = classToMap(t1)
-            if (m.get(colName1).orNull != null) {
-              ret = findCollectionOne[T2](futureCollection2, document("_id" -> m.getOrElse(colName1, "")))
-            }
-            ret.map { t2 => (t1, t2)}
-          }
-        )
-      }
-    } yield {
-      t1t2s
-    }
-  }
-
-  //todo not finished
-  //join col1 to col2 with col1 with col1._id = id1 and col2.colName2 = col1.colName1 in collection return multiple records
-  /**
-    * @param futureCollection1: Future[BSONCollection], col1
-    * @param futureCollection2: Future[BSONCollection], col2
-    * @param selector1: BSONDocument, col1 selector1
-    * @param colName1: String, col2._id = col1.colName
-    * @return Future[List[(T1, T2)] ], return the records with col1 and col2
-    */
-  def joinCollectionOneMulti[T1 <: BaseMongoObj, T2 <: BaseMongoObj](futureCollection1: Future[BSONCollection], futureCollection2: Future[BSONCollection], selector1: BSONDocument, colName1: String = "")(implicit handler1: BSONDocumentReader[T1] with BSONDocumentWriter[T1] with BSONHandler[BSONDocument, T1], handler2: BSONDocumentReader[T2] with BSONDocumentWriter[T2] with BSONHandler[BSONDocument, T2]): Future[List[(T1, T2)]] = {
-    for {
-      t1s <- findCollection[T1](futureCollection1, selector1)
-      t1t2s <- {
-        Future.sequence(
-          t1s.map { t1 =>
-            var ret = Future[T2](null.asInstanceOf[T2])
-            val m = classToMap(t1)
-            if (m.get(colName1).orNull != null) {
-              ret = findCollectionOne[T2](futureCollection2, document("_id" -> m.getOrElse(colName1, "")))
-            }
-            ret.map { t2 => (t1, t2)}
-          }
-        )
-      }
-    } yield {
-      t1t2s
     }
   }
 

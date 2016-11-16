@@ -7,27 +7,27 @@
                     <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">lock</i>
-                            <input id="oldpassword" type="password" class="validate" minlength="6" maxlength="18">
+                            <input ng-model="changePwdData.oldPwd" id="oldpassword" type="password" class="validate" minlength="6" maxlength="18">
                             <label for="oldpassword" data-error="login password 6-18 characters">old login password</label>
                         </div>
                     </div>
                     <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">vpn_key</i>
-                            <input id="password" type="password" class="validate" minlength="6" maxlength="18">
+                            <input ng-model="changePwdData.newPwd" id="password" type="password" class="validate" minlength="6" maxlength="18">
                             <label for="password" data-error="login password 6-18 characters">new login password</label>
                         </div>
                     </div>
                     <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">vpn_key</i>
-                            <input id="repassword" type="password" class="validate" minlength="6" maxlength="18">
+                            <input ng-model="changePwdData.renewPwd" id="repassword" type="password" class="validate" minlength="6" maxlength="18">
                             <label for="repassword" data-error="6-18 characters and the same with password">repeat login password</label>
                         </div>
                     </div>
                     <div class="row"></div>
                     <div class="row center-align">
-                        <a href="javascript:history.back()" class="green waves-effect waves-light btn"><i class="material-icons left">autorenew</i> update </a>
+                        <a ng-click="changePwdSubmit()" class="green waves-effect waves-light btn"><i class="material-icons left">autorenew</i> update </a>
                     </div>
                 </div>
             </div>

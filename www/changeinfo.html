@@ -6,33 +6,36 @@
                 <div class="col s12 m8 offset-m2 l8 offset-l2">
                     <div class="row">
                         <div class="input-field col s12 center-align">
-                            <img src="images/yuna.jpg" alt="" class="circle responsive-img">
-                            <div>Select your avatar</div>
+                            <div class="col s6 offset-s3 m6 offset-m3 l6 offset-l3">
+                                <img ng-src="{{changeUserInfoData.avatar}}" alt="" id="avatarImage" class="circle responsive-img" onclick="$('#avatarInput').click();">
+                                <input id="avatarInput" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="showImage(this);">
+                                <div>Select your avatar</div>
+                            </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">face</i>
-                            <input id="nickname" type="text" class="validate" minlength="4" maxlength="20">
+                            <input ng-model="changeUserInfoData.nickname" id="nickname" type="text" class="validate" minlength="4" maxlength="20">
                             <label for="nickname" data-error="nickname 4-20 characters">nickname show in chat list</label>
                         </div>
                     </div>
                     <div class="container">
                         <div class="row center-align">
                             <div class="col s6">
-                                <input name="sex" type="radio" id="sex1" value="1"/>
+                                <input ng-model="changeUserInfoData.gender" name="sex" type="radio" id="sex1" value="1"/>
                                 <label for="sex1">
                                     <div class="chip">
-                                        <img src="images/yuna.jpg" alt="Contact Person">
+                                        <img src="images/avatar/boy.jpg" alt="Contact Person">
                                         Boy
                                     </div>
                                 </label>
                             </div>
                             <div class="col s6">
-                                <input name="sex" type="radio" id="sex0" value="0"/>
-                                <label for="sex0">
+                                <input ng-model="changeUserInfoData.gender" name="sex" type="radio" id="sex2" value="2"/>
+                                <label for="sex2">
                                     <div class="chip">
-                                        <img src="images/yuna.jpg" alt="Contact Person">
+                                        <img src="images/avatar/girl.jpg" alt="Contact Person">
                                         Girl
                                     </div>
                                 </label>
@@ -41,7 +44,7 @@
                     </div>
                     <div class="row"></div>
                     <div class="row center-align">
-                        <a href="javascript:history.back()" class="green waves-effect waves-light btn"><i class="material-icons left">autorenew</i> update </a>
+                        <a ng-click="changeUserInfoSubmit()" class="green waves-effect waves-light btn"><i class="material-icons left">autorenew</i> update </a>
                     </div>
                 </div>
             </div>
