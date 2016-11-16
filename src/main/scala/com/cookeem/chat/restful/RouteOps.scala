@@ -1,11 +1,17 @@
 package com.cookeem.chat.restful
 
+import java.io.File
+import java.nio.file.Paths
+import java.text.SimpleDateFormat
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatchers
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.FileIO
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.event.UserSessionInfo
 import com.cookeem.chat.mongo.MongoLogic._
@@ -14,7 +20,8 @@ import com.cookeem.chat.websocket.ChatSession
 import com.cookeem.chat.websocket.OperateSession._
 import play.api.libs.json.Json
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * Created by cookeem on 16/11/3.
@@ -124,18 +131,52 @@ object RouteOps {
     }
   }
 
-  def routeUserInfoUpdate(implicit ec: ExecutionContext) = post {
+  def routeUserInfoUpdate(implicit ec: ExecutionContext, materializer: ActorMaterializer) = post {
     path("api" / "updateUser") {
       formFieldMap { params =>
         val userTokenStr = paramsGetString(params, "userToken", "")
         val nickname = paramsGetString(params, "nickname", "")
         val gender = paramsGetInt(params, "gender", 0)
         val avatar = paramsGetString(params, "avatar", "")
-        complete {
-          val updateUserInfoResult = updateUserInfoCtl(userTokenStr, nickname, gender, avatar)
-          updateUserInfoResult map { json =>
-            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
-          }
+//        if (avatar != "") {
+//          fileUpload("avatar") {
+//            case (metadata, byteSource) =>
+//              complete {
+//                val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
+//                val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
+//                val path = s"upload/avatar/$path1/$path2"
+//                val dir = new File(path)
+//                if (!dir.exists()) {
+//                  dir.mkdirs()
+//                }
+//                val filenameNew = UUID.randomUUID().toString
+//                val avatar = s"$path/$filenameNew"
+//                for {
+//                  ioResult <- byteSource.runWith(FileIO.toPath(Paths.get(avatar)))
+//                  json <- {
+//                    ioResult.status match {
+//                      case Success(done) =>
+//                        updateUserInfoCtl(userTokenStr, nickname, gender, avatar)
+//                      case Failure(e) =>
+//                        Future(
+//                          Json.obj(
+//                            "errmsg" -> s"upload file error: $e",
+//                            "successmsg" -> ""
+//                          )
+//                        )
+//                    }
+//                  }
+//                } yield {
+//                  HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+//                }
+//              }
+//          }
+//        } else {
+          complete {
+            updateUserInfoCtl(userTokenStr, nickname, gender, avatar).map { json =>
+              HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+            }
+//          }
         }
       }
     }
@@ -147,8 +188,9 @@ object RouteOps {
         val userTokenStr = paramsGetString(params, "userToken", "")
         val oldPwd = paramsGetString(params, "oldPwd", "")
         val newPwd = paramsGetString(params, "newPwd", "")
+        val renewPwd = paramsGetString(params, "renewPwd", "")
         complete {
-          val changePwdResult = changePwdCtl(userTokenStr, oldPwd, newPwd)
+          val changePwdResult = changePwdCtl(userTokenStr, oldPwd, newPwd, renewPwd)
           changePwdResult map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }

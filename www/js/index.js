@@ -2,7 +2,7 @@
  * Created by cookeem on 16/9/27.
  */
 
-var app = angular.module('app', ['ngRoute', 'ngAnimate']);
+var app = angular.module('app', ['ngRoute', 'ngAnimate', 'ngCookies']);
 
 app.config(function($routeProvider, $locationProvider) {
     $routeProvider
@@ -59,7 +59,7 @@ app.config(function($routeProvider, $locationProvider) {
 app.controller('headerCtl', function($rootScope) {
     //sideNav菜单项初始化
     $rootScope.showSideBar = false;
-    //关闭底部footer
+    //Hide footer when init
     $rootScope.showMessageArea = false;
 
     $rootScope.menuItems = [
@@ -82,7 +82,7 @@ app.controller('headerCtl', function($rootScope) {
         {
             "menuName": "ChatSession",
             "url": "#!/chatsession"
-        },
+        }
     ];
 
     $rootScope.accountMenuItems = [
@@ -97,7 +97,7 @@ app.controller('headerCtl', function($rootScope) {
         {
             "menuName": "Logout",
             "url": "#!/logout"
-        },
+        }
     ];
 
     //sideNav初始化
@@ -117,6 +117,7 @@ app.controller('headerCtl', function($rootScope) {
             }
         );
     }
+
 });
 
 app.controller('contentCtl', function($rootScope, $scope, $route, $routeParams, $http) {
