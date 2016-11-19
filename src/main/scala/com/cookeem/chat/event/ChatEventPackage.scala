@@ -3,19 +3,24 @@ package com.cookeem.chat.event
 import akka.actor.ActorRef
 import akka.util.ByteString
 
+import com.cookeem.chat.common.CommonUtils._
+
 /**
   * Created by cookeem on 16/11/2.
   */
-sealed trait ChatEvent
-case class UserOnline(actor: ActorRef) extends ChatEvent
-case object UserOffline extends ChatEvent
 
-case class UserText(uid: String, nickname: String, avatar: String, message: String) extends ChatEvent
-case class UserBinary(uid: String, nickname: String, avatar: String, filepath: String, filename: String, filesize: Long, filetype: String) extends ChatEvent
-case class ClusterText(uid: String, nickname: String, avatar: String, message: String) extends ChatEvent
-case class ClusterBinary(uid: String, nickname: String, avatar: String, filepath: String, filename: String, filesize: Long, filetype: String) extends ChatEvent
+sealed trait WsMessageUp {
+  val uid: String
+}
+case class WsTextUp(uid: String, nickname: String, avatar: String, sessionid: String, msgType: String, content: String) extends WsMessageUp
+case class WsBinaryUp(uid: String, nickname: String, avatar: String, sessionid: String, msgType: String, bs: ByteString, fileName: String, fileSize: Long, fileType: String) extends WsMessageUp
 
-case class UserToken(uid: String, nickname: String, avatar: String)
-case class SessionToken(sessionid: String)
-case class UserSessionInfo(uid: String, nickname: String, avatar: String, sessionid: String)
+sealed trait WsMessageDown
+case class WsTextDown(uid: String, nickname: String, avatar: String, sessionid: String, msgType: String, content: String, dateline: String = timeToStr(System.currentTimeMillis())) extends WsMessageDown
+case class WsBinaryDown(uid: String, nickname: String, avatar: String, sessionid: String, msgType: String, filePath: String, fileName: String, fileSize: Long, fileType: String, fileThumb: String, dateline: String = timeToStr(System.currentTimeMillis())) extends WsMessageDown
 
+case class ClusterText(uid: String, nickname: String, avatar: String, sessionid: String, msgType: String, content: String, dateline: String = timeToStr(System.currentTimeMillis())) extends WsMessageDown
+case class ClusterBinary(uid: String, nickname: String, avatar: String, sessionid: String, msgType: String, filePath: String, fileName: String, fileSize: Long, fileType: String, fileThumb: String, dateline: String = timeToStr(System.currentTimeMillis())) extends WsMessageDown
+
+case class UserOnline(actor: ActorRef) extends WsMessageDown
+case object UserOffline extends WsMessageDown

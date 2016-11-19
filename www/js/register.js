@@ -28,17 +28,21 @@ app.controller('registerAppCtl', function($rootScope, $scope, $cookies, $timeout
             console.log(response.data);
             if (response.data.errmsg) {
                 $rootScope.errmsg = response.data.errmsg;
-                Materialize.toast("error: " + $rootScope.errmsg, 4000);
+                Materialize.toast("error: " + $rootScope.errmsg, 3000);
             } else {
-                var expiresDate = new Date();
+                $rootScope.uid = response.data.uid;
+                $rootScope.userToken = response.data.token;
                 //cookies will expires after 15 minutes
+                var expiresDate = new Date();
                 expiresDate.setTime(expiresDate.getTime() + 15 * 60 * 1000);
-                $cookies.put('uid', response.data.uid, {'expires': expiresDate});
-                $cookies.put('userToken', response.data.token, {'expires': expiresDate});
+                $cookies.put('uid', $rootScope.uid, {'expires': expiresDate});
+                $cookies.put('userToken', $rootScope.userToken, {'expires': expiresDate});
 
                 $rootScope.successmsg = response.data.successmsg;
-                Materialize.toast($rootScope.successmsg, 4000);
-                window.location.href = '#!/chatlist';
+                Materialize.toast($rootScope.successmsg, 3000);
+
+                //redirect url
+                window.location.href = '#!/chatlist/public';
             }
         }, function errorCallback(response) {
             console.info("error:" + response.data);

@@ -14,26 +14,37 @@
     <link href="fonts/fonts.css" rel="stylesheet">
 
     <!--materialize css-->
-    <link href="node_modules/materialize-css/dist/css/materialize.min.css" rel="stylesheet">
+    <link href="jslib/materialize.min.css" rel="stylesheet">
 
     <!--main style sheet-->
     <link href="css/index.css" rel="stylesheet">
 </head>
 <body ng-app="app" ng-class="animation">
 <header ng-controller="headerCtl">
-    <!--顶部导航栏-->
+    <ul id="topDropDown" class="dropdown-content">
+        <li><a class="green-text" data-target="modalCreateSession">Create group chat</a></li>
+        <li class="divider"></li>
+        <li><a href="#!/changepwd" class="blue-text">Change pwd</a></li>
+        <li><a href="#!/changeinfo" class="blue-text">Set profile</a></li>
+        <li class="divider"></li>
+        <li><a href="#!/logout" class="red-text">Logout</a></li>
+    </ul>
+    <!-- top navbar-->
     <nav id="top-navbar">
         <div class="nav-wrapper yellow">
             <a ng-show="showNavbar" href="#" data-activates="nav-mobile" class="button-collapse hide-on-large-only text-black">
                 <i class="material-icons black-text">menu</i>
             </a>
-
             <div class="center-align">
                 <a class="black-text"><img src="images/favicon.ico" class="top-navbar-icon">CookIM</a>
+                <ul class="right">
+                    <!-- Dropdown Trigger -->
+                    <li><a class="dropdown-button black-text" href="#!" data-activates="topDropDown">Account Menu<i class="material-icons right">arrow_drop_down</i></a></li>
+                </ul>
             </div>
         </div>
     </nav>
-    <!--左侧导航菜单-->
+    <!-- sidebar -->
     <ul ng-show="showNavbar" id="nav-mobile" class="side-nav fixed">
         <li class="no-padding">
             <ul class="collapsible collapsible-accordion">
@@ -49,7 +60,7 @@
             </ul>
             <ul class="collapsible collapsible-accordion">
                 <li class="bold yellow">
-                    <a class="collapsible-header active waves-effect waves-light"><i class="material-icons">people</i>Account menu</a>
+                    <a class="collapsible-header active waves-effect waves-light"><i class="material-icons">people</i>Joined Chat</a>
                     <div class="collapsible-body" style="">
                         <ul>
                             <li ng-repeat="menuItem in accountMenuItems"><a href="{{menuItem.url}}" class="black-text">{{menuItem.menuName}} &nbsp; <span class="chip red white-text">10</span></a>
@@ -62,6 +73,39 @@
     </ul>
 </header>
 <main ng-controller="contentCtl">
+    <!--modal create session-->
+    <div id="modalCreateSession" class="modal">
+        <div class="modal-content">
+            <div>
+                <div class="row">
+                    <div class="input-field col s12 center-align">
+                        <div class="col s4 offset-s4 m4 offset-m4 l4 offset-l4">
+                            <img src="images/avatar/unknown.jpg" alt="" id="chatIcon" class="circle responsive-img" onclick="$('#chatIconInput').click();">
+                            <input id="chatIconInput" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="showChatIcon(this);">
+                        </div>
+                    </div>
+                    <div class="center-align">Select chat avatar</div>
+
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">chat</i>
+                        <input ng-model="sessionData.name" id="name" type="text" class="validate" minlength="3" maxlength="32">
+                        <label for="name" data-error="name at least 8 characters">chat description, at least 3 characters</label>
+                    </div>
+
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">visibility</i>
+                        <input ng-model="sessionData.publictype" type="checkbox" id="publictype" />
+                        <label for="publictype">public chat</label>
+                    </div>
+                </div>
+                <div class="row"></div>
+                <div class="row center-align">
+                    <a ng-click="createSessionSubmit()" class="modal-action waves-effect waves-green btn">Create group chat</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--main content-->
     <div id="main-content" class="col s12" style="padding: 20px;">
         <div ng-if="isLoading == true" class="row center spinner-fade">
             <div class="preloader-wrapper big active">
@@ -111,6 +155,9 @@
             </div>
         </div>
     </div>
+    <div id="ws-log" class="row">
+
+    </div>
 </main>
 <footer ng-if="showMessageArea" class="page-footer yellow bottom-fixed" style="padding-top: 0;">
     <div class="row" style="margin-bottom: 0">
@@ -127,10 +174,10 @@
         </div>
         <div class="input-field col s8 right-align">
             <!--<input type="text">-->
-            <textarea id="textarea1" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
+            <textarea id="messageContent" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
         </div>
         <div class="input-field col s2 center-align">
-            <a class="btn-floating waves-effect waves-light black"><i class="material-icons">send</i></a>
+            <a ng-click="sendChatMessage()" class="btn-floating waves-effect waves-light black"><i class="material-icons">send</i></a>
         </div>
     </div>
 </footer>
@@ -145,14 +192,14 @@
 <!--jquery js-->
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 
+<!-- materialize js -->
+<script src="jslib/materialize.min.js"></script>
+
 <!-- angular js -->
 <script src="node_modules/angular/angular.min.js"></script>
 <script src="node_modules/angular-route/angular-route.min.js"></script>
 <script src="node_modules/angular-animate/angular-animate.min.js"></script>
 <script src="node_modules/angular-cookies/angular-cookies.min.js"></script>
-
-<!-- materialize js -->
-<script src="node_modules/materialize-css/dist/js/materialize.min.js"></script>
 
 <!--app script-->
 <script src="js/index.js"></script>

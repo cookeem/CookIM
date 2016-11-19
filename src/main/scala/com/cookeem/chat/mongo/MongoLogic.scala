@@ -3,7 +3,6 @@ package com.cookeem.chat.mongo
 import java.util.Date
 
 import com.cookeem.chat.common.CommonUtils._
-import com.cookeem.chat.event._
 import com.cookeem.chat.jwt.JwtOps._
 import com.cookeem.chat.mongo.MongoOps._
 import reactivemongo.api.collections.bson.BSONCollection
@@ -31,11 +30,6 @@ object MongoLogic {
   implicit def fileInfoHandler = Macros.handler[FileInfo]
   implicit def messageHandler = Macros.handler[Message]
   implicit def onlineHandler = Macros.handler[Online]
-
-  createUsersCollection()
-  createSessionsCollection()
-  createMessagesCollection()
-  createOnlinesCollection()
 
   //create users collection and index
   def createUsersCollection(): Future[String] = {
@@ -320,26 +314,27 @@ object MongoLogic {
   }
 
   //create a new group session
-  def createGroupSession(uid: String, sessiontype: Int, visabletype: Int, jointype: Int, name: String): Future[(String, String)] = {
+  def createGroupSession(uid: String, chaticon: String, publictype: Int, name: String): Future[(String, String)] = {
     var errmsg = ""
     val selector = document("_id" -> uid)
+    val sessiontype = 1
     for {
       user <- findCollectionOne[User](usersCollection, selector)
       (sessionid, errmsg) <- {
         if (user == null) {
           errmsg = "user not exists"
           Future("", errmsg)
-        } else if (!(sessiontype == 0 || sessiontype == 1)) {
-          errmsg = "sessiontype error"
+        } else if (name.length < 3) {
+          errmsg = "session desc must at least 3 character"
           Future("", errmsg)
-        } else if (!(visabletype == 0 || visabletype == 1)) {
-          errmsg = "visabletype error"
+        } else if (!(publictype == 0 || publictype == 1)) {
+          errmsg = "publictype error"
           Future("", errmsg)
-        } else if (!(jointype == 0 || jointype == 1)) {
-          errmsg = "jointype error"
+        } else if (chaticon.length < 6) {
+          errmsg = "please select chat icon"
           Future("", errmsg)
         } else {
-          val newSession = Session("", senduid = uid, recvuid = "", sessiontype, visabletype, jointype, name)
+          val newSession = Session("", senduid = uid, recvuid = "", chaticon, sessiontype, publictype, name)
           val insRet = insertCollection[Session](sessionsCollection, newSession)
           for {
             (sessionid, errormsg) <- insRet
@@ -389,7 +384,7 @@ object MongoLogic {
           if (session != null) {
             ret = Future(session._id, "")
           } else {
-            val newSession = Session("", senduid = uid, recvuid = "", sessiontype = 0, visabletype = 0, jointype = 0, name = "")
+            val newSession = Session("", senduid = uid, recvuid = "", chaticon = "", sessiontype = 0, publictype = 0, name = "")
             ret = insertCollection[Session](sessionsCollection, newSession)
             for {
               (sessionid, errmsg) <- ret
@@ -436,20 +431,17 @@ object MongoLogic {
   }
 
   //update session info
-  def updateSessionInfo(sessionid: String, uid: String, visabletype: Int, jointype: Int, name: String): Future[UpdateResult] = {
+  def updateSessionInfo(sessionid: String, uid: String, publictype: Int, name: String): Future[UpdateResult] = {
     var errmsg = ""
     var update = document()
-    if (!(visabletype == 0 || visabletype == 1)) {
-      errmsg = "visabletype error"
-    } else if (!(jointype == 0 || jointype == 1)) {
-      errmsg = "jointype error"
+    if (!(publictype == 0 || publictype == 1)) {
+      errmsg = "publictype error"
     } else if (name == "") {
       errmsg = "name can not be empty"
     } else {
       update = document(
         "$set" -> document(
-          "visabletype" -> visabletype,
-          "jointype" -> jointype,
+          "publictype" -> publictype,
           "name" -> name
         )
       )
@@ -544,8 +536,8 @@ object MongoLogic {
     }
   }
 
-  //list all session public and user not joined yet
-  def listPublicSessions(uid: String, page: Int = 1, count: Int = 10): Future[List[Session]] = {
+  //list all session, showType: (0: private, 1:group , 2:all)
+  def listSessions(uid: String, isPublic: Boolean, showType: Int = 2, page: Int = 1, count: Int = 10): Future[List[Session]] = {
     for {
       user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
       sessions <- {
@@ -556,55 +548,32 @@ object MongoLogic {
           sessionids.foreach { sessionid =>
             ba = ba.merge(sessionid)
           }
-          val selector = document(
-            "visabletype" -> 1,   //visabletype（可见类型：0：不可见，1：公开可见）
-            "jointype" -> 0,      //jointype（加入类型：0：所有人可以加入，1：群里用户邀请才能加入）
-            "sessiontype" -> 1,   //sessiontype（会话类型：0：私聊，1：群聊）
-            "_id" -> document(
-              "$nin" -> ba
+          var selector = document()
+          if (isPublic) {
+            selector = document(
+              "publictype" -> 1,
+              "sessiontype" -> 1,
+              "_id" -> document(
+                "$nin" -> ba
+              )
             )
-          )
+          } else {
+            var selector = document(
+              "_id" -> document(
+                "$in" -> ba
+              )
+            )
+            showType match {
+              case 0 =>
+                selector = selector.merge(document("sessiontype" -> 0))
+              case 1 =>
+                selector = selector.merge(document("sessiontype" -> 1))
+              case _ =>
+            }
+          }
           if (ba.size > 0) {
             sessions = findCollection[Session](sessionsCollection, selector, sort = document("dateline" -> -1), page = page, count = count)
           }
-        }
-        sessions
-      }
-    } yield {
-      sessions
-    }
-  }
-
-
-  // list my sessions, showType: (0: private, 1:group , 2:all)
-  def listJoinedSessions(uid: String, showType: Int, page: Int = 1, count: Int = 10): Future[List[Session]] = {
-    for {
-      user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
-      sessions <- {
-        val sessionids = if (user == null) {
-          List[String]()
-        } else {
-          user.sessionsstatus.map(_.sessionid)
-        }
-        var ba = array()
-        sessionids.foreach { sessionid =>
-          ba = ba.merge(sessionid)
-        }
-        var selector = document(
-          "_id" -> document(
-            "$in" -> ba
-          )
-        )
-        showType match {
-          case 0 =>
-            selector = selector.merge(document("sessiontype" -> 0))
-          case 1 =>
-            selector = selector.merge(document("sessiontype" -> 1))
-          case _ =>
-        }
-        var sessions = Future(List[Session]())
-        if (ba.size > 0) {
-          sessions = findCollection[Session](sessionsCollection, selector, sort = document("dateline" -> -1), page = page, count = count)
         }
         sessions
       }
@@ -622,7 +591,7 @@ object MongoLogic {
       if (user != null && session != null) {
         ""
       } else {
-        "no privilege to send message in this session"
+        "no privilege in this session"
       }
     }
   }
@@ -698,7 +667,7 @@ object MongoLogic {
   }
 
   //list history messages
-  def listHistoryMessages(uid: String, sessionid: String, page: Int = 1, count: Int = 10, sort: BSONDocument): Future[List[Message]] = {
+  def listHistoryMessages(uid: String, sessionid: String, page: Int = 1, count: Int = 10, sort: BSONDocument): Future[(String, List[(Message, User)])] = {
     for {
       errmsg <- verifySession(uid, sessionid)
       messages <- {
@@ -708,8 +677,17 @@ object MongoLogic {
         }
         messages
       }
+      listMessageUser <- {
+        Future.sequence(
+          messages.map { message =>
+            findCollectionOne[User](usersCollection, document("_id" -> message.senduid)).map { user =>
+              (message, user)
+            }
+          }
+        )
+      }
     } yield {
-      messages
+      (errmsg, listMessageUser)
     }
   }
 

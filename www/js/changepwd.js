@@ -10,18 +10,13 @@ app.controller('changePwdAppCtl', function($rootScope, $scope, $cookies, $timeou
         showHideSideBar($rootScope.showNavbar);
     }, 0);
 
-    var cookie_userToken = "";
-    if ($cookies.get('userToken')) {
-        cookie_userToken = $cookies.get('userToken');
-    } else {
-        Materialize.toast('please login first', 4000);
-        window.location.href = '#!/login';
-    }
+    $rootScope.verifyUserToken();
+
     $scope.changePwdData = {
         "oldPwd": "",
         "newPwd": "",
         "renewPwd": "",
-        "userToken": cookie_userToken
+        "userToken": $rootScope.userToken
     };
 
     $scope.changePwdSubmit = function() {
@@ -34,11 +29,11 @@ app.controller('changePwdAppCtl', function($rootScope, $scope, $cookies, $timeou
             console.log(response.data);
             if (response.data.errmsg) {
                 $rootScope.errmsg = response.data.errmsg;
-                Materialize.toast("error: " + $rootScope.errmsg, 4000);
+                Materialize.toast("error: " + $rootScope.errmsg, 3000);
             } else {
                 $rootScope.successmsg = response.data.successmsg;
-                Materialize.toast($rootScope.successmsg, 4000);
-                window.location.href = '#!/chatlist';
+                Materialize.toast($rootScope.successmsg, 3000);
+                window.location.href = '#!/chatlist/joined';
             }
         }, function errorCallback(response) {
             console.info("error:" + response.data);

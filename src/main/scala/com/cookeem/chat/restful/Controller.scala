@@ -2,8 +2,8 @@ package com.cookeem.chat.restful
 
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.mongo.MongoLogic._
-import com.cookeem.chat.jwt.JwtOps._
-import play.api.libs.json.{JsArray, JsNull, JsObject, Json}
+import play.api.libs.json._
+import reactivemongo.bson._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,6 +40,17 @@ object Controller {
         )
       }
     }
+  }
+
+  def verifyUserTokenCtl(userTokenStr: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    Future(
+      Json.obj(
+        "uid" -> userToken.uid,
+        "nickname" -> userToken.nickname,
+        "avatar" -> userToken.avatar
+      )
+    )
   }
 
   def loginCtl(login: String, password: String)(implicit ec: ExecutionContext): Future[JsObject] = {
@@ -172,43 +183,137 @@ object Controller {
     }
   }
 
-
-  def listPublicSessionsCtl(userTokenStr: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+  def createGroupSessionCtl(userTokenStr: String, chaticon: String, publictype: Int, name: String)(implicit ec: ExecutionContext) = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
       Future(
         Json.obj(
-          "errmsg" -> "no privilege to list public sessions",
+          "sessionid" -> "",
+          "errmsg" -> "no privilege to create group session",
+          "successmsg" -> ""
+        )
+      )
+    } else {
+      val uid = userToken.uid
+      createGroupSession(uid, chaticon, publictype, name).map { case (sessionid, errmsg) =>
+        if (errmsg != "") {
+          Json.obj(
+            "sessionid" -> sessionid,
+            "errmsg" -> errmsg,
+            "successmsg" -> ""
+          )
+        } else {
+          Json.obj(
+            "sessionid" -> sessionid,
+            "errmsg" -> errmsg,
+            "successmsg" -> "create group session success"
+          )
+        }
+      }
+    }
+  }
+
+  def createUserTokenCtl(userTokenStr: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    if (userToken.uid == "") {
+      Future(
+        Json.obj(
+          "errmsg" -> "no privilege to create user token",
+          "uid" -> "",
+          "userToken" -> ""
+        )
+      )
+    } else {
+      val uid = userToken.uid
+      createUserToken(uid).map { newUserTokenStr =>
+        if (newUserTokenStr == "") {
+          Json.obj(
+            "errmsg" -> "no privilege to create user token",
+            "uid" -> "",
+            "userToken" -> ""
+          )
+        } else {
+          Json.obj(
+            "errmsg" -> "",
+            "uid" -> uid,
+            "userToken" -> newUserTokenStr
+          )
+        }
+      }
+    }
+  }
+
+  def createSessionTokenCtl(userTokenStr: String, sessionid: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    if (userToken.uid == "") {
+      Future(
+        Json.obj(
+          "errmsg" -> "no privilege to create session token",
+          "sessionToken" -> ""
+        )
+      )
+    } else {
+      val uid = userToken.uid
+      createSessionToken(uid, sessionid).map { newSessionTokenStr =>
+        if (newSessionTokenStr == "") {
+          Json.obj(
+            "errmsg" -> "no privilege to create session token",
+            "sessionToken" -> ""
+          )
+        } else {
+          Json.obj(
+            "errmsg" -> "",
+            "sessionToken" -> newSessionTokenStr
+          )
+        }
+      }
+    }
+  }
+
+  def listSessionsCtl(userTokenStr: String, isPublic: Boolean, showType: Int = 2, page: Int = 1, count: Int = 10)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    if (userToken.uid == "") {
+      Future(
+        Json.obj(
+          "errmsg" -> "no privilege to list sessions",
           "successmsg" -> "",
           "sessions" -> JsArray()
         )
       )
     } else {
       val uid = userToken.uid
-      listPublicSessions(uid).map { sessions =>
+      listSessions(uid, isPublic, showType, page, count).map { sessions =>
         val lastMessages = sessions.map { session =>
           getSessionLastMessage(userTokenStr, session._id).map { case (sessionLast, messageLast, userLast) =>
-            Json.obj(
-              "sessionid" -> session._id,
-              "sessionname" -> session.name,
-              "jointype" -> session.jointype,
-              "sessiontype" -> session.sessiontype,
-              "visabletype" -> session.visabletype,
-              "dateline" -> timeToStr(session.dateline),
-              "message" -> Json.obj(
+            var jsonMessage: JsValue = JsNull
+            if (messageLast != null && userLast != null) {
+              var jsonFileInfo: JsValue = JsNull
+              if (messageLast.fileinfo != null) {
+                jsonFileInfo = Json.obj(
+                  "filepath" -> messageLast.fileinfo.filepath,
+                  "filename" -> messageLast.fileinfo.filename,
+                  "filetype" -> messageLast.fileinfo.filetype,
+                  "size" -> messageLast.fileinfo.size
+                )
+              }
+              jsonMessage = Json.obj(
                 "uid" -> userLast._id,
                 "nickname" -> userLast.nickname,
                 "avatar" -> userLast.avatar,
                 "msgtype" -> messageLast.msgtype,
                 "noticetype" -> messageLast.noticetype,
                 "message" -> messageLast.message,
-                "fileinfo" -> Json.obj(
-                  "filepath" -> messageLast.fileinfo.filepath,
-                  "filename" -> messageLast.fileinfo.filename,
-                  "filetype" -> messageLast.fileinfo.filetype,
-                  "size" -> messageLast.fileinfo.size
-                )
+                "fileinfo" -> jsonFileInfo
               )
+            }
+            Json.obj(
+              "sessionid" -> session._id,
+              "name" -> session.name,
+              "sessiontype" -> session.sessiontype,
+              "chaticon" -> session.chaticon,
+              "publictype" -> session.publictype,
+              "dateline" -> timeToStr(session.dateline),
+              "message" -> jsonMessage
             )
           }
         }
@@ -219,6 +324,70 @@ object Controller {
           "successmsg" -> "get public session success",
           "sessions" -> sessions
         )
+      }
+    }
+  }
+
+  def listMessagesCtl(userTokenStr: String, sessionid: String, page: Int = 1, count: Int = 10)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    if (userToken.uid == "") {
+      Future(
+        Json.obj(
+          "errmsg" -> "no privilege to list session messages",
+          "sessionToken" -> "",
+          "messages" -> JsArray()
+        )
+      )
+    } else {
+      val uid = userToken.uid
+      for {
+        sessionToken <- createSessionToken(uid, sessionid)
+        ret <- {
+          listHistoryMessages(uid, sessionid, page, count, sort = document("dateline" -> -1)).map { case (errmsg, messageUsers) =>
+            var token = ""
+            if (errmsg == "") {
+              token = sessionToken
+            }
+            Json.obj(
+              "errmsg" -> errmsg,
+              "sessionToken" -> token,
+              "messages" -> messageUsers.map { case (message, user) =>
+                var jsonFileInfo: JsValue = JsNull
+                if (message.fileinfo != null) {
+                  jsonFileInfo = Json.obj(
+                    "filepath" -> message.fileinfo.filepath,
+                    "filename" -> message.fileinfo.filename,
+                    "filetype" -> message.fileinfo.filetype,
+                    "size" -> message.fileinfo.size
+                  )
+                }
+                if (user != null) {
+                  Json.obj(
+                    "uid" -> user._id,
+                    "nickname" -> user.nickname,
+                    "avatar" -> user.avatar,
+                    "msgtype" -> message.msgtype,
+                    "noticetype" -> message.noticetype,
+                    "message" -> message.message,
+                    "fileinfo" -> jsonFileInfo
+                  )
+                } else {
+                  Json.obj(
+                    "uid" -> "",
+                    "nickname" -> "",
+                    "avatar" -> "",
+                    "msgtype" -> message.msgtype,
+                    "noticetype" -> message.noticetype,
+                    "message" -> message.message,
+                    "fileinfo" -> jsonFileInfo
+                  )
+                }
+              }
+            )
+          }
+        }
+      } yield {
+        ret
       }
     }
   }
