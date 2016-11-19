@@ -14,7 +14,7 @@
     "angular-cookies": "1.5.8",
     "jquery": "3.1.0",
     "spark-md5": "2.0.2",
-    "materialize-css": "0.97.7",
+    "materialize-css": "0.97.8",
     "font-awesome": "4.6.3"
   },
   "author": "cookeem",

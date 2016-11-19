@@ -7,57 +7,97 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatchers
+import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import com.cookeem.chat.common.CommonUtils._
-import com.cookeem.chat.event.UserSessionInfo
 import com.cookeem.chat.mongo.MongoLogic._
 import com.cookeem.chat.restful.Controller._
-import com.cookeem.chat.websocket.ChatSession
-import com.cookeem.chat.websocket.OperateSession._
+import com.cookeem.chat.websocket.ChatSessionGraph._
+import com.sksamuel.scrimage.Image
+import com.sksamuel.scrimage.nio.PngWriter
+import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.duration._
 
 /**
   * Created by cookeem on 16/11/3.
   */
 object RouteOps {
+  //init create mongodb collection
+  createUsersCollection()
+  createSessionsCollection()
+  createMessagesCollection()
+  createOnlinesCollection()
 
   def routeLogic(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
     routeWebsocket ~
     routeAsset ~
     routeUserRegister ~
+    routeVerifyUserToken ~
     routeUserLogin ~
     routeUserLogout ~
     routeUserInfoUpdate ~
     routeUserPwdChange ~
     routeGetUserInfo ~
-    routeListPublicSessions
+    routeCreateGroupSession ~
+    routeListSessions ~
+    routeListMessages
+  }
+
+  //mix multiform to Future[Map[String, String]]. if include file upload, save to pathroot and return path
+  def multiPartExtract(formData: Multipart.FormData, pathRoot: String)(implicit ec: ExecutionContext, materializer: ActorMaterializer): Future[Map[String, String]] = {
+    formData.parts.map { part =>
+      if (part.filename.isDefined) {
+        val fileInfo = FileInfo(part.name, part.filename.get, part.entity.contentType)
+        val contentType = fileInfo.contentType.value
+        val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
+        val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
+        val path = s"$pathRoot/$path1/$path2"
+        val dir = new File(path)
+        if (!dir.exists()) {
+          dir.mkdirs()
+        }
+        val filenameNew = UUID.randomUUID().toString
+        var avatarPath = s"$path/$filenameNew"
+        if (contentType == "image/jpeg" || contentType == "image/gif" || contentType == "image/png") {
+          avatarPath = s"$avatarPath.${contentType.replace("image/", "")}.thumb.png"
+        } else {
+          avatarPath = ""
+        }
+        part.entity.dataBytes.runWith(FileIO.toPath(Paths.get(avatarPath))).map { _ =>
+          try {
+            if (contentType == "image/jpeg" || contentType == "image/gif" || contentType == "image/png") {
+              //crop and resize image
+              implicit val writer = PngWriter.NoCompression
+              val bytesImage = Image.fromFile(new File(avatarPath)).cover(200, 200).bytes
+              FileUtils.writeByteArrayToFile(new File(avatarPath), bytesImage)
+            }
+            avatarPath = s"/$avatarPath"
+          } catch { case e: Throwable =>
+            consoleLog("ERROR", s"images process error: $e")
+            avatarPath = ""
+          }
+          (part.name, avatarPath)
+        }
+      } else {
+        part.entity.toStrict(5.seconds).map(e => (part.name, e.data.utf8String))
+      }
+    }.mapAsync[(String, String)](1)(t => t).runFold(Map[String, String]())(_ + _)
   }
 
   def routeWebsocket(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
     get {
-      pathPrefix("ws-chat" / Segment) { userToken =>
-        path(PathMatchers.Segment) { sessionToken =>
-          val UserSessionInfo(uid, nickname, avatar, sessionid) = verifyUserSessionToken(userToken, sessionToken)
-          if (uid != "" && sessionid != "") {
-            val chatSession = new ChatSession(uid, nickname, avatar, sessionid)
-            handleWebSocketMessages(chatSession.chatService(uid, nickname, avatar))
-          } else {
-            handleWebSocketMessages(rejectWebsocket())
-          }
-        }
-      } ~ pathPrefix("ws-user" / Segment) { uid =>
-        handleWebSocketMessages(createUserTokenWebsocket(uid))
-      } ~ pathPrefix("ws-session" / Segment) { uid =>
-        path(PathMatchers.Segment) { sessionid =>
-          handleWebSocketMessages(createSessionTokenWebsocket(uid, sessionid))
-        }
+      path("ws-chat") {
+        handleWebSocketMessages(chatGraph())
+      } ~ path("ws-user") {
+        handleWebSocketMessages(createUserTokenWebsocket())
+      } ~ path("ws-session") {
+        handleWebSocketMessages(createSessionTokenWebsocket())
       }
     }
   }
@@ -72,6 +112,8 @@ object RouteOps {
         getFromFile("www/index.html")
       } ~ pathPrefix("chat") {
         getFromDirectory("www")
+      } ~ pathPrefix("upload") {
+        getFromDirectory("upload")
       } ~ path("ping") {
         val headers = List(
           RawHeader("X-MyObject-Id", "myobjid"),
@@ -95,6 +137,20 @@ object RouteOps {
         complete {
           val registerUserResult = registerUserCtl(login, nickname, password, repassword, gender)
           registerUserResult map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeVerifyUserToken(implicit ec: ExecutionContext) = post {
+    path("api" / "verifyUserToken") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        complete {
+          val verifyUserTokenResult = verifyUserTokenCtl(userTokenStr)
+          verifyUserTokenResult map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -133,50 +189,20 @@ object RouteOps {
 
   def routeUserInfoUpdate(implicit ec: ExecutionContext, materializer: ActorMaterializer) = post {
     path("api" / "updateUser") {
-      formFieldMap { params =>
-        val userTokenStr = paramsGetString(params, "userToken", "")
-        val nickname = paramsGetString(params, "nickname", "")
-        val gender = paramsGetInt(params, "gender", 0)
-        val avatar = paramsGetString(params, "avatar", "")
-//        if (avatar != "") {
-//          fileUpload("avatar") {
-//            case (metadata, byteSource) =>
-//              complete {
-//                val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
-//                val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
-//                val path = s"upload/avatar/$path1/$path2"
-//                val dir = new File(path)
-//                if (!dir.exists()) {
-//                  dir.mkdirs()
-//                }
-//                val filenameNew = UUID.randomUUID().toString
-//                val avatar = s"$path/$filenameNew"
-//                for {
-//                  ioResult <- byteSource.runWith(FileIO.toPath(Paths.get(avatar)))
-//                  json <- {
-//                    ioResult.status match {
-//                      case Success(done) =>
-//                        updateUserInfoCtl(userTokenStr, nickname, gender, avatar)
-//                      case Failure(e) =>
-//                        Future(
-//                          Json.obj(
-//                            "errmsg" -> s"upload file error: $e",
-//                            "successmsg" -> ""
-//                          )
-//                        )
-//                    }
-//                  }
-//                } yield {
-//                  HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
-//                }
-//              }
-//          }
-//        } else {
-          complete {
+      entity(as[Multipart.FormData]) { formData =>
+        //mix file upload and text formdata to Map[String, String]
+        val futureParams: Future[Map[String, String]] = multiPartExtract(formData, "upload/avatar")
+        complete {
+          // complete support nest future
+          futureParams.map { params =>
+            val userTokenStr = paramsGetString(params, "userToken", "")
+            val nickname = paramsGetString(params, "nickname", "")
+            val gender = paramsGetInt(params, "gender", 0)
+            val avatar = paramsGetString(params, "avatar", "")
             updateUserInfoCtl(userTokenStr, nickname, gender, avatar).map { json =>
               HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
             }
-//          }
+          }
         }
       }
     }
@@ -214,13 +240,58 @@ object RouteOps {
     }
   }
 
-  def routeListPublicSessions(implicit ec: ExecutionContext) = post {
-    path("api" / "listPublicSessions") {
+  def routeCreateGroupSession(implicit ec: ExecutionContext, materializer: ActorMaterializer) = post {
+    path("api" / "createGroupSession") {
+      entity(as[Multipart.FormData]) { formData =>
+        //mix file upload and text formdata to Map[String, String]
+        val futureParams: Future[Map[String, String]] = multiPartExtract(formData, "upload/avatar")
+        complete {
+          // complete support nest future
+          futureParams.map { params =>
+            val userTokenStr = paramsGetString(params, "userToken", "")
+            val publictype = paramsGetInt(params, "publictype", 0)
+            val name = paramsGetString(params, "name", "")
+            val chaticon = paramsGetString(params, "chaticon", "")
+            createGroupSessionCtl(userTokenStr, chaticon, publictype, name).map { json =>
+              HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def routeListSessions(implicit ec: ExecutionContext) = post {
+    path("api" / "listSessions") {
       formFieldMap { params =>
         val userTokenStr = paramsGetString(params, "userToken", "")
+        val isPublic = paramsGetInt(params, "isPublic", 0) match {
+          case 1 => true
+          case _ => false
+        }
+        val showType = paramsGetInt(params, "showType", 0)
+        val page = paramsGetInt(params, "page", 0)
+        val count = paramsGetInt(params, "count", 0)
         complete {
-          val listPublicSessionsResult = listPublicSessionsCtl(userTokenStr)
-          listPublicSessionsResult map { json =>
+          val listSessionsResult = listSessionsCtl(userTokenStr, isPublic, showType, page, count)
+          listSessionsResult map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeListMessages(implicit ec: ExecutionContext) = post {
+    path("api" / "listMessages") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        val page = paramsGetInt(params, "page", 0)
+        val count = paramsGetInt(params, "count", 0)
+        complete {
+          val listMessagesResult = listMessagesCtl(userTokenStr, sessionid, page, count)
+          listMessagesResult map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }

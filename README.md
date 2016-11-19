@@ -50,9 +50,9 @@ sessions： 会话表（记录所有群聊私聊的会话信息）
 ```
 *senduid（创建者的uid）
 *recvuid（接收者的uid，只有当私聊的时候才有效）
+chaticon（会话的icon，对于群聊有效）
 sessiontype（会话类型：0：私聊，1：群聊）
-visabletype（可见类型：0：不可见，1：公开可见）
-jointype（加入类型：0：所有人可以加入，1：群里用户邀请才能加入）
+publictype（可见类型：0：不公开邀请才能加入，1：公开）
 name（群描述）
 dateline（创建日期，timestamp）
 usersstatus（会话对应的用户uuid数组：[{uid: 用户uuid, online: 是否在线（true：在线，false：离线）}]）
@@ -148,108 +148,34 @@ SessionTokenChannel：当用户打开某个会话页面的时候，从服务端�
 MessageChannel：用于接收用户消息，以及向用户发送消息。当用户向服务端发送消息的时候，必须提供UserToken以及SessionToken，当这两个token验证都通过的情况下，用户可以发送消息，否则拒绝用户发送消息，并回送错误消息给用户。
 
 # MessageChannel消息
-## browser -> cluster（上行）
-## （消息中必须包含UserToken以及SessionToken，用于验证权限，如果鉴权失败，则下发Notice(reject)）
-用户进入会话（UserOnline）
+```
+/ws-user channel
+上行：
+{ userToken: "xxx"}
+下行：
+{ errmsg: "xxx", userToken: "xxx", uid: "xxx"}
+```
 ---
-先验证userToken以及sessionToken，如果不通过，则让actorRef关闭。
-如果通过，则设置对应的sessions.usersstatus以及users.sessionsstatus，并把Notice(online)发送到各个节点,
-
-用户离开会话（UserOffline）
+```
+/ws-session channel
+上行：
+{ userToken: "xxx", sessionid: "xxx"}
+下行：
+{ errmsg: "xxx", sessionToken: "xxx"}
+```
 ---
-设置对应的sessions.usersstatus以及users.sessionsstatus
-
-用户发送文本消息（UserText）
----
-用户发送文件消息（UserBinary），把文件信息放到UserBinary中
----
-{
-    "userToken": "",
-    "sessionToken": "",
-    "fileInfo": {
-        "fileName": "",
-        "fileSize": 0,
-        "fileType": ""
-    }
-}<#fileInfo#>Binary
-## cluster -> browser（下行）
-向用户下发的文字消息（ChatText），保存对应的messages，更新users.sessionsstatus
-{
-    "uid": "",
-    "nickname": "",
-    "avatar": "",
-    "msgType": "text",
-    "time": "",
-    "message": ""
-}
-集群间发布的消息（ClusterText），用于集群间的订阅发布
-{
-    "uid": "",
-    "nickname": "",
-    "avatar": "",
-    "msgType": "text",
-    "time": "",
-    "message": ""
-}
-向用户下发的文件消息（ChatBinaryInfo），保存对应的messages，更新users.sessionsstatus
-{
-    "uid": "",
-    "nickname": "",
-    "avatar": "",
-    "msgType": "binary",
-    "time": "",
-    "fileInfo": {
-        "filePath": "",
-        "fileName": "",
-        "fileSize": 0,
-        "fileType": ""
-    }
-}
-集群间发布的消息（ClusterBinaryInfo），用于集群间的订阅发布
-{
-    "uid": "",
-    "nickname": "",
-    "avatar": "",
-    "msgType": "binary",
-    "time": "",
-    "fileInfo": {
-        "filePath": "",
-        "fileName": "",
-        "fileSize": 0,
-        "fileType": ""
-    }
-}
-由系统下发消息（ChatNotice）
-{
-    "uid": "",
-    "nickname": "system",
-    "avatar": "",
-    "msgType": "notice",
-    "noticeType": "reject",  //reject, online, offline, join, leave, keepAlive
-    "time": "",
-    "message": ""
-}
-集群间发布的系统消息（ClusterNotice），用于集群间的订阅发布
-{
-    "uid": "",
-    "nickname": "system",
-    "avatar": "",
-    "msgType": "notice",
-    "noticeType": "reject",  //reject, online, offline, join, leave, keepAlive
-    "time": "",
-    "message": ""
-}
-
-## cluster -> browser（下行keepAlive消息）
-系统下发的KeepAlive消息（KeepAliveUser），keepAlive包含UserToken（uid，nickname，avatar）
-{
-    "userToken": ""
-}
-系统下发的KeepAlive消息（KeepAliveSession），keepAlive包含SessionToken（sessionid）
-{
-    "sessionToken": ""
-}
-
+```
+/ws-chat channel
+上行：
+textMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx"}
+fileMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx"}<#BinaryInfo#>binary_file_array_buffer
+下行：
+rejectMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "reject", content: "xxx", dateline: "xxx"}
+keepAlive: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "keepalive", content: "", dateline: "xxx"}
+noticeMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "system", content: "xxx", dateline: "xxx"}
+textMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "text", content: "xxx", dateline: "xxx"}
+fileMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+```
 
 users表需要记录用户参与的session以及参与的session的最新消息
 sessions表需要记录会话的参与者的当前是否在线状态

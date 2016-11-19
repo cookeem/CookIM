@@ -13,7 +13,7 @@ package object mongo {
 
   case class SessionStatus(sessionid: String, newcount: Int)
 
-  case class Session(var _id: String, senduid: String, recvuid: String, sessiontype: Int, visabletype: Int, jointype: Int, name: String, usersstatus: List[UserStatus] = List(), lastmsgid: String = "", dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
+  case class Session(var _id: String, senduid: String, recvuid: String, chaticon: String, sessiontype: Int, publictype: Int, name: String, usersstatus: List[UserStatus] = List(), lastmsgid: String = "", dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
 
   case class UserStatus(uid: String, online: Boolean)
 
@@ -25,4 +25,8 @@ package object mongo {
 
   case class UpdateResult(n: Int, errmsg: String)
 
+
+  case class UserToken(uid: String, nickname: String, avatar: String)
+  case class SessionToken(sessionid: String)
+  case class UserSessionInfo(uid: String, nickname: String, avatar: String, sessionid: String)
 }

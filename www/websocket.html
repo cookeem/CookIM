@@ -2,6 +2,10 @@
 <html>
 <meta charset="utf-8" />
 <title>WebSocket Test</title>
+<!--materialize css-->
+<link href="node_modules/materialize-css/dist/css/materialize.min.css" rel="stylesheet">
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">-->
+
 <script language="javascript" type="text/javascript">
     var querys = window.location.search.replace('?','').split("&");
     var username = "";
@@ -20,24 +24,27 @@
         }
     }
     var host = window.location.host;
-    var wsUri = "ws://" + host + "/ws-chat/"+chatid+"/"+username;
+//    var wsUri = "ws://" + host + "/ws-chat/"+chatid+"/"+username;
+    var wsUri = "ws://" + host + "/ws-chat";
 //    var wsUri = "ws://" + host + "/ws-echo";
 
     var output;
     //用于接收字符串消息
     var websocket = new WebSocket(wsUri);
     websocket.binaryType = 'arraybuffer';
+    console.log(wsUri);
 
-    var websocketUserToken = new WebSocket("ws://" + host + "/ws-user/5825085049000049009d87c1");
-    var websocketSessionToken = new WebSocket("ws://" + host + "/ws-session/5825085049000049009d87c1/sessionid");
+//    var websocketUserToken = new WebSocket("ws://" + host + "/ws-user/5825085049000049009d87c1");
+//    var websocketSessionToken = new WebSocket("ws://" + host + "/ws-session/5825085049000049009d87c1/sessionid");
 
     function init() {
         output = document.getElementById("output");
-        listenWebsocket(websocket);
-        listenWebsocket(websocketUserToken);
-        listenWebsocket(websocketSessionToken);
+        listenWebsocketToken(websocket);
+//        listenWebsocketToken(websocketUserToken);
+//        listenWebsocketToken(websocketSessionToken);
+        $('.modal').modal();
     }
-    function listenWebsocket(ws) {
+    function listenWebsocketToken(ws) {
         ws.onopen = function(evt) {
             onOpen(evt)
         };
@@ -60,7 +67,7 @@
         i = i + 1;
         showMessage("DISCONNECTED");
         if (i < 3) {
-            listenWebsocket();
+            listenWebsocketToken();
         }
     }
 
@@ -139,7 +146,7 @@
                     filesize: file.size,
                     filetype: file.type
                 };
-                var fileInfoStr = JSON.stringify(fileInfo) + "<#fileInfo#>";
+                var fileInfoStr = JSON.stringify(fileInfo) + "<#BinaryInfo#>";
                 var fileInfoBuf = utf8StringToArrayBuffer(fileInfoStr);
                 var fileBuf = reader.result;
                 var mixBuf = concatenateBuffers(fileInfoBuf, fileBuf);
@@ -185,4 +192,24 @@ Select file
     <input type="text" name="msg"><input type="submit" value="Send"  onclick="sendMessage(document.all.msg.value)">
 </div>
 <div id="output"></div>
+
+<a class="waves-effect waves-light btn" href="#modal1">Modal</a>
+
+<!-- Modal Structure -->
+<div id="modal1" class="modal">
+    <div class="modal-content">
+        <h4>Modal Header</h4>
+        <p>A bunch of text</p>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+    </div>
+</div>
+<!--jquery js-->
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+
+<!-- materialize js -->
+<script src="node_modules/materialize-css/dist/js/materialize.min.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>-->
+
 </html>

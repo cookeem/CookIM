@@ -10,30 +10,12 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
         showHideSideBar($rootScope.showNavbar);
     }, 0);
 
-    var cookie_userToken = "";
-    var cookie_uid = "";
-    if ($cookies.get('userToken')) {
-        cookie_userToken = $cookies.get('userToken');
-    } else {
-        Materialize.toast('please login first', 4000);
-        window.location.href = '#!/login';
-    }
-    if ($cookies.get('uid')) {
-        cookie_uid = $cookies.get('uid');
-    }
+    $rootScope.verifyUserToken();
 
     $scope.getUserInfoData = {
-        "uid": cookie_uid,
-        "userToken": cookie_userToken
+        "uid": $rootScope.uid,
+        "userToken": $rootScope.userToken
     };
-
-    $scope.changeUserInfoData = {
-        "nickname": "",
-        "gender": 0,
-        "avatar": "",
-        "userToken": cookie_userToken
-    };
-    var avatarInput = $('#avatarInput');
 
     $scope.getUserInfoSubmit = function() {
         $http({
@@ -45,7 +27,7 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
             console.log(response.data);
             if (response.data.errmsg) {
                 $rootScope.errmsg = response.data.errmsg;
-                Materialize.toast("error: " + $rootScope.errmsg, 4000);
+                window.location.href = '#!/error';
             } else {
                 $rootScope.successmsg = response.data.successmsg;
                 $scope.changeUserInfoData.nickname = response.data.userInfo.nickname;
@@ -53,36 +35,53 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
                 $scope.changeUserInfoData.gender = response.data.userInfo.gender;
                 $('label').addClass('active');
                 console.log($scope.changeUserInfoData);
-                Materialize.toast($rootScope.successmsg, 4000);
             }
         }, function errorCallback(response) {
             console.info("error:" + response.data);
         });
     };
-    $scope.getUserInfoSubmit();
+
+    if ($rootScope.errmsg == '') {
+        $scope.getUserInfoSubmit();
+    }
+
+    $scope.changeUserInfoData = {
+        "nickname": "",
+        "gender": 0,
+        "avatar": ""
+    };
 
     $scope.changeUserInfoSubmit = function() {
-        if (avatarInput.files) {
-            $scope.changeUserInfoData.avatar = avatarInput.files[0];
+        var formData = new FormData();
+        formData.append("nickname", $scope.changeUserInfoData.nickname);
+        formData.append("gender", $scope.changeUserInfoData.gender);
+        formData.append("userToken", $rootScope.userToken);
+        var avatarInput = $('#avatarInput')[0];
+        if (avatarInput.files && avatarInput.files[0]) {
+            formData.append("avatar", avatarInput.files[0]);
         }
         $http({
             method  : 'POST',
             url     : '/api/updateUser',
-            data    : $.param($scope.changeUserInfoData),
-            headers : { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8' }
+            // mix file upload and form multipart
+            data    : formData,
+            transformRequest: angular.identity,
+            headers : { 'Content-Type': undefined }
         }).then(function successCallback(response) {
             console.log(response.data);
             if (response.data.errmsg) {
                 $rootScope.errmsg = response.data.errmsg;
-                Materialize.toast("error: " + $rootScope.errmsg, 4000);
+                Materialize.toast("error: " + $rootScope.errmsg, 3000);
             } else {
                 $rootScope.successmsg = response.data.successmsg;
-                Materialize.toast($rootScope.successmsg, 4000);
+                Materialize.toast($rootScope.successmsg, 3000);
+                $scope.getUserInfoSubmit();
             }
         }, function errorCallback(response) {
             console.info("error:" + response.data);
         });
     };
+
 
 });
 

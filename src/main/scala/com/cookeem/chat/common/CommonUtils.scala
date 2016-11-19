@@ -3,7 +3,6 @@ package com.cookeem.chat.common
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.TimeZone
 
 import com.typesafe.config.ConfigFactory
 import org.joda.time.DateTime
@@ -19,10 +18,8 @@ object CommonUtils {
   val configMongoDbname = configMongo.getString("dbname")
   val configMongoUri = configMongo.getString("uri")
 
-  val configRedis = config.getConfig("redis")
-  val configRedisHost = configRedis.getString("redis-host")
-  val configRedisPort = configRedis.getInt("redis-port")
-  var configRedisPass = configRedis.getString("redis-pass")
+  val configJwt = config.getConfig("jwt")
+  val configJwtSecret = configJwt.getString("secret")
 
   case class CustomException(message: String = "", cause: Throwable = null) extends Exception(message, cause)
 

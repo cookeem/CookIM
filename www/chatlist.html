@@ -7,77 +7,33 @@
             </div>
         </div>
         <div class="row"></div>
-        <ul class="collection">
-            <li class="collection-item avatar">
-                <img src="images/yuna.jpg" alt="" class="circle">
-                <span class="title">Yuna</span>
-                <p style="width: 75%;"> You can just add the class dismissable to enable each collection item
-                </p>
-                <span class="secondary-content blue-text right-align">
-                    <p>
-                        09-26 10:43
-                        <br />
-                        <i class="material-icons red-text">grade</i>
+        <div class="collection" ng-if="listSessionsResults.length > 0">
+            <a ng-repeat="session in listSessionsResults" href="#!/chatsession/{{session.sessionid}}" class="collection-item avatar">
+                <img ng-src="{{session.chaticon}}" alt="" class="circle">
+                <span class="title blue-text">{{session.name}}</span>
+                <div ng-if="session.message">
+                    <p style="width: 75%;" class="black-text"> {{session.message.nickname}}: {{session.message.message}}
                     </p>
-                </span>
-            </li>
-            <li class="collection-item avatar">
-                <i class="material-icons circle">folder</i>
-                <span class="title">Title</span>
-                <p style="width: 75%;"> Collections allow you to group list objects together
-                </p>
-                <span class="secondary-content blue-text right-align">
-                    <p>
-                        09-26 10:43
-                        <br />
-                        <i class="material-icons red-text">grade</i>
+                    <span class="secondary-content blue-text right-align">
+                        <p>
+                            {{session.dateline}}
+                            <br />
+                            <i class="material-icons red-text">grade</i>
+                        </p>
+                    </span>
+                </div>
+                <div ng-if="!session.message">
+                    <p style="width: 75%;" class="black-text"> No new message
                     </p>
-                </span>
-            </li>
-            <li class="collection-item avatar">
-                <i class="material-icons circle green">insert_chart</i>
-                <span class="title">Title</span>
-                <p style="width: 75%;"> Running com cookeem chat.DistributedWebChat
-                </p>
-                <span class="secondary-content blue-text">
-                    <p>
-                        09-25 12:12
-                    </p>
-                </span>
-            </li>
-            <li class="collection-item avatar">
-                <i class="material-icons circle red">play_arrow</i>
-                <span class="title">Title</span>
-                <p style="width: 75%;"> Initial directly invalidated sources
-                </p>
-                <span class="secondary-content blue-text">
-                    <p>
-                        09-24 12:12
-                    </p>
-                </span>
-            </li>
-            <li class="collection-item avatar">
-                <i class="material-icons circle red">play_arrow</i>
-                <span class="title">Title</span>
-                <p style="width: 75%;"> Initial directly invalidated sources
-                </p>
-                <span class="secondary-content blue-text">
-                    <p>
-                        09-24 12:12
-                    </p>
-                </span>
-            </li>
-            <li class="collection-item avatar">
-                <i class="material-icons circle red">play_arrow</i>
-                <span class="title">Title</span>
-                <p style="width: 75%;"> Initial directly invalidated sources
-                </p>
-                <span class="secondary-content blue-text">
-                    <p>
-                        09-24 12:12
-                    </p>
-                </span>
-            </li>
-        </ul>
+                    <span class="secondary-content blue-text right-align">
+                        <p>
+                            {{session.dateline}}
+                            <br />
+                            <i class="material-icons red-text">grade</i>
+                        </p>
+                    </span>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
