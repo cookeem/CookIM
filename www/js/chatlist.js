@@ -13,8 +13,8 @@ app.controller('chatListAppCtl', function($rootScope, $scope, $cookies, $timeout
     $rootScope.verifyUserToken();
 
     //refresh userToken on websocket
-    if (!$rootScope.websocketUserToken) {
-        $rootScope.listenWebsocketUserToken();
+    if (!$rootScope.wsUserToken || $rootScope.userToken == "") {
+        $rootScope.listenUserToken();
     }
 
     $scope.listSessionsData = {
@@ -49,7 +49,7 @@ app.controller('chatListAppCtl', function($rootScope, $scope, $cookies, $timeout
                 $scope.listSessionsResults = response.data.sessions;
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 

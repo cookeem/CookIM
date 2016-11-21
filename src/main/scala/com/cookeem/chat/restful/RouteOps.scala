@@ -15,7 +15,8 @@ import akka.stream.scaladsl.FileIO
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.mongo.MongoLogic._
 import com.cookeem.chat.restful.Controller._
-import com.cookeem.chat.websocket.ChatSessionGraph._
+import com.cookeem.chat.websocket.ChatSession
+import com.cookeem.chat.websocket.TokenWebsocket._
 import com.sksamuel.scrimage.Image
 import com.sksamuel.scrimage.nio.PngWriter
 import org.apache.commons.io.FileUtils
@@ -93,7 +94,8 @@ object RouteOps {
   def routeWebsocket(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
     get {
       path("ws-chat") {
-        handleWebSocketMessages(chatGraph())
+        val chatSession = new ChatSession()
+        handleWebSocketMessages(chatSession.chatService)
       } ~ path("ws-user") {
         handleWebSocketMessages(createUserTokenWebsocket())
       } ~ path("ws-session") {

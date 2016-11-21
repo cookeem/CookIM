@@ -30,15 +30,15 @@ app.controller('logoutAppCtl', function($rootScope, $scope, $cookies, $http, $ti
                 $rootScope.successmsg = response.data.successmsg;
                 Materialize.toast($rootScope.successmsg, 3000);
                 $timeout(function() {
-                    if ($rootScope.websocketUserToken) {
+                    if ($rootScope.wsUserToken) {
                         //close websocket when logout
-                        $rootScope.closeWebsocket($rootScope.websocketUserToken);
+                        $rootScope.closeWs($rootScope.wsUserToken);
                     }
                 }, 1000);
                 window.location.href = '#!/login';
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
     $scope.logoutSubmit();

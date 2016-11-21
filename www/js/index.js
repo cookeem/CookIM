@@ -104,9 +104,9 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
     });
 
     //global variable
-    $rootScope.errmsg = '';     //show in the error page
-    $rootScope.uid = '';        //global uid variable
-    $rootScope.userToken = '';  //global userToken variable
+    $rootScope.errmsg = '';
+    $rootScope.uid = '';
+    $rootScope.userToken = '';
 
     //verify user token, if failure then redirect to error page
     $rootScope.verifyUserToken = function() {
@@ -134,7 +134,7 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
                 window.location.href = '#!/error';
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 
@@ -184,20 +184,20 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
                 window.location.href = '#!/chatlist/joined';
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 
     //websocket listen userToken
-    $rootScope.listenWebsocketUserToken = function() {
+    $rootScope.listenUserToken = function() {
         $rootScope.uid = $cookies.get('uid');
         $rootScope.userToken = $cookies.get('userToken');
         var host = window.location.host;
         var wsUri = "ws://" + host + "/ws-user";
-        $rootScope.websocketUserToken = new WebSocket(wsUri);
-        $rootScope.websocketUserToken.binaryType = 'arraybuffer';
-        $rootScope.listenWebsocket(
-            $rootScope.websocketUserToken,
+        $rootScope.wsUserToken = new WebSocket(wsUri);
+        $rootScope.wsUserToken.binaryType = 'arraybuffer';
+        $rootScope.listenWs(
+            $rootScope.wsUserToken,
             function(evt) {
                 var json = JSON.parse(evt.data);
                 if (json.uid != "") {
@@ -209,7 +209,13 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
                     $cookies.put('uid', $rootScope.uid, {'expires': expiresDate});
                     $cookies.put('userToken', $rootScope.userToken, {'expires': expiresDate});
                 }
-                $rootScope.showWebsocketMessage(evt.data);
+                $rootScope.showWsMessage(evt.data);
+            },
+            function() {
+                var postData = {
+                    "userToken": $rootScope.userToken
+                };
+                $rootScope.sendWsMessage($rootScope.wsUserToken, JSON.stringify(postData));
             }
         );
 
@@ -217,44 +223,56 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
             var postData = {
                 "userToken": $rootScope.userToken
             };
-            $rootScope.sendWebsocketMessage($rootScope.websocketUserToken, JSON.stringify(postData));
+            $rootScope.sendWsMessage($rootScope.wsUserToken, JSON.stringify(postData));
         }, 15000);
     };
 
-    $rootScope.listenWebsocket = function(ws, onWsMessage) {
-        ws.onopen = function() {
-            $rootScope.showWebsocketMessage("CONNECTED");
-        };
+
+
+    $rootScope.listenWs = function(ws, onWsMessage, onWsOpen, onWsError, onWsClose) {
         var i = 0;
-        ws.onclose = function(ws) {
+        if (typeof(onWsMessage)==='undefined') onWsMessage = function(evt) {
+            $rootScope.showWsMessage("RECEIVE: " + evt);
+        };
+
+        if (typeof(onWsOpen)==='undefined') onWsOpen = function() {
+            $rootScope.showWsMessage("CONNECTED");
+        };
+
+        if (typeof(onWsError)==='undefined') onWsError = function(evt) {
+            $rootScope.showWsMessage('ERROR:\n' + evt.data);
+        };
+
+        if (typeof(onWsClose)==='undefined') onWsClose = function(ws) {
             i = i + 1;
-            $rootScope.showWebsocketMessage("DISCONNECTED");
+            $rootScope.showWsMessage("DISCONNECTED");
             if (i < 3) {
-                $rootScope.listenWebsocket(ws, onWsMessage);
+                $rootScope.listenWs(ws, onWsMessage, onWsOpen, onWsClose, onWsError);
             }
         };
-        ws.onerror = function(evt) {
-            $rootScope.showWebsocketMessage('ERROR:\n' + evt.data);
-        };
+
         ws.onmessage = onWsMessage;
+        ws.onopen = onWsOpen;
+        ws.onclose = onWsClose;
+        ws.onerror = onWsError;
     };
 
-    $rootScope.onWebsocketMessage = function(evt) {
-        $rootScope.showWebsocketMessage(evt.data);
+    $rootScope.onWsMessage = function(evt) {
+        $rootScope.showWsMessage(evt.data);
     };
 
     //show text websocket message
-    $rootScope.showWebsocketMessage = function(message) {
+    $rootScope.showWsMessage = function(message) {
         console.log(message);
     };
 
     //send message through websocket
-    $rootScope.sendWebsocketMessage = function(ws, message) {
+    $rootScope.sendWsMessage = function(ws, message) {
         ws.send(message);
     };
 
     //send file through websocket
-    $rootScope.sendWebsocketFile = function(ws) {
+    $rootScope.sendWsFile = function(ws) {
         var file = document.getElementById('filename').files[0];
         var isImage = file.type.startsWith("image/");
         var isFitSize = file.size < 2048 * 1024;
@@ -280,7 +298,7 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
         }
     };
 
-    $rootScope.closeWebsocket = function(ws) {
+    $rootScope.closeWs = function(ws) {
         ws.close();
     };
 
