@@ -22,14 +22,12 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
 
     $rootScope.verifyUserToken();
 
-    $scope.sessionid = $routeParams.querystring;
+    //refresh userToken on websocket
+    if (!$rootScope.wsUserToken || $rootScope.userToken == "") {
+        $rootScope.listenUserToken();
+    }
 
-    $rootScope.sendChatMessage = function() {
-        if ($rootScope.websocketChatSession) {
-            var message = $('#messageContent')[0].value;
-            $rootScope.sendWebsocketMessage($rootScope.websocketChatSession, message);
-        }
-    };
+    $scope.sessionid = $routeParams.querystring;
 
     $scope.listMessagesData = {
         "sessionid": $scope.sessionid,
@@ -53,32 +51,36 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
             } else {
                 $scope.listMessagesResults = response.data.messages;
                 $scope.sessionToken = response.data.sessionToken;
-                $scope.listenWebsocketChatSession($scope.sessionToken);
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 
     $scope.listMessagesSubmit();
 
     //websocket listen sessionToken
-    $scope.listenWebsocketSessionToken = function() {
+    $scope.listenSessionToken = function() {
         $rootScope.uid = $cookies.get('uid');
         $rootScope.userToken = $cookies.get('userToken');
         var host = window.location.host;
         var wsUri = "ws://" + host + "/ws-session";
-        $rootScope.websocketSessionToken = new WebSocket(wsUri);
-        $rootScope.websocketSessionToken.binaryType = 'arraybuffer';
-        $rootScope.listenWebsocket(
-            $rootScope.websocketSessionToken,
+        $rootScope.wsSessionToken = new WebSocket(wsUri);
+        $rootScope.wsSessionToken.binaryType = 'arraybuffer';
+        $rootScope.listenWs(
+            $rootScope.wsSessionToken,
             function(evt) {
                 var json = JSON.parse(evt.data);
-                if (json.uid != "") {
-                    $scope.errmsg = json.errmsg;
-                    $scope.sessionToken = json.sessionToken;
-                }
-                $rootScope.showWebsocketMessage(evt.data);
+                $scope.errmsg = json.errmsg;
+                $scope.sessionToken = json.sessionToken;
+                $rootScope.showWsMessage(evt.data);
+            },
+            function() {
+                var postData = {
+                    "userToken": $rootScope.userToken,
+                    "sessionid": $scope.sessionid
+                };
+                $rootScope.sendWsMessage($rootScope.wsSessionToken, JSON.stringify(postData));
             }
         );
 
@@ -87,38 +89,54 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
                 "userToken": $rootScope.userToken,
                 "sessionid": $scope.sessionid
             };
-            $rootScope.sendWebsocketMessage($rootScope.websocketSessionToken, JSON.stringify(postData));
+            $rootScope.sendWsMessage($rootScope.wsSessionToken, JSON.stringify(postData));
         }, 15000);
     };
-
-    $scope.listenWebsocketSessionToken();
+    $scope.listenSessionToken();
 
     //websocket listen chat session
-    $scope.listenWebsocketChatSession = function(sessionid) {
+    $scope.output = [];
+    $scope.listenChat = function() {
         $rootScope.uid = $cookies.get('uid');
         $rootScope.userToken = $cookies.get('userToken');
-
         var host = window.location.host;
         var wsUri = "ws://" + host + "/ws-chat";
-        $rootScope.websocketChatSession = new WebSocket(wsUri);
-        $rootScope.websocketChatSession.binaryType = 'arraybuffer';
-        $rootScope.listenWebsocket(
-            $rootScope.websocketChatSession,
+        $rootScope.wsChatSession = new WebSocket(wsUri);
+        $rootScope.wsChatSession.binaryType = 'arraybuffer';
+        $rootScope.listenWs(
+            $rootScope.wsChatSession,
             function(evt) {
-                $rootScope.showWebsocketMessage(evt.data);
+                var output = $('#output')[0];
+                var pre = document.createElement("p");
+                pre.style.wordBreak = "break-all";
+                pre.innerHTML = evt.data;
+                output.appendChild(pre);
+                //$scope.output.push(JSON.parse(evt.data));
+            },
+            function() {
+                var onlineData = {
+                    "userToken": $rootScope.userToken,
+                    "sessionToken": $scope.sessionToken,
+                    "msgType": "online",
+                    "content": ""
+                };
+                $rootScope.sendWsMessage($rootScope.wsChatSession, JSON.stringify(onlineData));
             }
         );
+    };
+    $scope.listenChat();
 
-        $interval(function () {
+    $rootScope.sendChatMessage = function() {
+        if ($rootScope.wsChatSession) {
+            var message = $('#messageContent')[0].value;
             var postData = {
                 "userToken": $rootScope.userToken,
                 "sessionToken": $scope.sessionToken,
-                "msgType":"text",
-                "content":"xxx"
+                "msgType": "text",
+                "content": message
             };
-            $rootScope.sendWebsocketMessage($rootScope.websocketSessionToken, JSON.stringify(postData));
-        }, 15000);
-
+            $rootScope.sendWsMessage($rootScope.wsChatSession, JSON.stringify(postData));
+        }
     };
 
 });

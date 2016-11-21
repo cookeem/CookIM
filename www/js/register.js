@@ -45,7 +45,7 @@ app.controller('registerAppCtl', function($rootScope, $scope, $cookies, $timeout
                 window.location.href = '#!/chatlist/public';
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     }
 
