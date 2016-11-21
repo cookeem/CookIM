@@ -12,9 +12,9 @@ sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 浏览器访问：
 
 ```
-http://localhost:8080/chat/websocket.html?username=cookeem&chatid=room01
+http://localhost:8080/
 
-http://localhost:8081/chat/websocket.html?username=faith&chatid=room01
+http://localhost:8081/
 ```
 ---
 ### 3. 客户端支持显示用户名，发送时间
