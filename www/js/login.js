@@ -70,7 +70,7 @@ app.controller('loginAppCtl', function($rootScope, $scope, $cookies, $timeout, $
                 window.location.href = '#!/chatlist/joined';
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     }
 });

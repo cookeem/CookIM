@@ -36,7 +36,7 @@ app.controller('changePwdAppCtl', function($rootScope, $scope, $cookies, $timeou
                 window.location.href = '#!/chatlist/joined';
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 

@@ -32,16 +32,15 @@
     //用于接收字符串消息
     var websocket = new WebSocket(wsUri);
     websocket.binaryType = 'arraybuffer';
-    console.log(wsUri);
 
-//    var websocketUserToken = new WebSocket("ws://" + host + "/ws-user/5825085049000049009d87c1");
-//    var websocketSessionToken = new WebSocket("ws://" + host + "/ws-session/5825085049000049009d87c1/sessionid");
+//    var wsUserToken = new WebSocket("ws://" + host + "/ws-user/5825085049000049009d87c1");
+//    var wsSessionToken = new WebSocket("ws://" + host + "/ws-session/5825085049000049009d87c1/sessionid");
 
     function init() {
         output = document.getElementById("output");
         listenWebsocketToken(websocket);
-//        listenWebsocketToken(websocketUserToken);
-//        listenWebsocketToken(websocketSessionToken);
+//        listenWebsocketToken(wsUserToken);
+//        listenWebsocketToken(wsSessionToken);
         $('.modal').modal();
     }
     function listenWebsocketToken(ws) {

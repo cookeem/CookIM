@@ -34,10 +34,9 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
                 $scope.changeUserInfoData.avatar = response.data.userInfo.avatar;
                 $scope.changeUserInfoData.gender = response.data.userInfo.gender;
                 $('label').addClass('active');
-                console.log($scope.changeUserInfoData);
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 
@@ -78,7 +77,7 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
                 $scope.getUserInfoSubmit();
             }
         }, function errorCallback(response) {
-            console.info("error:" + response.data);
+            console.error("http request error:" + response.data);
         });
     };
 

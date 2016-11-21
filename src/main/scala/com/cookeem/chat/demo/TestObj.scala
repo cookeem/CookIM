@@ -31,4 +31,36 @@ object TestObj extends App {
 
   println(Jwts.parser().setSigningKey(key).parseClaimsJws(compactJws).getBody.getSubject)
   val header = Jwts.parser().setSigningKey(key).parse(compactJws).getHeader.entrySet().map { t => (t.getKey, t.getValue)}.toMap[String, Any]
+
+
+  import akka.actor._
+
+  class TestActor extends Actor with ActorLogging {
+    def receive = {
+      case s: String =>
+        println(s"receive $s")
+      case _ =>
+        log.error("Receive type error!")
+    }
+  }
+
+  object TestActor {
+    def props = Props[TestActor]
+  }
+
+  class TestClass {
+    var name = ""
+
+    def helloName() = {
+      val system: ActorSystem = ActorSystem("system")
+      val testActor = system.actorOf(TestActor.props, "test-actor")
+      testActor ! name
+    }
+  }
+
+  val c = new TestClass
+
+  c.name = "haijian"
+
+  c.helloName()
 }

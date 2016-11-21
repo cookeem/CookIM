@@ -167,13 +167,14 @@ MessageChannel：用于接收用户消息，以及向用户发送消息。当用
 ```
 /ws-chat channel
 上行：
-textMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx"}
-fileMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx"}<#BinaryInfo#>binary_file_array_buffer
+onlineMsg: { userToken: "xxx", sessionToken: "xxx", msgType:"online", content:"" }
+textMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx" }
+fileMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx" }<#BinaryInfo#>binary_file_array_buffer
 下行：
-rejectMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "reject", content: "xxx", dateline: "xxx"}
-keepAlive: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "keepalive", content: "", dateline: "xxx"}
-noticeMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "system", content: "xxx", dateline: "xxx"}
-textMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "text", content: "xxx", dateline: "xxx"}
+rejectMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "reject", content: "xxx", dateline: "xxx" }
+keepAlive: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "keepalive", content: "", dateline: "xxx" }
+noticeMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "system", content: "xxx", dateline: "xxx" }
+textMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
 fileMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
 ```
 
