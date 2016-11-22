@@ -55,14 +55,7 @@ app.controller('loginAppCtl', function($rootScope, $scope, $cookies, $timeout, $
                 $rootScope.errmsg = response.data.errmsg;
                 Materialize.toast("error: " + $rootScope.errmsg, 3000);
             } else {
-                $rootScope.uid = response.data.uid;
-                $rootScope.userToken = response.data.token;
-                //cookies will expires after 15 minutes
-                var expiresDate = new Date();
-                expiresDate.setTime(expiresDate.getTime() + 15 * 60 * 1000);
-                $cookies.put('uid', $rootScope.uid, {'expires': expiresDate});
-                $cookies.put('userToken', $rootScope.userToken, {'expires': expiresDate});
-
+                $rootScope.setCookieUserToken(response.data.uid, response.data.userToken);
                 $rootScope.successmsg = response.data.successmsg;
                 Materialize.toast($rootScope.successmsg, 3000);
 

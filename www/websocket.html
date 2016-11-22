@@ -33,14 +33,9 @@
     var websocket = new WebSocket(wsUri);
     websocket.binaryType = 'arraybuffer';
 
-//    var wsUserToken = new WebSocket("ws://" + host + "/ws-user/5825085049000049009d87c1");
-//    var wsSessionToken = new WebSocket("ws://" + host + "/ws-session/5825085049000049009d87c1/sessionid");
-
     function init() {
         output = document.getElementById("output");
         listenWebsocketToken(websocket);
-//        listenWebsocketToken(wsUserToken);
-//        listenWebsocketToken(wsSessionToken);
         $('.modal').modal();
     }
     function listenWebsocketToken(ws) {

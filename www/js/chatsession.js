@@ -20,12 +20,7 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
         );
     }, 0);
 
-    $rootScope.verifyUserToken();
-
-    //refresh userToken on websocket
-    if (!$rootScope.wsUserToken || $rootScope.userToken == "") {
-        $rootScope.listenUserToken();
-    }
+    $rootScope.getUserTokenRepeat();
 
     $scope.sessionid = $routeParams.querystring;
 
@@ -59,43 +54,51 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
 
     $scope.listMessagesSubmit();
 
-    //websocket listen sessionToken
-    $scope.listenSessionToken = function() {
-        $rootScope.uid = $cookies.get('uid');
-        $rootScope.userToken = $cookies.get('userToken');
-        var host = window.location.host;
-        var wsUri = "ws://" + host + "/ws-session";
-        $rootScope.wsSessionToken = new WebSocket(wsUri);
-        $rootScope.wsSessionToken.binaryType = 'arraybuffer';
-        $rootScope.listenWs(
-            $rootScope.wsSessionToken,
-            function(evt) {
-                var json = JSON.parse(evt.data);
-                $scope.errmsg = json.errmsg;
-                $scope.sessionToken = json.sessionToken;
-                $rootScope.showWsMessage(evt.data);
-            },
-            function() {
-                var postData = {
-                    "userToken": $rootScope.userToken,
-                    "sessionid": $scope.sessionid
-                };
-                $rootScope.sendWsMessage($rootScope.wsSessionToken, JSON.stringify(postData));
-            }
-        );
 
-        $interval(function () {
-            var postData = {
-                "userToken": $rootScope.userToken,
-                "sessionid": $scope.sessionid
-            };
-            $rootScope.sendWsMessage($rootScope.wsSessionToken, JSON.stringify(postData));
-        }, 15000);
+    //get sessionToken request
+    $scope.getSessionTokenSubmit = function() {
+        $rootScope.verifyUserToken();
+        var postData = {
+            "userToken": $rootScope.userToken,
+            "sessionid": $scope.sessionid
+        };
+        $http({
+            method  : 'POST',
+            url     : '/api/sessionToken',
+            data    : $.param(postData),
+            headers : { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8' }
+        }).then(function successCallback(response) {
+            console.log(response.data);
+            if (response.data.errmsg) {
+                $rootScope.errmsg = response.data.errmsg;
+                Materialize.toast("error: " + $rootScope.errmsg, 3000);
+            } else {
+                $scope.sessionToken = response.data.sessionToken;
+            }
+        }, function errorCallback(response) {
+            console.error("http request error:" + response.data);
+        });
     };
-    $scope.listenSessionToken();
+
+    $scope.getSessionTokenRepeat = function() {
+        // $scope.getSessionTokenSubmit();
+        if (!angular.isDefined($scope.getSessionTokenTimer)) {
+            $scope.getSessionTokenTimer = $interval(function () {
+                $scope.getSessionTokenSubmit();
+            }, 15000);
+        }
+    };
+
+    $scope.getSessionTokenStop = function() {
+        if (angular.isDefined($scope.getSessionTokenTimer)) {
+            $interval.cancel($scope.getSessionTokenTimer);
+            $scope.getSessionTokenTimer = undefined;
+        }
+    };
+
+    $scope.getSessionTokenRepeat();
 
     //websocket listen chat session
-    $scope.output = [];
     $scope.listenChat = function() {
         $rootScope.uid = $cookies.get('uid');
         $rootScope.userToken = $cookies.get('userToken');
@@ -107,24 +110,38 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
             $rootScope.wsChatSession,
             function(evt) {
                 var output = $('#output')[0];
-                var pre = document.createElement("p");
-                pre.style.wordBreak = "break-all";
-                pre.innerHTML = evt.data;
-                output.appendChild(pre);
-                //$scope.output.push(JSON.parse(evt.data));
+                if (output) {
+                    var pre = document.createElement("p");
+                    pre.style.wordBreak = "break-all";
+                    pre.innerHTML = evt.data;
+                    output.appendChild(pre);
+                } else {
+                    $rootScope.showWsMessage(evt.data);
+                }
             },
             function() {
-                var onlineData = {
-                    "userToken": $rootScope.userToken,
-                    "sessionToken": $scope.sessionToken,
-                    "msgType": "online",
-                    "content": ""
-                };
-                $rootScope.sendWsMessage($rootScope.wsChatSession, JSON.stringify(onlineData));
+                //it must wait until chatSessionActor created!
+                $timeout(function() {
+                    var onlineData = {
+                        "userToken": $rootScope.userToken,
+                        "sessionToken": $scope.sessionToken,
+                        "msgType": "online",
+                        "content": ""
+                    };
+                    $rootScope.sendWsMessage($rootScope.wsChatSession, JSON.stringify(onlineData));
+                }, 500);
             }
         );
     };
     $scope.listenChat();
+
+    //when route change, close websocket and get session token timer
+    $scope.$on('$destroy',function(){
+        if ($rootScope.wsChatSession) {
+            $rootScope.closeWs($rootScope.wsChatSession);
+        }
+        $scope.getSessionTokenStop();
+    });
 
     $rootScope.sendChatMessage = function() {
         if ($rootScope.wsChatSession) {
@@ -136,6 +153,7 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
                 "content": message
             };
             $rootScope.sendWsMessage($rootScope.wsChatSession, JSON.stringify(postData));
+            $('#messageContent')[0].value = "";
         }
     };
 

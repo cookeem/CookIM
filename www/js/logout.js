@@ -29,12 +29,9 @@ app.controller('logoutAppCtl', function($rootScope, $scope, $cookies, $http, $ti
 
                 $rootScope.successmsg = response.data.successmsg;
                 Materialize.toast($rootScope.successmsg, 3000);
-                $timeout(function() {
-                    if ($rootScope.wsUserToken) {
-                        //close websocket when logout
-                        $rootScope.closeWs($rootScope.wsUserToken);
-                    }
-                }, 1000);
+
+                $rootScope.getUserTokenStop();
+
                 window.location.href = '#!/login';
             }
         }, function errorCallback(response) {
