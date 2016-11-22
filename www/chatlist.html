@@ -9,8 +9,8 @@
         <div class="row"></div>
         <div class="collection" ng-if="listSessionsResults.length > 0">
             <a ng-repeat="session in listSessionsResults" href="#!/chatsession/{{session.sessionid}}" class="collection-item avatar">
-                <img ng-src="{{session.chaticon}}" alt="" class="circle">
-                <span class="title blue-text">{{session.name}}</span>
+                <img ng-src="{{session.sessionicon}}" alt="" class="circle">
+                <span class="title blue-text">{{session.sessionname}}</span>
                 <div ng-if="session.message">
                     <p style="width: 75%;" class="black-text"> {{session.message.nickname}}: {{session.message.message}}
                     </p>

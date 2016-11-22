@@ -15,8 +15,7 @@ import akka.stream.scaladsl.FileIO
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.mongo.MongoLogic._
 import com.cookeem.chat.restful.Controller._
-import com.cookeem.chat.websocket.ChatSession
-import com.cookeem.chat.websocket.TokenWebsocket._
+import com.cookeem.chat.websocket.{ChatSession, PushSession}
 import com.sksamuel.scrimage.Image
 import com.sksamuel.scrimage.nio.PngWriter
 import org.apache.commons.io.FileUtils
@@ -39,6 +38,8 @@ object RouteOps {
     routeWebsocket ~
     routeAsset ~
     routeUserRegister ~
+    routeGetUserToken ~
+    routeGetSessionToken ~
     routeVerifyUserToken ~
     routeUserLogin ~
     routeUserLogout ~
@@ -93,13 +94,14 @@ object RouteOps {
 
   def routeWebsocket(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
     get {
+      //use for chat service
       path("ws-chat") {
         val chatSession = new ChatSession()
         handleWebSocketMessages(chatSession.chatService)
-      } ~ path("ws-user") {
-        handleWebSocketMessages(createUserTokenWebsocket())
-      } ~ path("ws-session") {
-        handleWebSocketMessages(createSessionTokenWebsocket())
+        //use for push service
+      } ~ path("ws-push") {
+        val pushSession = new PushSession()
+        handleWebSocketMessages(pushSession.pushService)
       }
     }
   }
@@ -139,6 +141,35 @@ object RouteOps {
         complete {
           val registerUserResult = registerUserCtl(login, nickname, password, repassword, gender)
           registerUserResult map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetUserToken(implicit ec: ExecutionContext) = post {
+    path("api" / "userToken") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        complete {
+          val createUserTokenResult = createUserTokenCtl(userTokenStr)
+          createUserTokenResult map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetSessionToken(implicit ec: ExecutionContext) = post {
+    path("api" / "sessionToken") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          val createSessionTokenResult = createSessionTokenCtl(userTokenStr, sessionid)
+          createSessionTokenResult map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -252,9 +283,9 @@ object RouteOps {
           futureParams.map { params =>
             val userTokenStr = paramsGetString(params, "userToken", "")
             val publictype = paramsGetInt(params, "publictype", 0)
-            val name = paramsGetString(params, "name", "")
-            val chaticon = paramsGetString(params, "chaticon", "")
-            createGroupSessionCtl(userTokenStr, chaticon, publictype, name).map { json =>
+            val sessionname = paramsGetString(params, "sessionname", "")
+            val sessionicon = paramsGetString(params, "sessionicon", "")
+            createGroupSessionCtl(userTokenStr, sessionicon, publictype, sessionname).map { json =>
               HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
             }
           }

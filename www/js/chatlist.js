@@ -10,12 +10,7 @@ app.controller('chatListAppCtl', function($rootScope, $scope, $cookies, $timeout
         showHideSideBar($rootScope.showNavbar);
     }, 0);
 
-    $rootScope.verifyUserToken();
-
-    //refresh userToken on websocket
-    if (!$rootScope.wsUserToken || $rootScope.userToken == "") {
-        $rootScope.listenUserToken();
-    }
+    $rootScope.getUserTokenRepeat();
 
     $scope.listSessionsData = {
         "isPublic": 0,

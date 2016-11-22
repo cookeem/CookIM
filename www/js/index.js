@@ -46,7 +46,7 @@ app.config(function($routeProvider, $locationProvider) {
             controller: 'contentCtl',
             animation: 'animation-slideleft'
         })
-        .otherwise({redirectTo: '/chatlist/public'});
+        .otherwise({redirectTo: '/login'});
     //使用#!作为路由前缀
     $locationProvider.html5Mode(false).hashPrefix('!');
 });
@@ -108,14 +108,34 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
     $rootScope.uid = '';
     $rootScope.userToken = '';
 
-    //verify user token, if failure then redirect to error page
-    $rootScope.verifyUserToken = function() {
+    //get rootScope.userToken and rootScope.uid from cookies
+    $rootScope.getCookieUserToken = function() {
         if ($cookies.get('uid')) {
             $rootScope.uid = $cookies.get('uid');
+        } else {
+            $rootScope.uid = "";
         }
         if ($cookies.get('userToken')) {
             $rootScope.userToken = $cookies.get('userToken');
+        } else {
+            $rootScope.userToken = "";
         }
+    };
+
+    //set rootScope.userToken and rootScope.uid and cookies
+    $rootScope.setCookieUserToken = function(uid, userToken) {
+        $rootScope.uid = uid;
+        $rootScope.userToken = userToken;
+        //cookies will expires after 15 minutes
+        var expiresDate = new Date();
+        expiresDate.setTime(expiresDate.getTime() + 15 * 60 * 1000);
+        $cookies.put('uid', $rootScope.uid, {'expires': expiresDate});
+        $cookies.put('userToken', $rootScope.userToken, {'expires': expiresDate});
+    };
+
+    //verify user token, if failure then redirect to error page
+    $rootScope.verifyUserToken = function() {
+        $rootScope.getCookieUserToken();
         if ($rootScope.userToken == "") {
             $rootScope.errmsg = "no privilege or not login";
             window.location.href = '#!/error';
@@ -140,7 +160,7 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
 
     // create session interface
     $scope.sessionData = {
-        "name" : "",
+        "sessionname" : "",
         "publictype": true
     };
     $scope.createSessionSubmit = function() {
@@ -151,11 +171,11 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
         }
         var formData = new FormData();
         formData.append("publictype", publictype);
-        formData.append("name", $scope.sessionData.name);
+        formData.append("sessionname", $scope.sessionData.sessionname);
         formData.append("userToken", $rootScope.userToken);
         var chatIconInput = $('#chatIconInput')[0];
         if (chatIconInput.files && chatIconInput.files[0]) {
-            formData.append("chaticon", chatIconInput.files[0]);
+            formData.append("sessionicon", chatIconInput.files[0]);
         }
 
         $http({
@@ -176,7 +196,7 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
                 $('#modalCreateSession').modal('close');
                 $('#chatIcon')[0].src = "images/avatar/unknown.jpg";
                 $scope.sessionData = {
-                    "name" : "",
+                    "sessionname" : "",
                     "publictype": true
                 };
                 var elmChatIconInput = $('#chatIconInput')[0];
@@ -188,43 +208,44 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
         });
     };
 
-    //websocket listen userToken
-    $rootScope.listenUserToken = function() {
-        $rootScope.uid = $cookies.get('uid');
-        $rootScope.userToken = $cookies.get('userToken');
-        var host = window.location.host;
-        var wsUri = "ws://" + host + "/ws-user";
-        $rootScope.wsUserToken = new WebSocket(wsUri);
-        $rootScope.wsUserToken.binaryType = 'arraybuffer';
-        $rootScope.listenWs(
-            $rootScope.wsUserToken,
-            function(evt) {
-                var json = JSON.parse(evt.data);
-                if (json.uid != "") {
-                    $rootScope.uid = json.uid;
-                    $rootScope.userToken = json.userToken;
-                    //cookies will expires after 15 minutes
-                    var expiresDate = new Date();
-                    expiresDate.setTime(expiresDate.getTime() + 15 * 60 * 1000);
-                    $cookies.put('uid', $rootScope.uid, {'expires': expiresDate});
-                    $cookies.put('userToken', $rootScope.userToken, {'expires': expiresDate});
-                }
-                $rootScope.showWsMessage(evt.data);
-            },
-            function() {
-                var postData = {
-                    "userToken": $rootScope.userToken
-                };
-                $rootScope.sendWsMessage($rootScope.wsUserToken, JSON.stringify(postData));
+    //get userToken request
+    $rootScope.getUserTokenSubmit = function() {
+        $rootScope.verifyUserToken();
+        var postData = {
+            "userToken": $rootScope.userToken
+        };
+        $http({
+            method  : 'POST',
+            url     : '/api/userToken',
+            data    : $.param(postData),
+            headers : { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8' }
+        }).then(function successCallback(response) {
+            console.log(response.data);
+            if (response.data.errmsg) {
+                $rootScope.errmsg = response.data.errmsg;
+                Materialize.toast("error: " + $rootScope.errmsg, 3000);
+            } else {
+                $rootScope.setCookieUserToken(response.data.uid, response.data.userToken);
             }
-        );
+        }, function errorCallback(response) {
+            console.error("http request error:" + response.data);
+        });
+    };
 
-        $interval(function () {
-            var postData = {
-                "userToken": $rootScope.userToken
-            };
-            $rootScope.sendWsMessage($rootScope.wsUserToken, JSON.stringify(postData));
-        }, 15000);
+    $rootScope.getUserTokenRepeat = function() {
+        $rootScope.getUserTokenSubmit();
+        if (!angular.isDefined($rootScope.getUserTokenTimer)) {
+            $rootScope.getUserTokenTimer = $interval(function () {
+                $rootScope.getUserTokenSubmit();
+            }, 15000);
+        }
+    };
+
+    $rootScope.getUserTokenStop = function() {
+        if (angular.isDefined($rootScope.getUserTokenTimer)) {
+            $interval.cancel($rootScope.getUserTokenTimer);
+            $rootScope.getUserTokenTimer = undefined;
+        }
     };
 
 

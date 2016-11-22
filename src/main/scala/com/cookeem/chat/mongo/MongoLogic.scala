@@ -52,7 +52,8 @@ object MongoLogic {
   def createMessagesCollection(): Future[String] = {
     val indexSettings = Array(
       ("senduid", 1, false, 0),
-      ("sessionid", 1, false, 0)
+      ("sessionid", 1, false, 0),
+      ("dateline", -1, false, 0)
     )
     createIndex(colMessagesName, indexSettings)
   }
@@ -314,7 +315,7 @@ object MongoLogic {
   }
 
   //create a new group session
-  def createGroupSession(uid: String, chaticon: String, publictype: Int, name: String): Future[(String, String)] = {
+  def createGroupSession(uid: String, sessionicon: String, publictype: Int, sessionname: String): Future[(String, String)] = {
     var errmsg = ""
     val selector = document("_id" -> uid)
     val sessiontype = 1
@@ -324,17 +325,17 @@ object MongoLogic {
         if (user == null) {
           errmsg = "user not exists"
           Future("", errmsg)
-        } else if (name.length < 3) {
+        } else if (sessionname.length < 3) {
           errmsg = "session desc must at least 3 character"
           Future("", errmsg)
         } else if (!(publictype == 0 || publictype == 1)) {
           errmsg = "publictype error"
           Future("", errmsg)
-        } else if (chaticon.length < 6) {
+        } else if (sessionicon.length < 6) {
           errmsg = "please select chat icon"
           Future("", errmsg)
         } else {
-          val newSession = Session("", senduid = uid, recvuid = "", chaticon, sessiontype, publictype, name)
+          val newSession = Session("", senduid = uid, recvuid = "", sessionicon, sessiontype, publictype, sessionname)
           val insRet = insertCollection[Session](sessionsCollection, newSession)
           for {
             (sessionid, errormsg) <- insRet
@@ -384,7 +385,7 @@ object MongoLogic {
           if (session != null) {
             ret = Future(session._id, "")
           } else {
-            val newSession = Session("", senduid = uid, recvuid = "", chaticon = "", sessiontype = 0, publictype = 0, name = "")
+            val newSession = Session("", senduid = uid, recvuid = "", sessionicon = "", sessiontype = 0, publictype = 0, sessionname = "")
             ret = insertCollection[Session](sessionsCollection, newSession)
             for {
               (sessionid, errmsg) <- ret
@@ -431,18 +432,18 @@ object MongoLogic {
   }
 
   //update session info
-  def updateSessionInfo(sessionid: String, uid: String, publictype: Int, name: String): Future[UpdateResult] = {
+  def updateSessionInfo(sessionid: String, uid: String, publictype: Int, sessionname: String): Future[UpdateResult] = {
     var errmsg = ""
     var update = document()
     if (!(publictype == 0 || publictype == 1)) {
       errmsg = "publictype error"
-    } else if (name == "") {
-      errmsg = "name can not be empty"
+    } else if (sessionname == "") {
+      errmsg = "sessionname can not be empty"
     } else {
       update = document(
         "$set" -> document(
           "publictype" -> publictype,
-          "name" -> name
+          "sessionname" -> sessionname
         )
       )
     }
@@ -618,7 +619,7 @@ object MongoLogic {
   }
 
   def getMessageById(userTokenStr: String, sessionTokenStr: String, msgid: String): Future[(Message, User)] = {
-    val UserSessionInfo(uid, nickname, avatar, sessionid) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
+    val UserSessionInfo(uid, nickname, avatar, sessionid, sessionname, sessionicon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
     if (uid == "") {
       Future((null, null))
     } else {
@@ -727,11 +728,26 @@ object MongoLogic {
   def createSessionToken(uid: String, sessionid: String): Future[String] = {
     for {
       errmsg <- verifySession(uid, sessionid)
+      sessionToken <- {
+        if (errmsg == "") {
+          findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid)).map { session =>
+            if (session != null) {
+              SessionToken(sessionid, session.sessionname, session.sessionicon)
+            } else {
+              SessionToken("", "", "")
+            }
+          }
+        } else {
+          Future(SessionToken("", "", ""))
+        }
+      }
     } yield {
       var token = ""
-      if (errmsg == "") {
+      if (sessionToken.sessionid != "") {
         val payload = Map[String, Any](
-          "sessionid" -> sessionid
+          "sessionid" -> sessionToken.sessionid,
+          "sessionname" -> sessionToken.sessionname,
+          "sessionicon" -> sessionToken.sessionicon
         )
         token = encodeJwt(payload)
       }
@@ -740,12 +756,14 @@ object MongoLogic {
   }
 
   def verifySessionToken(token: String): SessionToken = {
-    var sessionToken = SessionToken("")
+    var sessionToken = SessionToken("", "", "")
     val mapSessionToken = decodeJwt(token)
     if (mapSessionToken.contains("sessionid")) {
       val sessionid = mapSessionToken("sessionid").asInstanceOf[String]
+      val sessionname = mapSessionToken("sessionname").asInstanceOf[String]
+      val sessionicon = mapSessionToken("sessionicon").asInstanceOf[String]
       if (sessionid != "") {
-        sessionToken = SessionToken(sessionid)
+        sessionToken = SessionToken(sessionid, sessionname, sessionicon)
       }
     }
     sessionToken
@@ -755,9 +773,9 @@ object MongoLogic {
     val userToken = verifyUserToken(userTokenStr)
     val sessionToken = verifySessionToken(sessionTokenStr)
     if (userToken.uid != "" && userToken.nickname != "" && userToken.avatar != "" && sessionToken.sessionid != "") {
-      UserSessionInfo(userToken.uid, userToken.nickname, userToken.avatar, sessionToken.sessionid)
+      UserSessionInfo(userToken.uid, userToken.nickname, userToken.avatar, sessionToken.sessionid, sessionToken.sessionname, sessionToken.sessionicon)
     } else {
-      UserSessionInfo("", "", "", "")
+      UserSessionInfo("", "", "", "", "", "")
     }
   }
 

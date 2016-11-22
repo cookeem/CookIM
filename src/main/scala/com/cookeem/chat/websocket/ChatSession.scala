@@ -14,7 +14,7 @@ import akka.util.ByteString
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.event._
 import com.cookeem.chat.mongo.MongoLogic._
-import com.cookeem.chat.mongo.UserSessionInfo
+import com.cookeem.chat.mongo._
 import com.sksamuel.scrimage.Image
 import com.sksamuel.scrimage.nio.PngWriter
 import org.apache.commons.io.FileUtils
@@ -55,8 +55,8 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
               } catch { case e: Throwable =>
                 consoleLog("ERROR", s"parse websocket text message error: $e")
               }
-              val UserSessionInfo(uid, nickname, avatar, sessionid) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
-              WsTextUp(uid, nickname, avatar, sessionid, msgType, content)
+              val UserSessionInfo(uid, nickname, avatar, sessionid, sessionname, sessionicon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
+              WsTextUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, content)
             }
           case bm: BinaryMessage =>
             bm.dataStream.runFold(ByteString.empty)(_ ++ _).map { bs =>
@@ -81,8 +81,8 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
               } catch { case e: Throwable =>
                 consoleLog("ERROR", s"parse websocket binary message error: $e")
               }
-              val UserSessionInfo(uid, nickname, avatar, sessionid) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
-              WsBinaryUp(uid, nickname, avatar, sessionid, msgType, bsFile, fileName, fileSize, fileType)
+              val UserSessionInfo(uid, nickname, avatar, sessionid, sessionname, sessionicon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
+              WsBinaryUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, bsFile, fileName, fileSize, fileType)
             }
         }.buffer(1024 * 1024, OverflowStrategy.fail).mapAsync(6)(t => t)
       )
@@ -91,16 +91,16 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
 
       val filterFailure: FlowShape[WsMessageUp, WsMessageUp] = builder.add(Flow[WsMessageUp].filter(_.uid == ""))
       val flowReject: FlowShape[WsMessageUp, WsTextDown] = builder.add(
-        Flow[WsMessageUp].map(_ => WsTextDown("", "", "", "", "reject", "no privilege to send message"))
+        Flow[WsMessageUp].map(_ => WsTextDown("", "", "", "", "", "", "reject", "no privilege to send message"))
       )
 
       val filterSuccess: FlowShape[WsMessageUp, WsMessageUp] = builder.add(Flow[WsMessageUp].filter(_.uid != ""))
 
       val flowAccept: FlowShape[WsMessageUp, WsMessageDown] = builder.add(
         Flow[WsMessageUp].collect {
-          case WsTextUp(uid, nickname, avatar, sessionid, msgType, content) =>
-            WsTextDown(uid, nickname, avatar, sessionid, msgType, content)
-          case WsBinaryUp(uid, nickname, avatar, sessionid, msgType, bs, fileName, fileSize, fileType) =>
+          case WsTextUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, content) =>
+            WsTextDown(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, content)
+          case WsBinaryUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, bs, fileName, fileSize, fileType) =>
             val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
             val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
             val path = s"upload/$path1/$path2"
@@ -127,7 +127,7 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
             } catch { case e: Throwable =>
               consoleLog("ERROR", s"chat upload image error: $e")
             }
-            WsBinaryDown(uid, nickname, avatar, sessionid, msgType, filePath, fileName, fileSize, fileType, fileThumb)
+            WsBinaryDown(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, filePath, fileName, fileSize, fileType, fileThumb)
         }
       )
 
@@ -142,7 +142,7 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
       val flowAcceptBack: FlowShape[WsMessageDown, WsMessageDown] = builder.add(
         // websocket default timeout after 60 second, to prevent timeout send keepalive message
         // you can config akka.http.server.idle-timeout to set timeout duration
-        Flow[WsMessageDown].keepAlive(100.seconds, () => WsTextDown("", "", "", "", "keepalive", ""))
+        Flow[WsMessageDown].keepAlive(30.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
       )
 
       val mergeBackWs: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
@@ -156,12 +156,14 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
         }
       )
       flowFromWs ~> broadcastWs
-      broadcastWs ~> filterFailure ~> flowReject ~> mergeBackWs.in(0)
+      broadcastWs ~> filterFailure ~> flowReject
 
       broadcastWs ~> filterSuccess ~> flowAccept ~> mergeAccept.in(0)
       builder.materializedValue ~> connectedWs ~> mergeAccept.in(1)
-      mergeAccept ~> chatActorSink // --> to chatActor
-      chatSource ~> flowAcceptBack ~> mergeBackWs.in(1)
+      mergeAccept ~> chatActorSink // --> to chatSessionActor
+
+      /* from chatSessionActor --> */ chatSource ~> flowAcceptBack ~> mergeBackWs.in(0)
+      flowReject ~> mergeBackWs.in(1)
       mergeBackWs ~> flowBackWs
 
       FlowShape(flowFromWs.in, flowBackWs.out)

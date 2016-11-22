@@ -18,7 +18,7 @@ object Controller {
           "uid" -> "",
           "errmsg" -> s"password and repassword must be same",
           "successmsg" -> "",
-          "token" -> ""
+          "userToken" -> ""
         )
       }
     } else {
@@ -27,7 +27,7 @@ object Controller {
         case 2 => "images/avatar/girl.jpg"
         case _ => "images/avatar/unknown.jpg"
       }
-      registerUser(login, nickname, password, gender, avatar).map { case (uid, token, errmsg) =>
+      registerUser(login, nickname, password, gender, avatar).map { case (uid, userTokenStr, errmsg) =>
         var successmsg = ""
         if (uid != "") {
           successmsg = "register user success, thank you for join us"
@@ -36,8 +36,65 @@ object Controller {
           "uid" -> uid,
           "errmsg" -> errmsg,
           "successmsg" -> successmsg,
-          "token" -> token
+          "userToken" -> userTokenStr
         )
+      }
+    }
+  }
+
+  def createUserTokenCtl(userTokenStr: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    if (userToken.uid == "") {
+      Future(
+        Json.obj(
+          "errmsg" -> "no privilege to create user token",
+          "uid" -> "",
+          "userToken" -> ""
+        )
+      )
+    } else {
+      val uid = userToken.uid
+      createUserToken(uid).map { newUserTokenStr =>
+        if (newUserTokenStr == "") {
+          Json.obj(
+            "errmsg" -> "no privilege to create user token",
+            "uid" -> "",
+            "userToken" -> ""
+          )
+        } else {
+          Json.obj(
+            "errmsg" -> "",
+            "uid" -> uid,
+            "userToken" -> newUserTokenStr
+          )
+        }
+      }
+    }
+  }
+
+  def createSessionTokenCtl(userTokenStr: String, sessionid: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val userToken = verifyUserToken(userTokenStr)
+    if (userToken.uid == "") {
+      Future(
+        Json.obj(
+          "errmsg" -> "no privilege to create session token",
+          "sessionToken" -> ""
+        )
+      )
+    } else {
+      val uid = userToken.uid
+      createSessionToken(uid, sessionid).map { sessionTokenStr =>
+        if (sessionTokenStr == "") {
+          Json.obj(
+            "errmsg" -> "no privilege to create session token",
+            "sessionToken" -> ""
+          )
+        } else {
+          Json.obj(
+            "errmsg" -> "",
+            "sessionToken" -> sessionTokenStr
+          )
+        }
       }
     }
   }
@@ -61,11 +118,11 @@ object Controller {
           "uid" -> "",
           "errmsg" -> s"password must at least 6 characters",
           "successmsg" -> "",
-          "token" -> ""
+          "userToken" -> ""
         )
       }
     } else {
-      loginAction(login, password).map { case (uid, token) =>
+      loginAction(login, password).map { case (uid, userTokenStr) =>
         var successmsg = ""
         if (uid != "") {
           successmsg = "login in success"
@@ -76,7 +133,7 @@ object Controller {
           "uid" -> uid,
           "errmsg" -> errmsg,
           "successmsg" -> successmsg,
-          "token" -> token
+          "userToken" -> userTokenStr
         )
       }
     }
@@ -183,7 +240,7 @@ object Controller {
     }
   }
 
-  def createGroupSessionCtl(userTokenStr: String, chaticon: String, publictype: Int, name: String)(implicit ec: ExecutionContext) = {
+  def createGroupSessionCtl(userTokenStr: String, sessionicon: String, publictype: Int, sessionname: String)(implicit ec: ExecutionContext) = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
       Future(
@@ -195,7 +252,7 @@ object Controller {
       )
     } else {
       val uid = userToken.uid
-      createGroupSession(uid, chaticon, publictype, name).map { case (sessionid, errmsg) =>
+      createGroupSession(uid, sessionicon, publictype, sessionname).map { case (sessionid, errmsg) =>
         if (errmsg != "") {
           Json.obj(
             "sessionid" -> sessionid,
@@ -207,63 +264,6 @@ object Controller {
             "sessionid" -> sessionid,
             "errmsg" -> errmsg,
             "successmsg" -> "create group session success"
-          )
-        }
-      }
-    }
-  }
-
-  def createUserTokenCtl(userTokenStr: String)(implicit ec: ExecutionContext): Future[JsObject] = {
-    val userToken = verifyUserToken(userTokenStr)
-    if (userToken.uid == "") {
-      Future(
-        Json.obj(
-          "errmsg" -> "no privilege to create user token",
-          "uid" -> "",
-          "userToken" -> ""
-        )
-      )
-    } else {
-      val uid = userToken.uid
-      createUserToken(uid).map { newUserTokenStr =>
-        if (newUserTokenStr == "") {
-          Json.obj(
-            "errmsg" -> "no privilege to create user token",
-            "uid" -> "",
-            "userToken" -> ""
-          )
-        } else {
-          Json.obj(
-            "errmsg" -> "",
-            "uid" -> uid,
-            "userToken" -> newUserTokenStr
-          )
-        }
-      }
-    }
-  }
-
-  def createSessionTokenCtl(userTokenStr: String, sessionid: String)(implicit ec: ExecutionContext): Future[JsObject] = {
-    val userToken = verifyUserToken(userTokenStr)
-    if (userToken.uid == "") {
-      Future(
-        Json.obj(
-          "errmsg" -> "no privilege to create session token",
-          "sessionToken" -> ""
-        )
-      )
-    } else {
-      val uid = userToken.uid
-      createSessionToken(uid, sessionid).map { newSessionTokenStr =>
-        if (newSessionTokenStr == "") {
-          Json.obj(
-            "errmsg" -> "no privilege to create session token",
-            "sessionToken" -> ""
-          )
-        } else {
-          Json.obj(
-            "errmsg" -> "",
-            "sessionToken" -> newSessionTokenStr
           )
         }
       }
@@ -308,9 +308,9 @@ object Controller {
             }
             Json.obj(
               "sessionid" -> session._id,
-              "name" -> session.name,
+              "sessionname" -> session.sessionname,
               "sessiontype" -> session.sessiontype,
-              "chaticon" -> session.chaticon,
+              "sessionicon" -> session.sessionicon,
               "publictype" -> session.publictype,
               "dateline" -> timeToStr(session.dateline),
               "message" -> jsonMessage
@@ -341,12 +341,12 @@ object Controller {
     } else {
       val uid = userToken.uid
       for {
-        sessionToken <- createSessionToken(uid, sessionid)
+        sessionTokenStr <- createSessionToken(uid, sessionid)
         ret <- {
           listHistoryMessages(uid, sessionid, page, count, sort = document("dateline" -> -1)).map { case (errmsg, messageUsers) =>
             var token = ""
             if (errmsg == "") {
-              token = sessionToken
+              token = sessionTokenStr
             }
             Json.obj(
               "errmsg" -> errmsg,

@@ -50,14 +50,13 @@ sessions： 会话表（记录所有群聊私聊的会话信息）
 ```
 *senduid（创建者的uid）
 *recvuid（接收者的uid，只有当私聊的时候才有效）
-chaticon（会话的icon，对于群聊有效）
+sessionicon（会话的icon，对于群聊有效）
 sessiontype（会话类型：0：私聊，1：群聊）
 publictype（可见类型：0：不公开邀请才能加入，1：公开）
-name（群描述）
+sessionname（群描述）
 dateline（创建日期，timestamp）
 usersstatus（会话对应的用户uuid数组：[{uid: 用户uuid, online: 是否在线（true：在线，false：离线）}]）
 lastmsgid（最新发送的消息id）
-dateline（新建时间）
 ```
 messages： 消息表（记录会话中的消息记录）
 ===
@@ -149,19 +148,16 @@ MessageChannel：用于接收用户消息，以及向用户发送消息。当用
 
 # MessageChannel消息
 ```
-/ws-user channel
+/ws-push channel
 上行：
-{ userToken: "xxx"}
+{ userToken: "xxx" }
 下行：
-{ errmsg: "xxx", userToken: "xxx", uid: "xxx"}
-```
----
-```
-/ws-session channel
-上行：
-{ userToken: "xxx", sessionid: "xxx"}
-下行：
-{ errmsg: "xxx", sessionToken: "xxx"}
+rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "reject", content: "xxx", dateline: "xxx" }
+keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "keepalive", content: "", dateline: "xxx" }
+noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "system", content: "xxx", dateline: "xxx" }
+textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+
 ```
 ---
 ```
