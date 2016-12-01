@@ -88,7 +88,7 @@ object CommonUtils {
   }
 
   def timeToStr(time: Long = System.currentTimeMillis()) = {
-    val sdf = new SimpleDateFormat("MM-dd HH:mm")
+    val sdf = new SimpleDateFormat("MM-dd HH:mm:ss")
     sdf.format(time)
   }
 
@@ -97,6 +97,22 @@ object CommonUtils {
       f.setAccessible(true)
       f.getName -> f.get(c).toString
     }.toMap
+  }
+
+  def trimUtf8(str: String, len: Int) = {
+    var i = 0
+    var strNew = ""
+    str.foreach { ch =>
+      if (i < len) {
+        strNew = strNew + ch
+      }
+      var charLen = ch.toString.getBytes.length
+      if (charLen > 2) {
+        charLen = 2
+      }
+      i = i + charLen
+    }
+    strNew
   }
 
 }

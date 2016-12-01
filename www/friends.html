@@ -1,0 +1,22 @@
+<div ng-controller="friendsAppCtl">
+    <div ng-if="!isLoading" class="row">
+        <div ng-if="1 == 0" class="search">
+            <div class="search-wrapper card">
+                <input id="search" placeholder="Search all chat sessions"><i class="material-icons">search</i>
+                <div class="search-results"></div>
+            </div>
+        </div>
+        <div class="row"></div>
+        <ul ng-if="friends.length > 0" class="collection">
+            <li ng-repeat="friend in friends" class="collection-item avatar">
+                <a ng-click="showUserMenu(friend.uid)" href="javascript:void(0)" class="title blue-text"><img ng-src="{{friend.avatar}}" alt="{{friend.nickname}}" class="circle">
+                    {{friend.nickname}}
+                </a>
+                <div class="grey-text">{{friend.dateline}}</div>
+                <div class="secondary-content right-align">
+                    <a ng-click="showRemoveFriendModal(friend.uid, friend.nickname)" href="javascript:void(0);" class="btn-floating tooltipped red right" data-position="bottom" data-delay="50" data-tooltip="delete friend"><i class="material-icons">clear</i></a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

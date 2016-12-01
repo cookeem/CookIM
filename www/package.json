@@ -15,7 +15,8 @@
     "jquery": "3.1.0",
     "spark-md5": "2.0.2",
     "materialize-css": "0.97.8",
-    "font-awesome": "4.6.3"
+    "font-awesome": "4.6.3",
+    "jsrender": "0.9.83"
   },
   "author": "cookeem",
   "license": "ISC"

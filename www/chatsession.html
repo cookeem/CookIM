@@ -1,118 +1,127 @@
-<link href="node_modules/materialize-css/dist/css/materialize.min.css" rel="stylesheet">
 <div ng-controller="chatSessionAppCtl">
-    <div ng-if="!isLoading" class="row">
-        <div class="search">
+    <div class="row">
+        <div ng-if="1 == 0" class="search">
             <div class="search-wrapper card">
                 <input id="search" placeholder="Search this chat session"><i class="material-icons">search</i>
                 <div class="search-results"></div>
             </div>
         </div>
         <div class="row"></div>
-        <div class="row">
-            <p id="output">
-            </p>
-        </div>
-        <div class="row">
-            <div class="card horizontal">
-                <div class="card-stacked">
-                    <div class="card-content">
-                        <span>
-                            <div class="chip">
-                                <img src="images/yuna.jpg" alt="Contact Person">
-                                Jane Doe
+        <div ng-repeat="message in messages track by $index">
+            <div ng-if="message.msgType == 'text' && message.uid != uid" class="row">
+                <div class="col s12 m10 l7">
+                    <div class="card horizontal">
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <a ng-click="showUserMenu(message.uid)" href="javascript:void(0)">
+                                    <div class="chip">
+                                        <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                        {{message.nickname}}
+                                    </div>
+                                </a>
+                                {{message.dateline}}
+                                <pre style="white-space: pre-wrap;">{{message.content}}</pre>
                             </div>
-                            09-20 12:12
-                            <a href="javascript:void(0);" class="dropdown-button right" data-activates="dropdown1"><i class="material-icons">more_vert</i></a>
-                            <ul id='dropdown1' class='dropdown-content'>
-                                <li class="bl"><a href="#!" class="blue-text">one</a></li>
-                                <li><a href="#!" class="blue-text">two</a></li>
-                                <li class="divider"></li>
-                                <li><a href="#!" class="red-text">three</a></li>
-                            </ul>
-                        </span>
-                        <p>I am a very simple card. I am good at containing small bits of information.</p>
+                        </div>
                     </div>
                 </div>
+                <div class="col m2 l5"></div>
             </div>
-        </div>
-        <div class="row">
-            <div class="card horizontal">
-                <div class="card-stacked">
-                    <div class="card-content right-align grey lighten-4">
-                        <span>
-                            09-20 12:12
-                            <div class="chip blue white-text">
-                                <img src="images/yuna.jpg" alt="Contact Person">
-                                Jane Doe
-                            </div>
-                            <a href="javascript:void(0);" class="dropdown-button left" data-activates="dropdown2"><i class="material-icons">more_vert</i></a>
-                            <ul id='dropdown2' class='dropdown-content'>
-                                <li class="bl"><a href="#!" class="blue-text">one</a></li>
-                                <li><a href="#!" class="blue-text">two</a></li>
-                                <li class="divider"></li>
-                                <li><a href="#!" class="red-text">three</a></li>
-                            </ul>
-                        </span>
-                        <p>I am a very simple card. I am good at containing small bits of information.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="card horizontal">
-                <div class="card-stacked">
-                    <div class="card-content">
-                        <span>
-                            <div class="chip">
-                                <img src="images/yuna.jpg" alt="Contact Person">
-                                Jane Doe
-                            </div>
-                            09-20 12:12
-                            <a href="javascript:void(0);" class="dropdown-button right" data-activates="dropdown3"><i class="material-icons">more_vert</i></a>
-                            <ul id='dropdown3' class='dropdown-content'>
-                                <li class="bl"><a href="#!" class="blue-text">one</a></li>
-                                <li><a href="#!" class="blue-text">two</a></li>
-                                <li class="divider"></li>
-                                <li><a href="#!" class="red-text">three</a></li>
-                            </ul>
-                        </span>
-                        <div class="row"></div>
-                        <div class="row">
-                            <div class="col s6 offset-s3 center-align">
-                                <img src="images/yuna.jpg" class="z-depth-1 responsive-img">
+            <div ng-if="message.msgType == 'text' && message.uid == uid" class="row">
+                <div class="col m2 l5"></div>
+                <div class="col s12 m10 l7">
+                    <div class="card horizontal grey lighten-3">
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <div class="chip blue white-text">
+                                    <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                    {{message.nickname}}
+                                </div>
+                                {{message.dateline}}
+                                <pre style="white-space: pre-wrap;">{{message.content}}</pre>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="card horizontal">
-                <div class="card-stacked">
-                    <div class="card-content right-align grey lighten-4">
-                        <span>
-                            09-20 12:12
-                            <div class="chip blue white-text">
-                                <img src="images/yuna.jpg" alt="Contact Person">
-                                Jane Doe
-                            </div>
-                            <a href="javascript:void(0);" class="dropdown-button left" data-activates="dropdown4"><i class="material-icons">more_vert</i></a>
-                            <ul id='dropdown4' class='dropdown-content'>
-                                <li class="bl"><a href="#!" class="blue-text">one</a></li>
-                                <li><a href="#!" class="blue-text">two</a></li>
-                                <li class="divider"></li>
-                                <li><a href="#!" class="red-text">three</a></li>
-                            </ul>
-                        </span>
-                        <div class="row"></div>
-                        <div class="row">
-                            <div class="col s6 offset-s3 center-align">
-                                <img src="images/sample.jpg" class="z-depth-1 responsive-img">
+            <div ng-if="message.msgType == 'file' && message.uid != uid" class="row">
+                <div class="col s12 m10 l7">
+                    <div class="card horizontal">
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <a ng-click="showUserMenu(message.uid)" href="javascript:void(0)">
+                                    <div class="chip">
+                                        <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                        {{message.nickname}}
+                                    </div>
+                                </a>
+                                {{message.dateline}}
+                                <div class="row"></div>
+                                <div class="row">
+                                    <div ng-if="message.fileInfo.fileThumb != '/'" class="col s6 offset-s3 center-align">
+                                        <a ng-href="{{message.fileInfo.filePath}}"><img ng-src="{{message.fileInfo.fileThumb}}" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileInfo.fileName}}</div>
+                                    </div>
+                                    <div ng-if="message.fileInfo.fileThumb == '/'" class="col s6 offset-s3 center-align">
+                                        <a ng-href="{{message.fileInfo.filePath}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileInfo.fileName}}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col m2 l5"></div>
+            </div>
+            <div ng-if="message.msgType == 'file' && message.uid == uid" class="row">
+                <div class="col m2 l5"></div>
+                <div class="col s12 m10 l7">
+                    <div class="card horizontal grey lighten-3">
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <div class="chip blue white-text">
+                                    <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                    {{message.nickname}}
+                                </div>
+                                {{message.dateline}}
+                                <div class="row"></div>
+                                <div class="row">
+                                    <div ng-if="message.fileInfo.fileThumb != '/'" class="col s6 offset-s3 center-align">
+                                        <a target="_blank" ng-href="{{message.fileInfo.filePath}}"><img ng-src="{{message.fileInfo.fileThumb}}" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileInfo.fileName}}</div>
+                                    </div>
+                                    <div ng-if="message.fileInfo.fileThumb == '/'" class="col s6 offset-s3 center-align">
+                                        <a target="_blank" ng-href="{{message.fileInfo.filePath}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileInfo.fileName}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="message.msgType == 'online'" class="row center-align">
+                <div class="chip blue lighten-4 white-text">{{message.content}} @ {{message.dateline}}</div>
+            </div>
+            <div ng-if="message.msgType == 'offline'" class="row center-align">
+                <div class="chip grey lighten-2 white-text">{{message.content}} @ {{message.dateline}}</div>
+            </div>
+            <div ng-if="message.msgType == 'join'" class="row center-align">
+                <div class="chip green lighten-4 white-text">{{message.content}} @ {{message.dateline}}</div>
+            </div>
+            <div ng-if="message.msgType == 'leave'" class="row center-align">
+                <div class="chip red lighten-4 white-text">{{message.content}} @ {{message.dateline}}</div>
+            </div>
+            <div ng-if="message.msgType == 'system'" class="row center-align">
+                <div class="chip blue white-text">{{message.content}} @ {{message.dateline}}</div>
+            </div>
+            <div ng-if="message.msgType == 'reject'" class="row center-align">
+                <div class="chip red white-text">{{message.content}} @ {{message.dateline}}</div>
             </div>
         </div>
     </div>
 </div>
+
+
+
+

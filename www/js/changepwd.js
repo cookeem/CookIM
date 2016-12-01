@@ -2,15 +2,32 @@
  * Created by cookeem on 16/6/3.
  */
 app.controller('changePwdAppCtl', function($rootScope, $scope, $cookies, $timeout, $http) {
-    //Hide sidebar when init
-    $rootScope.showNavbar = true;
-    //Hide footer when init
+    $rootScope.showSideNavbar = true;
     $rootScope.showMessageArea = false;
+    $rootScope.showAccoutMenu = true;
+    $rootScope.titleInfo = {
+        //private_session, group_session, other
+        mode: "other",
+        //title text
+        title: "CookIM - Change login password",
+        //title icon
+        icon: "images/favicon.ico",
+        //useful when mode == "group_session"
+        sessionid: "",
+        //useful when mode == "private_session"
+        uid: ""
+    };
+
     $timeout(function() {
-        showHideSideBar($rootScope.showNavbar);
+        showHideSideBar($rootScope.showSideNavbar);
+        $(window).resize(function() {
+            showHideSideBar($rootScope.showSideNavbar);
+        });
     }, 0);
 
     $rootScope.verifyUserToken();
+
+    $rootScope.getUserTokenRepeat();
 
     $scope.changePwdData = {
         "oldPwd": "",
@@ -20,6 +37,7 @@ app.controller('changePwdAppCtl', function($rootScope, $scope, $cookies, $timeou
     };
 
     $scope.changePwdSubmit = function() {
+        $rootScope.verifyUserToken();
         $http({
             method  : 'POST',
             url     : '/api/changePwd',

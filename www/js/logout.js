@@ -2,6 +2,18 @@
  * Created by cookeem on 16/6/2.
  */
 app.controller('logoutAppCtl', function($rootScope, $scope, $cookies, $http, $timeout) {
+    //Hide sidebar when init
+    $rootScope.showSideNavbar = false;
+    $rootScope.showAccoutMenu = false;
+    //Hide footer when init
+    $rootScope.showMessageArea = false;
+    $timeout(function() {
+        showHideSideBar($rootScope.showSideNavbar);
+        $(window).resize(function() {
+            showHideSideBar($rootScope.showSideNavbar);
+        });
+        $('label').addClass('active');
+    }, 0);
 
     $rootScope.verifyUserToken();
 
@@ -31,6 +43,10 @@ app.controller('logoutAppCtl', function($rootScope, $scope, $cookies, $http, $ti
                 Materialize.toast($rootScope.successmsg, 3000);
 
                 $rootScope.getUserTokenStop();
+
+                if ($rootScope.wsPushSession) {
+                    $rootScope.closeWs($rootScope.wsPushSession);
+                }
 
                 window.location.href = '#!/login';
             }

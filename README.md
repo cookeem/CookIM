@@ -17,19 +17,6 @@ http://localhost:8080/
 http://localhost:8081/
 ```
 ---
-### 3. 客户端支持显示用户名，发送时间
-
----
-### 4. 支持消息保存到mongodb
-
----
-### 5. 支持用户进入聊天室的时候显示之前的消息
-
----
-### 6. 显示二进制内容机制修改，改为推送json信息
-
----
-### 7. 用户信息保存在mongodb
 
 users： 用户表
 ===
@@ -39,49 +26,61 @@ nickname（昵称）
 password（密码SHA1）
 gender（性别：未知：0，男生：1，女生：2）
 avatar（头像，绝对路径，/upload/avatar/201610/26/xxxx.JPG）
-lastlogin（最后登录时间，timstamp）
-logincount(登录次数)
-sessionsstatus（用户相关的会话状态列表：[{sessionid: 会话id, newcount: 未读的新消息数量}]）
+lastLogin（最后登录时间，timstamp）
+loginCount(登录次数)
+sessionsStatus（用户相关的会话状态列表：[{sessionid: 会话id, newCount: 未读的新消息数量}]）
 friends（用户的好友列表：[{uuid: 好友uuid}]）
 dateline（注册时间，timstamp）
 ```
 sessions： 会话表（记录所有群聊私聊的会话信息）
 ===
 ```
-*senduid（创建者的uid）
-*recvuid（接收者的uid，只有当私聊的时候才有效）
-sessionicon（会话的icon，对于群聊有效）
-sessiontype（会话类型：0：私聊，1：群聊）
-publictype（可见类型：0：不公开邀请才能加入，1：公开）
-sessionname（群描述）
+*createuid（创建者的uid）
+*ouid（接收者的uid，只有当私聊的时候才有效）
+sessionIcon（会话的icon，对于群聊有效）
+sessionType（会话类型：0：私聊，1：群聊）
+publicType（可见类型：0：不公开邀请才能加入，1：公开）
+sessionName（群描述）
 dateline（创建日期，timestamp）
-usersstatus（会话对应的用户uuid数组：[{uid: 用户uuid, online: 是否在线（true：在线，false：离线）}]）
-lastmsgid（最新发送的消息id）
+usersStatus（会话对应的用户uuid数组：[{uid: 用户uuid, online: 是否在线（true：在线，false：离线）}]）
+lastMsgid（最新发送的消息id）
+lastUpdate（最后更新时间，timstamp）
+dateline（创建时间，timstamp）
 ```
 messages： 消息表（记录会话中的消息记录）
 ===
 ```
-*senduid（消息发送者的uuid）
+*uid（消息发送者的uid）
 *sessionid（所在的会话id）
-msgtype（消息类型：0：文字消息，1：图片消息，2：语音消息，3：视频消息，4：文件消息，5：语音聊天，6：视频聊天）
+msgType（消息类型：）
 content（消息内容）
-fileinfo（文件内容）
+fileInfo（文件内容）
 {
-    filepath（文件路径）
-    filename（文件名）
-    filetype（文件mimetype）
-    filemd5（文件的md5）
-    size（文件大小）
-    dateline（创建日期，timestamp）
+    filePath（文件路径）
+    fileName（文件名）
+    fileType（文件mimetype）
+    fileSize（文件大小）
+    fileThumb（缩略图）
 }
-dateline（创建日期，timestamp）
+*dateline（创建日期，timestamp）
 ```
 
-online（在线用户表）
+onlines：（在线用户表）
 ===
 ```
 *id（唯一标识）
 *uid（在线用户uid）
+dateline（更新时间戳）
+```
+
+notifications：（接收通知表）
+===
+```
+noticeType：通知类型（"joinFriend", "removeFriend", "inviteSession"）
+senduid：操作方uid
+*recvuid：接收方uid
+sessionid：对应的sessionid
+isRead：是否已读（0：未读，1：已读）
 dateline（更新时间戳）
 ```
 ### 11. 文件支持保存到本地目录，并自动命名文件。并且能够根据客户端发送的文件md5信息与服务端文件md5信息进行比较，建立文件与消息id对应关系
@@ -100,10 +99,6 @@ dateline（更新时间戳）
 服务端支持直接解释表情文本为表情
 
 ### 22. 支持视频直播
-
-### 23. 支持用户不在线的时候消息缓存到队列，用户上线的时候，把队列中的消息发送给用户
-
-### 24. 支持查看历史消息
 
 
 ### jwt验证流程
@@ -124,16 +119,15 @@ jwt应该放在request的header中
 
 
 # mongodb读写操作
-用户注册    registerUser
-用户登录    loginAction
-用户注销    logoutAction
-用户修改密码  changePwd
+[OK] 用户注册    registerUser
+[OK] 用户登录    loginAction
+[OK] 用户注销    logoutAction
+[OK] 用户修改密码  changePwd
 显示个人资料  getUserInfo
-修改个人资料  updateUserInfo
-查看公开会话列表（群聊）    listPublicSessions
-查看加入的会话（查看全部列表、查看私聊列表、查看群聊列表）   listJoinedSessions
+[OK] 修改个人资料  updateUserInfo
+[OK] 查看会话列表    listSessions
 加入群聊会话  joinSession
-创建群聊会话  createGroupSession
+[OK] 创建群聊会话  createGroupSession
 修改群聊信息  updateSessionInfo
 离开群聊会话  leaveSession
 查看历史消息（分页排序）    listHistoryMessages
@@ -152,36 +146,102 @@ MessageChannel：用于接收用户消息，以及向用户发送消息。当用
 上行：
 { userToken: "xxx" }
 下行：
-rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "reject", content: "xxx", dateline: "xxx" }
-keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "keepalive", content: "", dateline: "xxx" }
-noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "system", content: "xxx", dateline: "xxx" }
-textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
-fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
-
+acceptMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "accept", content: "xxx", dateline: "xxx" }
+rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
+keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
+textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
+offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
+joinSessionMsg: { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
+leaveSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "leave", content: "xxx", dateline: "xxx" }
+noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "xxx", sessionIcon: "xxx", msgType: "system", content: "xxx", dateline: "xxx" }
+下行用户端：
+pushMsg:       { 
+                    uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "xxx", 
+                    content: "xxx", 
+                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    dateline: "xxx" 
+               }
 ```
 ---
 ```
 /ws-chat channel
 上行：
-onlineMsg: { userToken: "xxx", sessionToken: "xxx", msgType:"online", content:"" }
-textMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx" }
-fileMsg:   { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx" }<#BinaryInfo#>binary_file_array_buffer
-下行：
-rejectMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "reject", content: "xxx", dateline: "xxx" }
-keepAlive: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "keepalive", content: "", dateline: "xxx" }
-noticeMsg: { uid: "", nickname: "", avatar: "", sessionid: "", msgType: "system", content: "xxx", dateline: "xxx" }
-textMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
-fileMsg:   { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
-```
+onlineMsg:     { userToken: "xxx", sessionToken: "xxx", msgType:"online", content:"" }
+textMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx" }
+fileMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx" }<#BinaryInfo#>binary_file_array_buffer
+下行：    
+rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
+keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
+textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
+offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
+joinSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
+leaveSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "leave", content: "xxx", dateline: "xxx" }
+noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "xxx", sessionIcon: "xxx", msgType: "system", content: "xxx", dateline: "xxx" }
+下行用户端：
+chatMsg:       { 
+                    uid: "xxx", nickname: "xxx", avatar: "xxx", msgType: "xxx", 
+                    content: "xxx", 
+                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    dateline: "xxx" 
+               }
+```    
+---
 
-users表需要记录用户参与的session以及参与的session的最新消息
-sessions表需要记录会话的参与者的当前是否在线状态
 
-在会话中发送消息，消息要批量入库到mongodb
-会话中发送消息的时候，浏览器通过ws发送jwt以及消息体给服务端，服务端要验证jwt（jwt中包含如下信息：uid,nickname,avatar），如果jwt不正确要回送错误提示而不进行群发，修改ChatSessionActor中的逻辑
-在websocket的keepalive上增加更新刷新online动作，更新online并回送jwt
-用户上线的时候读取session的历史消息即可
-用户发送图片的时候，使用TextMessage下发消息回浏览器
+经常改变的字段：
+users.sessionsStatus（用户相关的会话状态列表：[{sessionid: 会话id, newCount: 未读的新消息数量}]）
+[OK] users.sessionsStatus.sessionid在joinSession的时候增加记录，在leaveSession的时候删除记录
+[OK] users.sessionsStatus.newCount，当用户不在线，createMessage的时候+1，listHistoryMessages的时候设置为0
+
+users.lastLogin（最后登录时间，timstamp）
+[OK] 在createUserToken的时候更新
+
+users.loginCount(登录次数)
+[OK] 在loginAction的时候+1
+
+sessions.usersStatus（会话对应的用户uuid数组：[{uid: 用户uuid, online: 是否在线（true：在线，false：离线）}]）
+[OK] sessions.usersStatus.uid在joinSession的时候增加记录，在leaveSession的时候删除记录
+[OK] sessions.usersStatus.online在用户进入会话的时候userOnlineOffline设置为true，在用户离开会话的时候设置为false
+sessions.lastMsgid（最新发送的消息id）
+[OK] 在createMessage的时候更新对应的lastmsgid
+
+onlines.uid（在线用户uid）
+onlines.dateline（更新时间戳）
+[OK] 在createUserToken的时候更新
+
+messages
+[OK] 在用户发送消息的时候更新(createMessage)
 
 
-# 用户最多当前在一个session中在线
+# 改进需求
+1、会话列表页（公开的）（群聊）可以（joinSession）；
+2、会话列表页（加入的）（群聊）可以（leaveSession）；
+3、会话列表页（加入的）（私聊）可以（leaveSession），leaveSession会把双方对应的users.sessionsstatus清除；
+4、会话列表页（群聊），可以查看会话中的用户，哪些在线，哪些不在线；
+5、查看会话中的用户列表界面，可以向某个用户发起会话（不能向自己发起会话），自动创建会话；
+6、会话列表页，接口没有显示会话中最后发送的消息 ———— 对于文件、图片消息需要进行翻译；
+7、顶部标题栏根据所在页面显示不同标题以及菜单
+
+---
+
+1、消息查看页（群聊），可以查看会话中的用户，哪些在线，哪些不在线；
+2、消息查看页（群聊），可以修改群聊资料；
+3、消息查看页（群聊），可以（leaveSession）、可以（inviteSession）邀请好友加入会话；
+4、消息查看页（私聊），可以加好友或者删除好友；
+5、消息查看页（私聊），可以邀请好友加入会话，自动创建新的会话；
+6、消息查看页，对于图片消息可以查看图片大图；对于文件消息可以下载文件；
+7、消息查看页，可以向某个用户发起会话（不能向自己发起会话），自动创建会话；
+8、消息查看页，可以申请加某个用户为好友（不能加自己为好友）；
+
+---
+
+1、左侧菜单显示已加入的群聊名称以及新消息数量；
+2、主界面可以显示pushMessage的toast通知；
+3、主界面右上角菜单可以关闭或者开启pushMessage的toast通知；
+4、新建通知页面，以及通知表。通知表用户显示加好友通知，邀请加入会话通知。
+——通知类型两类：加好友通知、邀请加入会话通知
+5、新建好友列表页面，列表上可以删除好友；
