@@ -42,23 +42,21 @@ var app = angular.module('app', ['ngRoute', 'ngAnimate', 'ngCookies', 'ui.materi
     $timeout(function() {
         //materializecss init
         //sideNavbar init
-        var sidebarWidth = 240;
-
-        if ($(window).width() > 992) {
-            $('.button-collapse').sideNav({
-                    'menuWidth': sidebarWidth, // Default is 240
-                    'edge': 'left', // Choose the horizontal origin
-                    'closeOnClick': false // Closes side-nav on <a> clicks, useful for Angular/Meteor
-                }
-            );
-        } else {
-            $('.button-collapse').sideNav({
-                    'menuWidth': sidebarWidth, // Default is 240
-                    'edge': 'left', // Choose the horizontal origin
-                    'closeOnClick': true // Closes side-nav on <a> clicks, useful for Angular/Meteor
-                }
-            );
-        }
+        // if ($(window).width() > 992) {
+        //     $('.button-collapse').sideNav({
+        //             'menuWidth': 240, // Default is 240
+        //             'edge': 'left', // Choose the horizontal origin
+        //             'closeOnClick': false // Closes side-nav on <a> clicks, useful for Angular/Meteor
+        //         }
+        //     );
+        // } else {
+        //     $('.button-collapse').sideNav({
+        //             'menuWidth': 240, // Default is 240
+        //             'edge': 'left', // Choose the horizontal origin
+        //             'closeOnClick': true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+        //         }
+        //     );
+        // }
 
         $('.modal').modal();
         $('.dropdown-button').dropdown({
@@ -1030,8 +1028,22 @@ app.filter('trustHtml', function ($sce) {
 function showHideSideBar(isShow) {
     if (isShow) {
         if ($(window).width() > 992) {
+            $('.button-collapse').sideNav('destroy');
+            $('.button-collapse').sideNav({
+                    'menuWidth': 240, // Default is 240
+                    'edge': 'left', // Choose the horizontal origin
+                    'closeOnClick': false // Closes side-nav on <a> clicks, useful for Angular/Meteor
+                }
+            );
             $('header, main, footer').css('padding-left', '240px');
         } else {
+            $('.button-collapse').sideNav('destroy');
+            $('.button-collapse').sideNav({
+                    'menuWidth': 240, // Default is 240
+                    'edge': 'left', // Choose the horizontal origin
+                    'closeOnClick': true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+                }
+            );
             $('header, main, footer').css('padding-left', '0');
         }
     } else {
