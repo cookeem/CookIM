@@ -959,7 +959,7 @@ app.controller('contentCtl', function($rootScope, $scope, $cookies, $route, $htt
     };
 
     $rootScope.updateJoinedSessions = function(json) {
-        if (json.msgType == 'text' || json.msgType == 'file' || json.msgType == 'online' || json.msgType == 'offline' || json.msgType == 'join' || json.msgType == 'leave' || json.msgType == 'system') {
+        if (json.msgType != 'accept' && json.msgType != 'reject' && json.msgType != 'keepalive') {
             var sessionid = json.sessionid;
             if (sessionid != "" && $rootScope.titleInfo.sessionid != sessionid) {
                 $rootScope.joinedSessions.forEach(function(session) {
