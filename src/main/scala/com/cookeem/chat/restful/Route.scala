@@ -1,7 +1,7 @@
 package com.cookeem.chat.restful
 
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.{HttpRequest, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
@@ -64,12 +64,12 @@ object Route {
     }(innerRejectionsHandled)(ctx)
   }
 
-  def routeRoot(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
+  def routeRoot(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer, notificationActor: ActorRef) = {
     routeLogic ~
     extractRequest { request =>
       badRequest(request)
     }
   }
 
-  def logRoute(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = logDuration(routeRoot)
+  def logRoute(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer, notificationActor: ActorRef) = logDuration(routeRoot)
 }

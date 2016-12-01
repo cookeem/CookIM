@@ -2,15 +2,32 @@
  * Created by cookeem on 16/6/3.
  */
 app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeout, $http) {
-    //Hide sidebar when init
-    $rootScope.showNavbar = true;
-    //Hide footer when init
+    $rootScope.showSideNavbar = true;
     $rootScope.showMessageArea = false;
+    $rootScope.showAccoutMenu = true;
+    $rootScope.titleInfo = {
+        //private_session, group_session, other
+        mode: "other",
+        //title text
+        title: "CookIM - Set user profile",
+        //title icon
+        icon: "images/favicon.ico",
+        //useful when mode == "group_session"
+        sessionid: "",
+        //useful when mode == "private_session"
+        uid: ""
+    };
+
     $timeout(function() {
-        showHideSideBar($rootScope.showNavbar);
+        showHideSideBar($rootScope.showSideNavbar);
+        $(window).resize(function() {
+            showHideSideBar($rootScope.showSideNavbar);
+        });
     }, 0);
 
     $rootScope.verifyUserToken();
+
+    $rootScope.getUserTokenRepeat();
 
     $scope.getUserInfoData = {
         "uid": $rootScope.uid,
@@ -18,6 +35,7 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
     };
 
     $scope.getUserInfoSubmit = function() {
+        $rootScope.verifyUserToken();
         $http({
             method  : 'POST',
             url     : '/api/getUserInfo',
@@ -51,6 +69,7 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
     };
 
     $scope.changeUserInfoSubmit = function() {
+        $rootScope.verifyUserToken();
         var formData = new FormData();
         formData.append("nickname", $scope.changeUserInfoData.nickname);
         formData.append("gender", $scope.changeUserInfoData.gender);

@@ -1,10 +1,11 @@
 package com.cookeem.chat
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.restful.Route
+import com.cookeem.chat.websocket.NotificationActor
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.cli.{DefaultParser, HelpFormatter, Options, Option => CliOption}
 
@@ -46,8 +47,9 @@ object CookIM extends App {
       implicit val system = ActorSystem("chat-cluster", configCluster)
       implicit val materializer = ActorMaterializer()
       import system.dispatcher
+      implicit val notificationActor = system.actorOf(Props(classOf[NotificationActor]))
       Http().bindAndHandle(Route.logRoute, "0.0.0.0", httpPort)
-      consoleLog("INFO",s"Websocket chat server started! Access url: http://localhost:$httpPort/chat/websocket.html?username=cookeem&chatid=room01")
+      consoleLog("INFO",s"CookIM server started! Access url: http://localhost:$httpPort/")
     }
   } catch {
     case e: Throwable =>

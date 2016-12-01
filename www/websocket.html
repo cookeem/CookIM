@@ -24,9 +24,7 @@
         }
     }
     var host = window.location.host;
-//    var wsUri = "ws://" + host + "/ws-chat/"+chatid+"/"+username;
-    var wsUri = "ws://" + host + "/ws-chat";
-//    var wsUri = "ws://" + host + "/ws-echo";
+    var wsUri = "ws://" + host + "/ws-push";
 
     var output;
     //用于接收字符串消息
@@ -35,10 +33,10 @@
 
     function init() {
         output = document.getElementById("output");
-        listenWebsocketToken(websocket);
+        listenWebsocket(websocket);
         $('.modal').modal();
     }
-    function listenWebsocketToken(ws) {
+    function listenWebsocket(ws) {
         ws.onopen = function(evt) {
             onOpen(evt)
         };
@@ -81,12 +79,7 @@
 
     //send message through websocket
     function sendMessage(message) {
-        var jsonMessage = {
-          nickname: username,
-          time: Date.now(),
-          message: message
-        };
-        websocket.send(JSON.stringify(jsonMessage));
+        websocket.send(message);
     }
 
     function utf8StringToArrayBuffer(s) {
@@ -128,7 +121,7 @@
 
     //send file through websocket
     function sendFile() {
-        var file = document.getElementById('filename').files[0];
+        var file = document.getElementById('fileName').files[0];
         var isImage = file.type.startsWith("image/");
         var isFitSize = file.size < 2048 * 1024;
         if (isImage && isFitSize) {
@@ -136,9 +129,9 @@
             reader.readAsArrayBuffer(file);
             reader.onloadend = function() {
                 var fileInfo = {
-                    filename: file.name,
-                    filesize: file.size,
-                    filetype: file.type
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type
                 };
                 var fileInfoStr = JSON.stringify(fileInfo) + "<#BinaryInfo#>";
                 var fileInfoBuf = utf8StringToArrayBuffer(fileInfoStr);
@@ -178,7 +171,7 @@
 </script>
 <h2>File Upload</h2>
 Select file
-<input type="file" id="filename" />
+<input type="file" id="fileName" />
 <br>
 <input type="button" value="Upload" onclick="sendFile()" />
 <h2>WebSocket Test</h2>

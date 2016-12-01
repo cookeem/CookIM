@@ -1,39 +1,38 @@
 <div ng-controller="chatListAppCtl">
     <div ng-if="!isLoading" class="row">
-        <div class="search">
+        <div ng-if="1 == 0" class="search">
             <div class="search-wrapper card">
                 <input id="search" placeholder="Search all chat sessions"><i class="material-icons">search</i>
                 <div class="search-results"></div>
             </div>
         </div>
         <div class="row"></div>
-        <div class="collection" ng-if="listSessionsResults.length > 0">
-            <a ng-repeat="session in listSessionsResults" href="#!/chatsession/{{session.sessionid}}" class="collection-item avatar">
-                <img ng-src="{{session.sessionicon}}" alt="" class="circle">
-                <span class="title blue-text">{{session.sessionname}}</span>
-                <div ng-if="session.message">
-                    <p style="width: 75%;" class="black-text"> {{session.message.nickname}}: {{session.message.message}}
-                    </p>
-                    <span class="secondary-content blue-text right-align">
-                        <p>
-                            {{session.dateline}}
-                            <br />
-                            <i class="material-icons red-text">grade</i>
-                        </p>
+        <ul class="collection" ng-if="listSessionsResults.length > 0">
+            <li ng-repeat="session in listSessionsResults" class="collection-item avatar">
+                <div ng-if="listSessionsData.isPublic == 0">
+                    <a ng-href="#!/chatsession/{{session.sessionid}}"><img ng-src="{{session.sessionIcon}}" class="circle"></a>
+                    <a ng-href="#!/chatsession/{{session.sessionid}}" class="title blue-text"><span ng-if="session.sessionType == 1" class="red-text">[Group]</span><span ng-if="session.sessionType == 0" class="red-text">[Private]</span> {{session.sessionName}}</a>
+                    <span ng-if="session.newCount > 0" class="chip red white-text" style="margin-left: 10px">{{session.newCount}}</span>
+                </div>
+                <div ng-if="listSessionsData.isPublic == 1">
+                    <span><img ng-src="{{session.sessionIcon}}" class="circle"></span>
+                    <span class="title green-text">
+                        <span ng-if="session.sessionType == 1" class="red-text">[Group]</span>
+                        <span ng-if="session.sessionType == 0" class="red-text">[Private]</span>
+                        {{session.sessionName}}
                     </span>
                 </div>
-                <div ng-if="!session.message">
-                    <p style="width: 75%;" class="black-text"> No new message
-                    </p>
-                    <span class="secondary-content blue-text right-align">
-                        <p>
-                            {{session.dateline}}
-                            <br />
-                            <i class="material-icons red-text">grade</i>
-                        </p>
-                    </span>
+                <div ng-if="session.message" class="grey-text">{{session.lastUpdate}}</div>
+                <div ng-if="session.message">{{session.message.nickname}}: {{session.message.content}}</div>
+                <div ng-if="!session.message">No new message in the session</div>
+                <div class="secondary-content right-align">
+                    <div class="horizontal click-to-toggle">
+                        <a ng-click="showSessionMenu(session.sessionid)" href="javascript:void(0)" class="btn-floating grey">
+                            <i class="material-icons">menu</i>
+                        </a>
+                    </div>
                 </div>
-            </a>
-        </div>
+            </li>
+        </ul>
     </div>
 </div>

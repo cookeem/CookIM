@@ -27,8 +27,8 @@ import scala.concurrent.duration._
   * Created by cookeem on 16/9/25.
   */
 class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer) {
-  implicit val wsTextDownWrites = Json.writes[WsTextDown]
-  implicit val wsBinaryDownWrites = Json.writes[WsBinaryDown]
+  implicit val fileInfoWrites = Json.writes[FileInfo]
+  implicit val chatMessageWrites = Json.writes[ChatMessage]
 
   val chatSessionActor = actorSystem.actorOf(Props(classOf[ChatSessionActor]))
   consoleLog("INFO", s"create new chatSessionActor: $chatSessionActor")
@@ -48,15 +48,15 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
               var content = ""
               try {
                 val json = Json.parse(jsonStr)
-                userTokenStr = getJsonString(json, "userToken", "")
-                sessionTokenStr = getJsonString(json, "sessionToken", "")
-                msgType = getJsonString(json, "msgType", "")
-                content = getJsonString(json, "content", "")
+                userTokenStr = getJsonString(json, "userToken")
+                sessionTokenStr = getJsonString(json, "sessionToken")
+                msgType = getJsonString(json, "msgType")
+                content = getJsonString(json, "content")
               } catch { case e: Throwable =>
                 consoleLog("ERROR", s"parse websocket text message error: $e")
               }
-              val UserSessionInfo(uid, nickname, avatar, sessionid, sessionname, sessionicon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
-              WsTextUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, content)
+              val UserSessionInfo(uid, nickname, avatar, sessionid, sessionName, sessionIcon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
+              WsTextUp(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content)
             }
           case bm: BinaryMessage =>
             bm.dataStream.runFold(ByteString.empty)(_ ++ _).map { bs =>
@@ -72,17 +72,17 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
               var fileType = ""
               try {
                 val json = Json.parse(jsonStr)
-                userTokenStr = getJsonString(json, "userToken", "")
-                sessionTokenStr = getJsonString(json, "sessionToken", "")
-                msgType = getJsonString(json, "msgType", "")
-                fileName = getJsonString(json, "fileName", "")
-                fileSize = getJsonLong(json, "fileSize", 0L)
-                fileType = getJsonString(json, "fileType", "")
+                userTokenStr = getJsonString(json, "userToken")
+                sessionTokenStr = getJsonString(json, "sessionToken")
+                msgType = getJsonString(json, "msgType")
+                fileName = getJsonString(json, "fileName")
+                fileSize = getJsonLong(json, "fileSize")
+                fileType = getJsonString(json, "fileType")
               } catch { case e: Throwable =>
                 consoleLog("ERROR", s"parse websocket binary message error: $e")
               }
-              val UserSessionInfo(uid, nickname, avatar, sessionid, sessionname, sessionicon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
-              WsBinaryUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, bsFile, fileName, fileSize, fileType)
+              val UserSessionInfo(uid, nickname, avatar, sessionid, sessionName, sessionIcon) = verifyUserSessionToken(userTokenStr, sessionTokenStr)
+              WsBinaryUp(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, bsFile, fileName, fileSize, fileType)
             }
         }.buffer(1024 * 1024, OverflowStrategy.fail).mapAsync(6)(t => t)
       )
@@ -98,9 +98,9 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
 
       val flowAccept: FlowShape[WsMessageUp, WsMessageDown] = builder.add(
         Flow[WsMessageUp].collect {
-          case WsTextUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, content) =>
-            WsTextDown(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, content)
-          case WsBinaryUp(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, bs, fileName, fileSize, fileType) =>
+          case WsTextUp(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content) =>
+            WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content)
+          case WsBinaryUp(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, bs, fileName, fileSize, fileType) =>
             val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
             val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
             val path = s"upload/$path1/$path2"
@@ -112,7 +112,7 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
             if (fileType == "image/jpeg" || fileType == "image/gif" || fileType == "image/png") {
               fileNameNew = s"$fileNameNew.${fileType.replace("image/", "")}"
             }
-            val filePath = s"$path/$fileNameNew"
+            var filePath = s"$path/$fileNameNew"
             val bytes = bs.toArray
             FileUtils.writeByteArrayToFile(new File(filePath), bytes)
             var fileThumb = ""
@@ -127,7 +127,9 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
             } catch { case e: Throwable =>
               consoleLog("ERROR", s"chat upload image error: $e")
             }
-            WsBinaryDown(uid, nickname, avatar, sessionid, sessionname, sessionicon, msgType, filePath, fileName, fileSize, fileType, fileThumb)
+            filePath = s"/$filePath"
+            fileThumb = s"/$fileThumb"
+            WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb)
         }
       )
 
@@ -142,17 +144,21 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
       val flowAcceptBack: FlowShape[WsMessageDown, WsMessageDown] = builder.add(
         // websocket default timeout after 60 second, to prevent timeout send keepalive message
         // you can config akka.http.server.idle-timeout to set timeout duration
-        Flow[WsMessageDown].keepAlive(30.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
+        Flow[WsMessageDown].keepAlive(100.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
       )
 
       val mergeBackWs: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
 
       val flowBackWs: FlowShape[WsMessageDown, Strict] = builder.add(
         Flow[WsMessageDown].collect {
-          case wsTextDown: WsTextDown =>
-            TextMessage(Json.stringify(Json.toJson(wsTextDown)))
-          case wsBinaryDown: WsBinaryDown =>
-            TextMessage(Json.stringify(Json.toJson(wsBinaryDown)))
+          case WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, dateline) =>
+            val fileInfo = FileInfo()
+            val chatMessage = ChatMessage(uid, nickname, avatar, msgType, content, fileInfo, dateline)
+            TextMessage(Json.stringify(Json.toJson(chatMessage)))
+          case WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) =>
+            val fileInfo = FileInfo(filePath, fileName, fileSize, fileType, fileThumb)
+            val chatMessage = ChatMessage(uid, nickname, avatar, msgType, content = "", fileInfo, dateline)
+            TextMessage(Json.stringify(Json.toJson(chatMessage)))
         }
       )
       flowFromWs ~> broadcastWs

@@ -19,7 +19,7 @@
     <!--main style sheet-->
     <link href="css/index.css" rel="stylesheet">
 </head>
-<body ng-app="app" ng-class="animation">
+<body id="app" ng-app="app" ng-class="animation">
 <header ng-controller="headerCtl">
     <ul id="topDropDown" class="dropdown-content">
         <li><a class="green-text" data-target="modalCreateSession">Create group chat</a></li>
@@ -30,29 +30,34 @@
         <li><a href="#!/logout" class="red-text">Logout</a></li>
     </ul>
     <!-- top navbar-->
-    <nav id="top-navbar">
+    <nav id="top-navbar" ng-show="isLoading == false">
         <div class="nav-wrapper yellow">
-            <a ng-show="showNavbar" href="#" data-activates="nav-mobile" class="button-collapse hide-on-large-only text-black">
+            <a ng-show="showSideNavbar" href="javascript:void(0);" data-activates="topNavBar" class="button-collapse hide-on-large-only text-black">
                 <i class="material-icons black-text">menu</i>
             </a>
             <div class="center-align">
-                <a class="black-text"><img src="images/favicon.ico" class="top-navbar-icon">CookIM</a>
-                <ul class="right">
+                <a ng-if="titleInfo.mode == 'other'" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> {{titleInfo.title}}</a>
+                <a ng-if="titleInfo.mode == 'group_session'" ng-click="showSessionMenu(titleInfo.sessionid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Group] {{titleInfo.title}}</a>
+                <a ng-if="titleInfo.mode == 'private_session'" ng-click="showUserMenu(titleInfo.uid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Private] {{titleInfo.title}}</a>
+                <ul ng-show="showAccoutMenu" class="right" ng-cloak>
                     <!-- Dropdown Trigger -->
-                    <li><a class="dropdown-button black-text" href="#!" data-activates="topDropDown">Account Menu<i class="material-icons right">arrow_drop_down</i></a></li>
+                    <li><a class="dropdown-button black-text" href="#!" data-activates="topDropDown">Account<i class="material-icons right">arrow_drop_down</i></a></li>
                 </ul>
             </div>
         </div>
     </nav>
     <!-- sidebar -->
-    <ul ng-show="showNavbar" id="nav-mobile" class="side-nav fixed">
+    <ul ng-show="showSideNavbar" id="topNavBar" class="side-nav fixed">
         <li class="no-padding">
             <ul class="collapsible collapsible-accordion">
                 <li class="bold active yellow">
                     <a class="collapsible-header active waves-effect waves-light"><i class="material-icons">view_comfy</i>Main menu</a>
                     <div class="collapsible-body" style="">
                         <ul>
-                            <li ng-repeat="menuItem in menuItems"><a href="{{menuItem.url}}" class="black-text">{{menuItem.menuName}} &nbsp; <span class="chip red white-text">10</span></a>
+                            <li ng-repeat="menuItem in menuItems">
+                                <a href="{{menuItem.url}}" class="black-text">
+                                    {{menuItem.menuName}} <span ng-if="menuItem.rsCount > 0" class="chip red white-text right" style="margin-top: 8px;">{{menuItem.rsCount}}</span>
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -61,9 +66,15 @@
             <ul class="collapsible collapsible-accordion">
                 <li class="bold yellow">
                     <a class="collapsible-header active waves-effect waves-light"><i class="material-icons">people</i>Joined Chat</a>
-                    <div class="collapsible-body" style="">
+                    <div class="collapsible-body">
                         <ul>
-                            <li ng-repeat="menuItem in accountMenuItems"><a href="{{menuItem.url}}" class="black-text">{{menuItem.menuName}} &nbsp; <span class="chip red white-text">10</span></a>
+                            <li ng-repeat="session in joinedSessions" class="collection-item">
+                                <a ng-href="{{'#!/chatsession/'+session.sessionid}}" class="black-text" style="padding-left: 10px; padding-right: 10px;">
+                                    <img ng-src="{{session.sessionIcon}}" class="circle" width="40" style="vertical-align: middle">
+                                    &nbsp;
+                                    {{session.sessionName}}
+                                    <span ng-if="session.newCount > 0" class="chip red white-text right" style="margin-top: 8px;">{{session.newCount}}</span>
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -88,19 +99,182 @@
 
                     <div class="input-field col s12">
                         <i class="material-icons prefix">chat</i>
-                        <input ng-model="sessionData.sessionname" id="sessionname" type="text" class="validate" minlength="3" maxlength="32">
-                        <label for="sessionname" data-error="sessionname at least 3 characters">session name, at least 3 characters</label>
+                        <input ng-model="sessionData.sessionName" id="sessionName" type="text" class="validate" minlength="3" maxlength="32">
+                        <label for="sessionName" data-error="sessionName at least 3 characters">session name, at least 3 characters</label>
                     </div>
 
                     <div class="input-field col s12">
                         <i class="material-icons prefix">visibility</i>
-                        <input ng-model="sessionData.publictype" type="checkbox" id="publictype" />
-                        <label for="publictype">public chat</label>
+                        <input ng-model="sessionData.publicType" type="checkbox" id="publicType" />
+                        <label for="publicType">public chat</label>
                     </div>
                 </div>
                 <div class="row"></div>
                 <div class="row center-align">
-                    <a ng-click="createSessionSubmit()" class="modal-action waves-effect waves-green btn">Create group chat</a>
+                    <a ng-click="createSessionSubmit()" class="modal-action waves-effect waves-green btn green">Create group chat</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal edit session-->
+    <div id="modalEditSession" class="modal">
+        <div class="modal-content">
+            <div>
+                <div class="row">
+                    <div class="input-field col s12 center-align">
+                        <div class="col s4 offset-s4 m4 offset-m4 l4 offset-l4">
+                            <img ng-src="{{sessionDataEdit.sessionIcon}}" alt="" id="chatIconEdit" class="circle responsive-img" onclick="$('#chatIconInputEdit').click();">
+                            <input id="chatIconInputEdit" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="showChatIconEdit(this);">
+                        </div>
+                    </div>
+                    <div class="center-align">Change chat avatar</div>
+
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">chat</i>
+                        <input ng-model="sessionDataEdit.sessionName" id="sessionnameEdit" type="text" class="validate" minlength="3" maxlength="32">
+                        <label for="sessionnameEdit" data-error="sessionName at least 3 characters">session name, at least 3 characters</label>
+                    </div>
+
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">visibility</i>
+                        <input ng-model="sessionDataEdit.publicType" type="checkbox" id="publicTypeEdit" />
+                        <label for="publicTypeEdit">public chat</label>
+                    </div>
+                </div>
+                <div class="row"></div>
+                <div class="row center-align">
+                    <a ng-click="editSessionSubmit()" class="modal-action waves-effect waves-blue btn blue">edit chat settings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal joined users list-->
+    <div id="modalJoinedUsers" class="modal">
+        <div class="modal-content">
+            <h4 class="center-align">{{sessionMenuData.sessionName}}</h4>
+            <div>
+                <h4 class="center-align">online users</h4>
+                <hr>
+                <div ng-if="joinedUsers.onlineUsers.length > 0" class="row">
+                    <div ng-repeat="onlineUser in joinedUsers.onlineUsers" class="col s3 m2 l2 center-align">
+                        <a ng-click="showUserMenu(onlineUser.uid)" href="javascript:void(0)"><img ng-src="{{onlineUser.avatar}}" alt="{{onlineUser.nickname}}" class="responsive-img circle"></a>
+                        <div>{{onlineUser.nickname}}</div>
+                    </div>
+                </div>
+                <div class="row"></div>
+                <h4 class="center-align grey-text">offline users</h4>
+                <hr>
+                <div ng-if="joinedUsers.offlineUsers.length > 0" class="row">
+                    <div ng-repeat="offlineUser in joinedUsers.offlineUsers" class="col s3 m2 l1 center-align">
+                        <a ng-click="showUserMenu(offlineUser.uid)" href="javascript:void(0)"><img ng-src="{{offlineUser.avatar}}" alt="{{offlineUser.nickname}}" class="grey-image responsive-img circle"></a>
+                        <div class="grey-text">{{offlineUser.nickname}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal invite friends list-->
+    <div id="modalInviteFriends" class="modal">
+        <div class="modal-content">
+            <div>
+                <div class="row">
+                    <h4 class="center-align">Invite your friends to {{sessionMenuData.sessionName}}</h4>
+                    <div class="input-field col s10 offset-s1 m6 offset-m3 center-align">
+                        <select ng-model="friendsFormData.friendsToInvite" multiple class="icons" material-select watch>
+                            <option value="" disabled selected>your friends</option>
+                            <option ng-repeat="friend in friendsList" value="{{friend.uid}}" data-icon="{{friend.avatar}}" class="circle">{{friend.nickname}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row center-align">
+                    <a ng-click="inviteFriendsSubmit()" class="modal-action waves-effect waves-blue btn blue">invite friends</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal join session tips-->
+    <div id="modalJoinSession" class="modal">
+        <div class="modal-content">
+            <h4 class="center-align">Join {{sessionMenuData.sessionName}}</h4>
+            <div class="center">After you join the session you can receive chat message notifications</div>
+            <div class="row"></div>
+            <div class="row">
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="joinGroupSessionSubmit()" class="modal-action waves-effect waves-blue btn blue">join</a>
+                </div>
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="hideJoinSessionModal()" class="modal-action waves-effect waves-blue btn grey">not now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal leave session tips-->
+    <div id="modalLeaveSession" class="modal">
+        <div class="modal-content">
+            <h4 class="center-align">Leave {{sessionMenuData.sessionName}}</h4>
+            <div class="center">After you leave the session you can not receive chat message notifications any more</div>
+            <div class="row"></div>
+            <div class="row">
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="leaveGroupSessionSubmit()" class="modal-action waves-effect waves-red btn red">leave</a>
+                </div>
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="hideLeaveSessionModal()" class="modal-action waves-effect waves-red btn grey">not now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal session buttom menu-->
+    <div id="modalSessionMenu" class="modal bottom-sheet">
+        <div class="modal-content">
+            <ul ng-if="sessionMenuData.sessionid != ''" class="collection">
+                <li ng-if="!sessionMenuData.joined" class="collection-item"><div><a ng-click="showJoinSessionModal(sessionMenuData.sessionid)" href="javascript:void(0);" class="blue-text">join the session</a><a class="secondary-content black-text"><i class="material-icons">person_add</i></a></div></li>
+                <li ng-if="sessionMenuData.joined" class="collection-item"><div><a ng-click="showInviteFriendsModal(sessionMenuData.sessionid, sessionMenuData.ouid)" href="javascript:void(0);" class="black-text">invite friends</a><a class="secondary-content black-text"><i class="material-icons">person_add</i></a></div></li>
+                <li class="collection-item"><div><a ng-click="getJoinedUsersSubmit(sessionMenuData.sessionid)" href="javascript:void(0);" class="blue-text">joined users</a><a class="secondary-content blue-text"><i class="material-icons">people</i></a></div></li>
+                <li ng-if="sessionMenuData.editable" class="collection-item"><div><a ng-click="getEditSessionSubmit(sessionMenuData.sessionid)" href="javascript:void(0);" class="green-text">chat settings</a><a class="secondary-content green-text"><i class="material-icons">mode_edit</i></a></div></li>
+                <li ng-if="sessionMenuData.joined && !sessionMenuData.editable" class="collection-item"><div><a ng-click="showLeaveSessionModal(sessionMenuData.sessionid)" href="javascript:void(0);" class="red-text">leave the session</a><a class="secondary-content red-text"><i class="material-icons">person_outline</i></a></div></li>
+            </ul>
+        </div>
+    </div>
+    <!--modal user buttom menu-->
+    <div id="modalUserMenu" class="modal bottom-sheet">
+        <div class="modal-content">
+            <ul ng-if="userMenuData.uid != ''" class="collection">
+                <li ng-if="userMenuData.uid != uid" class="collection-item"><div><a ng-click="getPrivateSessionSubmit()" href="javascript:void(0);" class="blue-text">talk with</a><a class="secondary-content black-text"><i class="material-icons">message</i></a></div></li>
+                <li ng-if="titleInfo.sessionid != '' && titleInfo.uid != ''" class="collection-item"><div><a ng-click="showInviteFriendsModal(titleInfo.sessionid, userMenuData.uid)" href="javascript:void(0);" class="black-text">invite friends</a><a class="secondary-content black-text"><i class="material-icons">person_add</i></a></div></li>
+                <li ng-if="!userMenuData.isFriend" class="collection-item"><div><a ng-click="showJoinFriendModal(userMenuData.uid, userMenuData.nickname)" href="javascript:void(0);" class="blue-text">join friend</a><a class="secondary-content blue-text"><i class="material-icons">account_box</i></a></div></li>
+                <li ng-if="userMenuData.isFriend" class="collection-item"><div><a ng-click="showRemoveFriendModal(userMenuData.uid, userMenuData.nickname)" href="javascript:void(0);" class="red-text">remove friend</a><a class="secondary-content red-text"><i class="material-icons">clear</i></a></div></li>
+            </ul>
+        </div>
+    </div>
+    <!--modal join friend tips-->
+    <div id="modalJoinFriend" class="modal">
+        <div class="modal-content">
+            <h4 class="center-align">Join friend</h4>
+            <div class="center">After you join <span class="blue-text">{{friendnicknameToJoin}}</span> as your friend, you can invite <span class="blue-text">{{friendnicknameToJoin}}</span> to your chat</div>
+            <div class="row"></div>
+            <div class="row">
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="joinFriendSubmit()" class="modal-action waves-effect waves-blue btn blue">join</a>
+                </div>
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="hideJoinFriendModal()" class="modal-action waves-effect waves-blue btn grey">not now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--modal delete friend tips-->
+    <div id="modalRemoveFriend" class="modal">
+        <div class="modal-content">
+            <h4 class="center-align">Remove friend</h4>
+            <div class="center">Are you sure want to delete <span class="red-text">{{friendnicknameToRemove}}</span> from your friends list?</div>
+            <div class="row"></div>
+            <div class="row">
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="removeFriendSubmit()" class="modal-action waves-effect waves-red btn red">delete</a>
+                </div>
+                <div class="col s6 m6 l6 center-align">
+                    <a ng-click="hideRemoveFriendModal()" class="modal-action waves-effect waves-blue btn grey">not now</a>
                 </div>
             </div>
         </div>
@@ -155,33 +329,32 @@
             </div>
         </div>
     </div>
-    <div id="ws-log" class="row">
 
-    </div>
 </main>
-<footer ng-if="showMessageArea" class="page-footer yellow bottom-fixed" style="padding-top: 0;">
+<footer ng-if="!isLoading && showMessageArea" class="page-footer yellow bottom-fixed" style="padding-top: 0;" ng-cloak>
+    <!--send message panel-->
     <div class="row" style="margin-bottom: 0">
         <div class="input-field col s2 center-align">
             <div class="fixed-action-btn click-to-toggle" style="position: initial; padding-top: 0px;">
-                <a class="btn-floating waves-effect waves-light black "><i class="material-icons">add</i></a>
+                <a id="sendMessageMenu" class="btn-floating waves-effect waves-light black "><i class="material-icons">add</i></a>
                 <ul>
-                    <li><a class="btn-floating red"><i class="material-icons">insert_chart</i></a></li>
-                    <li><a class="btn-floating yellow darken-1"><i class="material-icons">format_quote</i></a></li>
-                    <li><a class="btn-floating green"><i class="material-icons">publish</i></a></li>
-                    <li><a class="btn-floating blue"><i class="material-icons">attach_file</i></a></li>
+                    <li><a class="btn-floating yellow darken-1" onclick="$('#chatImage').click();"><i class="material-icons">image</i></a></li>
+                    <li><a class="btn-floating blue" onclick="$('#chatFile').click();"><i class="material-icons">attach_file</i></a></li>
+                    <li><a class="btn-floating green" onclick="$('body').animate({ scrollTop: 0 }, 'slow');$('#sendMessageMenu').trigger('click');"><i class="material-icons">vertical_align_top</i></a></li>
                 </ul>
             </div>
         </div>
         <div class="input-field col s8 right-align">
-            <!--<input type="text">-->
-            <textarea id="messageContent" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
+            <input id="chatImage" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="angular.element('#app').scope().sendChatImage()">
+            <input id="chatFile" type="file" style="display: none" onchange="angular.element('#app').scope().sendChatFile()">
+            <textarea ng-keyup="$event.keyCode == 13 && sendChatMessage()" id="messageContent" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
         </div>
         <div class="input-field col s2 center-align">
             <a ng-click="sendChatMessage()" class="btn-floating waves-effect waves-light black"><i class="material-icons">send</i></a>
         </div>
     </div>
 </footer>
-<footer ng-if="!showMessageArea" class="page-footer yellow" style="padding-top: 0px;">
+<footer ng-if="!isLoading && !showMessageArea" class="page-footer yellow" style="padding-top: 0;" ng-cloak>
     <div class="footer-copyright">
         <div class="container black-text" align="center">
             © 2016 Copyright cookeem.com
@@ -201,6 +374,9 @@
 <script src="node_modules/angular-animate/angular-animate.min.js"></script>
 <script src="node_modules/angular-cookies/angular-cookies.min.js"></script>
 
+<!-- materialize angular js -->
+<script src="jslib/angular-materialize.min.js"></script>
+
 <!--app script-->
 <script src="js/index.js"></script>
 <script src="js/error.js"></script>
@@ -211,4 +387,7 @@
 <script src="js/chatsession.js"></script>
 <script src="js/changeinfo.js"></script>
 <script src="js/changepwd.js"></script>
+<script src="js/friends.js"></script>
+<script src="js/notifications.js"></script>
+
 </html>

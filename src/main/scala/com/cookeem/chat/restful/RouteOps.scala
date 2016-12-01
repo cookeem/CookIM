@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
 import akka.http.scaladsl.server.Directives._
@@ -33,8 +33,9 @@ object RouteOps {
   createSessionsCollection()
   createMessagesCollection()
   createOnlinesCollection()
+  createNotificationsCollection()
 
-  def routeLogic(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
+  def routeLogic(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer, notificationActor: ActorRef) = {
     routeWebsocket ~
     routeAsset ~
     routeUserRegister ~
@@ -47,8 +48,24 @@ object RouteOps {
     routeUserPwdChange ~
     routeGetUserInfo ~
     routeCreateGroupSession ~
+    routeGetGroupSessionInfo ~
+    routeEditGroupSession ~
     routeListSessions ~
-    routeListMessages
+    routeListJoinedSessions ~
+    routeGetNewNotificationCount ~
+    routeListMessages ~
+    routeJoinGroupSession ~
+    routeLeaveGroupSession ~
+    routeGetJoinedUsers ~
+    routeGetFriends ~
+    routeInviteFriends ~
+    routeJoinFriend ~
+    routeRemoveFriend ~
+    routeGetPrivateSession ~
+    routeGetSessionHeader ~
+    routeGetSessionMenu ~
+    routeGetUserMenu ~
+    routeListNotifications
   }
 
   //mix multiform to Future[Map[String, String]]. if include file upload, save to pathroot and return path
@@ -89,7 +106,7 @@ object RouteOps {
       } else {
         part.entity.toStrict(5.seconds).map(e => (part.name, e.data.utf8String))
       }
-    }.mapAsync[(String, String)](1)(t => t).runFold(Map[String, String]())(_ + _)
+    }.mapAsync[(String, String)](6)(t => t).runFold(Map[String, String]())(_ + _)
   }
 
   def routeWebsocket(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
@@ -139,8 +156,7 @@ object RouteOps {
         val repassword = paramsGetString(params, "repassword", "")
         val gender = paramsGetInt(params, "gender", 0)
         complete {
-          val registerUserResult = registerUserCtl(login, nickname, password, repassword, gender)
-          registerUserResult map { json =>
+          registerUserCtl(login, nickname, password, repassword, gender) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -153,8 +169,7 @@ object RouteOps {
       formFieldMap { params =>
         val userTokenStr = paramsGetString(params, "userToken", "")
         complete {
-          val createUserTokenResult = createUserTokenCtl(userTokenStr)
-          createUserTokenResult map { json =>
+          createUserTokenCtl(userTokenStr) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -168,8 +183,7 @@ object RouteOps {
         val userTokenStr = paramsGetString(params, "userToken", "")
         val sessionid = paramsGetString(params, "sessionid", "")
         complete {
-          val createSessionTokenResult = createSessionTokenCtl(userTokenStr, sessionid)
-          createSessionTokenResult map { json =>
+          createSessionTokenCtl(userTokenStr, sessionid) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -182,8 +196,7 @@ object RouteOps {
       formFieldMap { params =>
         val userTokenStr = paramsGetString(params, "userToken", "")
         complete {
-          val verifyUserTokenResult = verifyUserTokenCtl(userTokenStr)
-          verifyUserTokenResult map { json =>
+          verifyUserTokenCtl(userTokenStr) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -197,8 +210,7 @@ object RouteOps {
         val login = paramsGetString(params, "login", "")
         val password = paramsGetString(params, "password", "")
         complete {
-          val loginUserResult = loginCtl(login, password)
-          loginUserResult map { json =>
+          loginCtl(login, password) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -211,8 +223,7 @@ object RouteOps {
       formFieldMap { params =>
         val userTokenStr = paramsGetString(params, "userToken", "")
         complete {
-          val logoutUserResult = logoutCtl(userTokenStr)
-          logoutUserResult map { json =>
+          logoutCtl(userTokenStr) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -249,8 +260,7 @@ object RouteOps {
         val newPwd = paramsGetString(params, "newPwd", "")
         val renewPwd = paramsGetString(params, "renewPwd", "")
         complete {
-          val changePwdResult = changePwdCtl(userTokenStr, oldPwd, newPwd, renewPwd)
-          changePwdResult map { json =>
+          changePwdCtl(userTokenStr, oldPwd, newPwd, renewPwd) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -264,8 +274,7 @@ object RouteOps {
         val userTokenStr = paramsGetString(params, "userToken", "")
         val uid = paramsGetString(params, "uid", "")
         complete {
-          val getUserInfoResult = getUserInfoCtl(userTokenStr, uid)
-          getUserInfoResult map { json =>
+          getUserInfoCtl(userTokenStr, uid) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -273,7 +282,7 @@ object RouteOps {
     }
   }
 
-  def routeCreateGroupSession(implicit ec: ExecutionContext, materializer: ActorMaterializer) = post {
+  def routeCreateGroupSession(implicit ec: ExecutionContext, materializer: ActorMaterializer, notificationActor: ActorRef) = post {
     path("api" / "createGroupSession") {
       entity(as[Multipart.FormData]) { formData =>
         //mix file upload and text formdata to Map[String, String]
@@ -282,10 +291,46 @@ object RouteOps {
           // complete support nest future
           futureParams.map { params =>
             val userTokenStr = paramsGetString(params, "userToken", "")
-            val publictype = paramsGetInt(params, "publictype", 0)
-            val sessionname = paramsGetString(params, "sessionname", "")
-            val sessionicon = paramsGetString(params, "sessionicon", "")
-            createGroupSessionCtl(userTokenStr, sessionicon, publictype, sessionname).map { json =>
+            val publicType = paramsGetInt(params, "publicType", 0)
+            val sessionName = paramsGetString(params, "sessionName", "")
+            val sessionIcon = paramsGetString(params, "sessionIcon", "")
+            createGroupSessionCtl(userTokenStr, sessionName, sessionIcon, publicType).map { json =>
+              HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetGroupSessionInfo(implicit ec: ExecutionContext) = post {
+    path("api" / "getGroupSessionInfo") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          getEditGroupSessionInfoCtl(userTokenStr, sessionid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeEditGroupSession(implicit ec: ExecutionContext, materializer: ActorMaterializer) = post {
+    path("api" / "editGroupSession") {
+      entity(as[Multipart.FormData]) { formData =>
+        //mix file upload and text formdata to Map[String, String]
+        val futureParams: Future[Map[String, String]] = multiPartExtract(formData, "upload/avatar")
+        complete {
+          // complete support nest future
+          futureParams.map { params =>
+            val userTokenStr = paramsGetString(params, "userToken", "")
+            val publicType = paramsGetInt(params, "publicType", 0)
+            val sessionid = paramsGetString(params, "sessionid", "")
+            val sessionName = paramsGetString(params, "sessionName", "")
+            val sessionIcon = paramsGetString(params, "sessionIcon", "")
+            editGroupSessionCtl(userTokenStr, sessionid, sessionName, sessionIcon, publicType).map { json =>
               HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
             }
           }
@@ -302,12 +347,8 @@ object RouteOps {
           case 1 => true
           case _ => false
         }
-        val showType = paramsGetInt(params, "showType", 0)
-        val page = paramsGetInt(params, "page", 0)
-        val count = paramsGetInt(params, "count", 0)
         complete {
-          val listSessionsResult = listSessionsCtl(userTokenStr, isPublic, showType, page, count)
-          listSessionsResult map { json =>
+          listSessionsCtl(userTokenStr, isPublic) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }
@@ -315,16 +356,211 @@ object RouteOps {
     }
   }
 
+  def routeListJoinedSessions(implicit ec: ExecutionContext) = post {
+    path("api" / "listJoinedSessions") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        complete {
+          listJoinedSessionsCtl(userTokenStr) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetNewNotificationCount(implicit ec: ExecutionContext) = post {
+    path("api" / "getNewNotificationCount") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        complete {
+          getNewNotificationCountCtl(userTokenStr) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
   def routeListMessages(implicit ec: ExecutionContext) = post {
     path("api" / "listMessages") {
       formFieldMap { params =>
         val userTokenStr = paramsGetString(params, "userToken", "")
         val sessionid = paramsGetString(params, "sessionid", "")
-        val page = paramsGetInt(params, "page", 0)
-        val count = paramsGetInt(params, "count", 0)
+        val page = paramsGetInt(params, "page", 1)
+        val count = paramsGetInt(params, "count", 10)
         complete {
-          val listMessagesResult = listMessagesCtl(userTokenStr, sessionid, page, count)
-          listMessagesResult map { json =>
+          listMessagesCtl(userTokenStr, sessionid, page, count) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeJoinGroupSession(implicit ec: ExecutionContext, notificationActor: ActorRef) = post {
+    path("api" / "joinGroupSession") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          joinGroupSessionCtl(userTokenStr, sessionid) map { json =>
+            println(s"notificationActor: $notificationActor")
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeLeaveGroupSession(implicit ec: ExecutionContext, notificationActor: ActorRef) = post {
+    path("api" / "leaveGroupSession") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          leaveGroupSessionCtl(userTokenStr, sessionid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetJoinedUsers(implicit ec: ExecutionContext) = post {
+    path("api" / "getJoinedUsers") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          getJoinedUsersCtl(userTokenStr, sessionid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetFriends(implicit ec: ExecutionContext) = post {
+    path("api" / "getFriends") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        complete {
+          getFriendsCtl(userTokenStr) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeInviteFriends(implicit ec: ExecutionContext, notificationActor: ActorRef) = post {
+    path("api" / "inviteFriends") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        val ouid = paramsGetString(params, "ouid", "")
+        val friendsStr = paramsGetString(params, "friends", "")
+        complete {
+          inviteFriendsCtl(userTokenStr, sessionid, friendsStr, ouid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeJoinFriend(implicit ec: ExecutionContext) = post {
+    path("api" / "joinFriend") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val fuid = paramsGetString(params, "fuid", "")
+        complete {
+          joinFriendCtl(userTokenStr, fuid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeRemoveFriend(implicit ec: ExecutionContext) = post {
+    path("api" / "removeFriend") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val fuid = paramsGetString(params, "fuid", "")
+        complete {
+          removeFriendCtl(userTokenStr, fuid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetPrivateSession(implicit ec: ExecutionContext, notificationActor: ActorRef) = post {
+    path("api" / "getPrivateSession") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val ouid = paramsGetString(params, "ouid", "")
+        complete {
+          getPrivateSessionCtl(userTokenStr, ouid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetSessionHeader(implicit ec: ExecutionContext) = post {
+    path("api" / "getSessionHeader") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          getSessionHeaderCtl(userTokenStr, sessionid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetSessionMenu(implicit ec: ExecutionContext) = post {
+    path("api" / "getSessionMenu") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val sessionid = paramsGetString(params, "sessionid", "")
+        complete {
+          getSessionMenuCtl(userTokenStr, sessionid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetUserMenu(implicit ec: ExecutionContext) = post {
+    path("api" / "getUserMenu") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val ouid = paramsGetString(params, "ouid", "")
+        complete {
+          getUserMenuCtl(userTokenStr, ouid) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeListNotifications(implicit ec: ExecutionContext) = post {
+    path("api" / "getNotifications") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val page = paramsGetInt(params, "page", 1)
+        val count = paramsGetInt(params, "count", 30)
+        complete {
+          listNotificationsCtl(userTokenStr, page, count) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
         }

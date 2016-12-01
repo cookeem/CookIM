@@ -2,32 +2,45 @@
  * Created by cookeem on 16/6/3.
  */
 app.controller('chatListAppCtl', function($rootScope, $scope, $cookies, $timeout, $routeParams, $http) {
-    //Hide sidebar when init
-    $rootScope.showNavbar = true;
-    //Hide footer when init
+    $rootScope.showSideNavbar = true;
     $rootScope.showMessageArea = false;
+    $rootScope.showAccoutMenu = true;
+    $rootScope.titleInfo = {
+        //private_session, group_session, other
+        mode: "other",
+        //title text
+        title: "CookIM",
+        //title icon
+        icon: "images/favicon.ico",
+        //useful when mode == "group_session"
+        sessionid: "",
+        //useful when mode == "private_session"
+        uid: ""
+    };
+
     $timeout(function() {
-        showHideSideBar($rootScope.showNavbar);
-    }, 0);
+        showHideSideBar($rootScope.showSideNavbar);
+        $(window).resize(function() {
+            showHideSideBar($rootScope.showSideNavbar);
+        });
+    }, 1000);
 
     $rootScope.getUserTokenRepeat();
 
     $scope.listSessionsData = {
         "isPublic": 0,
-        "showType": 0,
-        "page": 1,
-        "count": 10,
         "userToken": $rootScope.userToken
     };
     $scope.querystring = $routeParams.querystring;
     if ($scope.querystring != "public") {
         $scope.listSessionsData.isPublic = 0;
+        $rootScope.titleInfo.title = 'CookIM - Chats joined';
     } else {
         $scope.listSessionsData.isPublic = 1;
+        $rootScope.titleInfo.title = 'CookIM - Chats public';
     }
-    $scope.listSessionsResults = [];
-
     $scope.listSessionsSubmit = function() {
+        $rootScope.listSessionsResults = [];
         $http({
             method  : 'POST',
             url     : '/api/listSessions',
@@ -39,9 +52,7 @@ app.controller('chatListAppCtl', function($rootScope, $scope, $cookies, $timeout
                 $rootScope.errmsg = response.data.errmsg;
                 Materialize.toast($rootScope.errmsg, 4000);
             } else {
-                $rootScope.successmsg = response.data.successmsg;
-                Materialize.toast($rootScope.successmsg, 4000);
-                $scope.listSessionsResults = response.data.sessions;
+                $rootScope.listSessionsResults = response.data.sessions;
             }
         }, function errorCallback(response) {
             console.error("http request error:" + response.data);
@@ -49,5 +60,9 @@ app.controller('chatListAppCtl', function($rootScope, $scope, $cookies, $timeout
     };
 
     $scope.listSessionsSubmit();
+
+    if (!$rootScope.wsPushSession) {
+        $rootScope.listenPush();
+    }
 
 });

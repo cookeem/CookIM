@@ -1,9 +1,5 @@
 package com.cookeem.chat.websocket
 
-import java.io.{ByteArrayInputStream, File}
-import java.text.SimpleDateFormat
-import java.util.UUID
-
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws.TextMessage.Strict
@@ -14,9 +10,6 @@ import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.event._
 import com.cookeem.chat.mongo.MongoLogic._
 import com.cookeem.chat.mongo._
-import com.sksamuel.scrimage.Image
-import com.sksamuel.scrimage.nio.PngWriter
-import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,8 +19,8 @@ import scala.concurrent.duration._
   * Created by cookeem on 16/9/25.
   */
 class PushSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer) {
-  implicit val wsTextDownWrites = Json.writes[WsTextDown]
-  implicit val wsBinaryDownWrites = Json.writes[WsBinaryDown]
+  implicit val fileInfoWrites = Json.writes[FileInfo]
+  implicit val pushMessageWrites = Json.writes[PushMessage]
 
   val pushSessionActor = actorSystem.actorOf(Props(classOf[PushSessionActor]))
   consoleLog("INFO", s"create new pushSessionActor: $pushSessionActor")
@@ -44,13 +37,13 @@ class PushSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
               var userTokenStr = ""
               try {
                 val json = Json.parse(jsonStr)
-                userTokenStr = getJsonString(json, "userToken", "")
+                userTokenStr = getJsonString(json, "userToken")
               } catch { case e: Throwable =>
                 consoleLog("ERROR", s"parse websocket text message error: $e")
               }
               verifyUserToken(userTokenStr)
             }
-          case bm: BinaryMessage =>
+          case _: BinaryMessage =>
             Future(UserToken("", "", ""))
         }.buffer(1024 * 1024, OverflowStrategy.fail).mapAsync(6)(t => t)
       )
@@ -68,28 +61,32 @@ class PushSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
         Flow[UserToken].map { case UserToken(uid, nickname, avatar) => WsTextDown(uid, nickname, avatar, "", "", "", "push", "")}
       )
 
-      val mergeAccept: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
-
       val connectedWs: Flow[ActorRef, UserOnline, NotUsed] = Flow[ActorRef].map { actor =>
         UserOnline(actor)
       }
+
+      val mergeAccept: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
 
       val pushActorSink: Sink[WsMessageDown, NotUsed] = Sink.actorRef[WsMessageDown](pushSessionActor, UserOffline)
 
       val flowAcceptBack: FlowShape[WsMessageDown, WsMessageDown] = builder.add(
         // websocket default timeout after 60 second, to prevent timeout send keepalive message
         // you can config akka.http.server.idle-timeout to set timeout duration
-        Flow[WsMessageDown].keepAlive(30.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
+        Flow[WsMessageDown].keepAlive(100.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
       )
 
       val mergeBackWs: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
 
       val flowBackWs: FlowShape[WsMessageDown, Strict] = builder.add(
         Flow[WsMessageDown].collect {
-          case wsTextDown: WsTextDown =>
-            TextMessage(Json.stringify(Json.toJson(wsTextDown)))
-          case wsBinaryDown: WsBinaryDown =>
-            TextMessage(Json.stringify(Json.toJson(wsBinaryDown)))
+          case WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, dateline) =>
+            val fileInfo = FileInfo()
+            val pushMessage = PushMessage(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, fileInfo, dateline)
+            TextMessage(Json.stringify(Json.toJson(pushMessage)))
+          case WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) =>
+            val fileInfo = FileInfo(filePath, fileName, fileSize, fileType, fileThumb)
+            val pushMessage = PushMessage(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content = "", fileInfo, dateline)
+            TextMessage(Json.stringify(Json.toJson(pushMessage)))
         }
       )
       flowFromWs ~> broadcastWs

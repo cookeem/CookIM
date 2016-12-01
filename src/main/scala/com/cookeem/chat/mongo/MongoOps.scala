@@ -167,6 +167,21 @@ object MongoOps {
     }
   }
 
+  //count in collection
+  /**
+    * @param futureCollection: Future[BSONCollection], collection to count
+    * @param selector: BSONDocument, filter
+    * @return Future[Int], return record count
+    */
+  def countCollection(futureCollection: Future[BSONCollection], selector: BSONDocument): Future[Int] = {
+    for {
+      col <- futureCollection
+      rsCount <- col.count(Some(selector))
+    } yield {
+      rsCount
+    }
+  }
+
   //update in collection
   /**
     * @param futureCollection: Future[BSONCollection], collection to update
