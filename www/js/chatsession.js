@@ -138,7 +138,13 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
         $rootScope.uid = $cookies.get('uid');
         $rootScope.userToken = $cookies.get('userToken');
         var host = window.location.host;
-        var wsUri = "ws://" + host + "/ws-chat";
+        var wsProtocal = "ws:";
+        if (window.location.protocol == "https:") {
+            wsProtocal = "wss:"
+        } else if (window.location.protocol == "http:") {
+            wsProtocal = "ws:"
+        }
+        var wsUri = wsProtocal + "//" + host + "/ws-chat";
         $rootScope.wsChatSession = new WebSocket(wsUri);
         $rootScope.wsChatSession.binaryType = 'arraybuffer';
         $rootScope.listenWs(
