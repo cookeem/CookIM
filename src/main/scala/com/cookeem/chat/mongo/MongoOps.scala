@@ -174,11 +174,14 @@ object MongoOps {
     * @return Future[Int], return record count
     */
   def countCollection(futureCollection: Future[BSONCollection], selector: BSONDocument): Future[Int] = {
-    for {
+    val countResult: Future[Int] = for {
       col <- futureCollection
       rsCount <- col.count(Some(selector))
     } yield {
       rsCount
+    }
+    countResult.recover { case e: Throwable =>
+      0
     }
   }
 
@@ -218,7 +221,7 @@ object MongoOps {
   def removeCollection(futureCollection: Future[BSONCollection], selector: BSONDocument, firstMatchOnly: Boolean = false): Future[UpdateResult] = {
     val removeResult = for {
       col <- futureCollection
-      wr <- col.remove(selector, firstMatchOnly = firstMatchOnly)
+      wr <- col.remove[BSONDocument](selector, firstMatchOnly = firstMatchOnly)
     } yield {
       UpdateResult(
         n = wr.n,

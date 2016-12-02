@@ -144,7 +144,7 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
       val flowAcceptBack: FlowShape[WsMessageDown, WsMessageDown] = builder.add(
         // websocket default timeout after 60 second, to prevent timeout send keepalive message
         // you can config akka.http.server.idle-timeout to set timeout duration
-        Flow[WsMessageDown].keepAlive(100.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
+        Flow[WsMessageDown].keepAlive(50.seconds, () => WsTextDown("", "", "", "", "", "", "keepalive", ""))
       )
 
       val mergeBackWs: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
