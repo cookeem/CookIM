@@ -51,16 +51,17 @@ sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
 
 -n 2551 表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
 
-- [3.3] 打开浏览器，访问
+- [3.3] 打开浏览器，访问以下网址：
 
 http://localhost:8080
 
-- [3.4] （可选）打开另外一个终端，运行如下命令，启动另外一个CookIM服务。
+- [3.4] 打开另外一个终端，运行如下命令，启动另外一个CookIM服务。
 ```sh
 sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 ```
 
-- [3.5] （可选）打开浏览器，访问
+- [3.5] 打开另外一个不同类型的浏览器，访问以下网址：
 
 http://localhost:8081
 
+该演示启动了两个CookIM服务，访问地址分别为8080端口以及8081端口，用户通过两个浏览器分别访问不同的的CookIM服务，用户在浏览器中通过websocket发送消息到akka集群，akka集群通过分布式的消息订阅与发布，把消息推送到集群中相应的节点，实现分布式通讯。
