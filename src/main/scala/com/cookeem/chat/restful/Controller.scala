@@ -411,7 +411,7 @@ object Controller {
           Json.obj(
             "sessionid" -> session._id,
             "createuid" -> session.createuid,
-            "sessionName" -> trimUtf8(session.sessionName, 12),
+            "sessionName" -> trimUtf8(session.sessionName, 24),
             "sessionType" -> session.sessionType,
             "sessionIcon" -> session.sessionIcon,
             "publicType" -> session.publicType,
@@ -668,7 +668,7 @@ object Controller {
               //private session
               if (ouid != "") {
                 //private session and ouid not empty
-                friends = (friends :+ ouid).distinct
+                friends = (ouid +: friends).distinct
                 generateNewGroupSession(uid, friends).map { case (sessionName, sessionIcons) =>
                   var filePath = ""
                   try {
