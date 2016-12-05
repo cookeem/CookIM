@@ -32,7 +32,7 @@ Scala 2.11+
 
 SBT 0.13+
 
-MongoDB 3+ (3.4.0测试有问题，建议使用3.2.9)
+MongoDB 3+ ( there's problem test in 3.4.0, recommend to use 3.2.9)
 
 ### Installation
 1. download source
