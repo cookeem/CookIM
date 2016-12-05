@@ -1034,6 +1034,7 @@ app.filter('trustHtml', function ($sce) {
 function showHideSideBar(isShow) {
     if (isShow) {
         if ($(window).width() > 992) {
+            $('header, main, footer').css('padding-left', '240px');
             $('.button-collapse').sideNav('destroy');
             $('.button-collapse').sideNav({
                     'menuWidth': 240, // Default is 240
@@ -1041,8 +1042,8 @@ function showHideSideBar(isShow) {
                     'closeOnClick': false // Closes side-nav on <a> clicks, useful for Angular/Meteor
                 }
             );
-            $('header, main, footer').css('padding-left', '240px');
         } else {
+            $('header, main, footer').css('padding-left', '0');
             $('.button-collapse').sideNav('destroy');
             $('.button-collapse').sideNav({
                     'menuWidth': 240, // Default is 240
@@ -1050,7 +1051,6 @@ function showHideSideBar(isShow) {
                     'closeOnClick': true // Closes side-nav on <a> clicks, useful for Angular/Meteor
                 }
             );
-            $('header, main, footer').css('padding-left', '0');
         }
     } else {
         $('header, main, footer').css('padding-left', '0');
