@@ -1,6 +1,6 @@
 ## CookIM - Distributed web chat application built on akka
 
-![CookIM logo](www/images/cookim.png)
+![CookIM logo](docs/cookim.png)
 
 - [中文文档](README_CN.md)
 - [English](README.md)

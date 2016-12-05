@@ -1,6 +1,6 @@
 ## CookIM - 一个基于akka的分布式聊天程序
 
-![CookIM logo](www/images/cookim.png)
+![CookIM logo](docs/cookim.png)
 
 - [中文文档](README_CN.md)
 - [English](README.md)
