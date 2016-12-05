@@ -16,8 +16,21 @@ PC
 - [演示地址](https://im.cookeem.com)
 
 ### 目录
-1. [功能](#types)
+1. [功能](#功能)
 1. [安装前准备](#types)
 1. [安装](#references)
 1. [使用](#objects)
 1. [架构](#arrays)
+
+### 功能
+```scala
+"""asdfasdfasdf
+asdf
+sadf
+sadfasdfasdf
+asdfasdf
+asdfasdf"""
+```
+
+
+### 功能
