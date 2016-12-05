@@ -55,11 +55,11 @@ sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
 
 http://localhost:8080
 
-- [3.4]  open the other terminal, and run the command below to start up another CookIM backend service:
+- [3.4] open the other terminal, and run the command below to start up another CookIM backend service:
 ```sh
 sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 ```
 
-- [3.5] open the browser, and access the url below:
+- [3.5] because CookIM applicaton use cookie, please open the other kind of browser, and access the url below:
 
 http://localhost:8081
