@@ -1150,7 +1150,7 @@ object MongoLogic {
     for {
       users <- findCollection[User](usersCollection, document("_id" -> document("$in" -> uids)))
     } yield {
-      val sessionName = "Group: " + users.map(_.nickname).mkString(",").take(16)
+      val sessionName = users.map(_.nickname).mkString(", ").take(30)
       val sessionIcons = users.map(_.avatar)
       (sessionName, sessionIcons)
     }

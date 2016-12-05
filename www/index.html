@@ -69,11 +69,11 @@
                     <div class="collapsible-body">
                         <ul>
                             <li ng-repeat="session in joinedSessions" class="collection-item">
-                                <a ng-href="{{'#!/chatsession/'+session.sessionid}}" class="black-text" style="padding-left: 10px; padding-right: 10px;">
+                                <a ng-href="{{'#!/chatsession/'+session.sessionid}}" class="black-text" style="padding-left: 10px; padding-right: 10px; line-height: 5px;">
                                     <img ng-src="{{session.sessionIcon}}" class="circle" width="40" style="vertical-align: middle">
                                     &nbsp;
                                     {{session.sessionName}}
-                                    <span ng-if="session.newCount > 0" class="chip red white-text right" style="margin-top: 8px;">{{session.newCount}}</span>
+                                    <span ng-if="session.newCount > 0" class="chip red white-text right secondary-content" style="margin-top: 8px;">{{session.newCount}}</span>
                                 </a>
                             </li>
                         </ul>
