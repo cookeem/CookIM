@@ -5,9 +5,6 @@
 - [中文文档](README_CN.md)
 - [English](README.md)
 
-
-- [演示地址](https://im.cookeem.com)
-
 PC
 
 ![screen snapshot](docs/screen.png) 
@@ -15,6 +12,8 @@ PC
 手机
 
 ![screen snapshot](docs/screen2.png)
+
+- [演示地址](https://im.cookeem.com)
 
 ### 目录
 1. [功能](#types)
