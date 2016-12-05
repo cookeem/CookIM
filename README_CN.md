@@ -32,4 +32,4 @@ asdfasdf
 asdfasdf"""
 ```
 
-### 功能
+### 安装前准备
