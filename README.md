@@ -16,7 +16,7 @@ Show on mobile
 - [demo](https://im.cookeem.com)
 
 ### Table of contents
-1. [function](#types)
+1. [introduction](#types)
 1. [requirement](#types)
 1. [install](#references)
 1. [usage](#objects)
