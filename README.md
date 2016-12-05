@@ -5,9 +5,6 @@
 - [中文文档](README_CN.md)
 - [English](README.md)
 
-
-- [demo](https://im.cookeem.com)
-
 Show on PC
 
 ![screen snapshot](docs/screen.png) 
@@ -15,6 +12,8 @@ Show on PC
 Show on mobile
 
 ![screen snapshot](docs/screen2.png)
+
+- [demo](https://im.cookeem.com)
 
 ### Table of contents
 1. [function](#types)
