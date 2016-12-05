@@ -11,7 +11,7 @@ app.controller('changePwdAppCtl', function($rootScope, $scope, $cookies, $timeou
         //title text
         title: "CookIM - Change login password",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"

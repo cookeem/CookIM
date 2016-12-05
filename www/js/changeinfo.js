@@ -11,7 +11,7 @@ app.controller('changeInfoAppCtl', function($rootScope, $scope, $cookies, $timeo
         //title text
         title: "CookIM - Set user profile",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"

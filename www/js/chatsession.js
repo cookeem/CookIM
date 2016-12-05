@@ -11,7 +11,7 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
         //title text
         title: "CookIM - My chat!",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"
