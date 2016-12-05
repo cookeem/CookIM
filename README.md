@@ -16,8 +16,51 @@ Show on mobile
 - [demo](https://im.cookeem.com)
 
 ### Table of contents
-1. [introduction](#types)
-1. [requirement](#types)
-1. [install](#references)
-1. [usage](#objects)
-1. [framework](#arrays)
+1. [introduction](#introduction)
+1. [requirement](#requirement)
+1. [install](#installation)
+1. [usage](#usage)
+1. [framework](#framework)
+
+### Introduction
+
+
+### Requirement
+Java 8+
+
+Scala 2.11+
+
+SBT 0.13+
+
+MongoDB 3+ (3.4.0测试有问题，建议使用3.2.9)
+
+### Installation
+1. download source
+```sh
+git clone https://github.com/cookeem/CookIM.git
+
+cd CookIM
+```
+
+2. open a terminal, and run the command below to start up CookIM backend service:
+
+```sh
+sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
+```
+-h 8080 is the port of HTTP service
+
+-n 2551 is akka cluster seed node port, by default seed node is localhost:2551
+
+3. open the browser, and access the url below:
+
+http://localhost:8080
+
+4.  (Optional) open the other terminal, and run the command below to start up another CookIM backend service:
+```sh
+sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
+```
+
+5. (Optional) open the browser, and access the url below:
+
+http://localhost:8081
+
