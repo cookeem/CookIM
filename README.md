@@ -35,14 +35,14 @@ SBT 0.13+
 MongoDB 3+ ( there's problem test in 3.4.0, recommend to use 3.2.9)
 
 ### Installation
-1. download source
+- [3.1] download source
 ```sh
 git clone https://github.com/cookeem/CookIM.git
 
 cd CookIM
 ```
 
-2. open a terminal, and run the command below to start up CookIM backend service:
+- [3.2] open a terminal, and run the command below to start up CookIM backend service:
 
 ```sh
 sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
@@ -51,16 +51,16 @@ sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
 
 -n 2551 is akka cluster seed node port, by default seed node is localhost:2551
 
-3. open the browser, and access the url below:
+- [3.3] open the browser, and access the url below:
 
 http://localhost:8080
 
-4.  (Optional) open the other terminal, and run the command below to start up another CookIM backend service:
+- [3.4]  (Optional) open the other terminal, and run the command below to start up another CookIM backend service:
 ```sh
 sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 ```
 
-5. (Optional) open the browser, and access the url below:
+- [3.5] (Optional) open the browser, and access the url below:
 
 http://localhost:8081
 
