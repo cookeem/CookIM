@@ -1,8 +1,11 @@
-## CookIM
+## CookIM - Distributed web chat application built on akka
 
 <img src="www/images/cookim.png">
 
-### CookIM 是一个分布式的websocket聊天程序
+- [中文文档](README_CN.md)
+- [Englist](README.md)
+
+### Table of contents
 
 
 分别打开不同终端，运行以下命令：
