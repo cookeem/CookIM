@@ -27,7 +27,7 @@ var app = angular.module('app', ['ngRoute', 'ngAnimate', 'ngCookies', 'ui.materi
         //title text
         title: "CookIM",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"

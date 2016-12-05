@@ -1,3 +1,7 @@
+## CookIM
+
+<img src="www/images/cookim.png">
+
 ### CookIM 是一个分布式的websocket聊天程序
 
 

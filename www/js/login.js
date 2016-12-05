@@ -11,7 +11,7 @@ app.controller('loginAppCtl', function($rootScope, $scope, $cookies, $timeout, $
         //title text
         title: "CookIM - User login",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"

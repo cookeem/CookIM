@@ -16,6 +16,9 @@
     <!--materialize css-->
     <link href="jslib/materialize.min.css" rel="stylesheet">
 
+    <!--featherlight css-->
+    <link href="jslib/featherlight.min.css" rel="stylesheet">
+
     <!--main style sheet-->
     <link href="css/index.css" rel="stylesheet">
 </head>
@@ -36,7 +39,7 @@
                 <i class="material-icons black-text">menu</i>
             </a>
             <div class="center-align">
-                <a ng-if="titleInfo.mode == 'other'" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> {{titleInfo.title}}</a>
+                <a ng-if="titleInfo.mode == 'other'" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon responsive-img"> {{titleInfo.title}}</a>
                 <a ng-if="titleInfo.mode == 'group_session'" ng-click="showSessionMenu(titleInfo.sessionid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Group] {{titleInfo.title}}</a>
                 <a ng-if="titleInfo.mode == 'private_session'" ng-click="showUserMenu(titleInfo.uid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Private] {{titleInfo.title}}</a>
                 <ul ng-show="showAccoutMenu" class="right" ng-cloak>
@@ -69,7 +72,7 @@
                     <div class="collapsible-body">
                         <ul>
                             <li ng-repeat="session in joinedSessions" class="collection-item">
-                                <a ng-href="{{'#!/chatsession/'+session.sessionid}}" class="black-text" style="padding-left: 10px; padding-right: 10px; line-height: 5px;">
+                                <a ng-href="{{'#!/chatsession/'+session.sessionid}}" class="black-text" style="padding-left: 10px; padding-right: 10px; float: left; ">
                                     <img ng-src="{{session.sessionIcon}}" class="circle" width="40" style="vertical-align: middle">
                                     &nbsp;
                                     {{session.sessionName}}
@@ -376,6 +379,9 @@
 
 <!-- materialize angular js -->
 <script src="jslib/angular-materialize.min.js"></script>
+
+<!--featherlight js-->
+<script src="jslib/featherlight.min.js"></script>
 
 <!--app script-->
 <script src="js/index.js"></script>

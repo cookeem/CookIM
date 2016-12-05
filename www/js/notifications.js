@@ -11,7 +11,7 @@ app.controller('notificationsAppCtl', function($rootScope, $timeout, $scope, $ht
         //title text
         title: "CookIM - Notifications",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"

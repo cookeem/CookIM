@@ -11,7 +11,7 @@ app.controller('errorAppCtl', function($rootScope, $timeout) {
         //title text
         title: "CookIM - Error encounter",
         //title icon
-        icon: "images/favicon.ico",
+        icon: "images/cookim.svg",
         //useful when mode == "group_session"
         sessionid: "",
         //useful when mode == "private_session"
