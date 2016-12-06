@@ -38,7 +38,8 @@ PC
 ### 安装前准备
 
 ---
-- [2.1] 安装Java 8+
+- [2.1] **安装Java 8+**
+
 下载jdk8二进制文件，下载链接位于：
 
 ```sh
@@ -74,7 +75,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.65-b01, mixed mode)
 
 ---
 
-- [2.2] 安装Scala 2.11+
+- [2.2] **安装Scala 2.11+**
 
 下载scala2.11，下载链接位于：
 ```sh
@@ -110,7 +111,7 @@ $ scala
 
 ---
 
-- [2.3] 安装SBT 0.13+
+- [2.3] **安装SBT 0.13+**
 
 下载sbt0.13.13，下载链接位于：
 ```sh
@@ -143,7 +144,7 @@ $ sbt
 ```
 ---
 
-- [2.4] 安装NodeJS 5+
+- [2.4] **安装NodeJS 5+**
 
 下载NodeJS，下载链接位于：
 ```sh
@@ -178,7 +179,7 @@ v5.10.1
 ```
 ---
 
-- [2.5] 安装MongoDB 3+ (3.4.0测试有问题，建议使用3.2.9)
+- [2.5] **安装MongoDB 3+ (3.4.0测试有问题，建议使用3.2.9)**
 
 下载mongoDB，下载链接位于：
 ```sh
@@ -233,20 +234,20 @@ $ mongod
 
 
 ### 运行
-- [3.1] 下载源代码
+- [3.1] **下载源代码**
 ```sh
 git clone https://github.com/cookeem/CookIM.git
 
 cd CookIM
 ```
 
-- [3.2] 进入www目录，获取node_modules的javascript依赖
+- [3.2] **进入www目录，获取node_modules的javascript依赖**
 ```sh
 $ cd www
 $ npm install
 ```
 
-- [3.3] 返回CookIM目录，打开一个终端，运行如下命令，启动MongoDB，启动CookIM服务，http端口8081，actorSystem端口2551。
+- [3.3] **返回CookIM目录，打开一个终端，运行如下命令，启动MongoDB，启动CookIM服务，http端口8081，actorSystem端口2551。**
 
 ```sh
 $ mongod
@@ -258,17 +259,17 @@ $ sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
 
 -n 2551 表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
 
-- [3.4] 打开浏览器，访问以下网址：
+- [3.4] **打开浏览器，访问以下网址：**
 ```sh
 http://localhost:8080
 ```
 
-- [3.5] 打开另外一个终端，运行如下命令，启动另外一个CookIM服务，http端口8081，actorSystem端口2552。
+- [3.5] **打开另外一个终端，运行如下命令，启动另外一个CookIM服务，http端口8081，actorSystem端口2552。**
 ```sh
 $ sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 ```
 
-- [3.6] 打开另外一个不同类型的浏览器，访问以下网址：
+- [3.6] **打开另外一个不同类型的浏览器，访问以下网址：**
 ```sh
 http://localhost:8081
 ```
