@@ -9,7 +9,6 @@
 
 ### 目录
 1. [演示](#演示)
-1. [功能](#功能)
 1. [安装前准备](#安装前准备)
     1. [安装Java8+](#安装java8)
     1. [安装Scala2.11+](#安装scala211)
@@ -28,8 +27,7 @@
     1. [打开浏览器，访问以下网址8081](#打开浏览器访问以下网址8081)
 1. [架构](#架构)
     1. [整体服务架构](#整体服务架构)
-    1. [akka stream websocket流计算graph](#akkastreamwebsocket流计算graph)
-    1. [分布式订阅与发布时序](#分布式订阅与发布时序)
+    1. [akka stream websocket graph](#akkastreamwebsocketgraph)
     1. [MongoDB数据库说明](#mongodb数据库说明)
     1. [消息类型](#消息类型)
 
@@ -47,7 +45,6 @@
 
 
 - **演示地址:** [https://im.cookeem.com](https://im.cookeem.com)
-
 
 ---
 
@@ -359,6 +356,168 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8081 -n 2552
 
 ### 架构
 
+#### 整体服务架构
+
 ![CookIM architecture](docs/CookIM-Flow.png)
 
+**CookIM服务由三部分组成，基础原理如下：**
+
+> 1. akka http：用于提供web服务，浏览器通过websocket连接akka http来访问分布式聊天应用；
+
+> 2. akka stream：akka http在接收websocket发送的消息之后（消息包括文本消息：TextMessage以及二进制文件消息：BinaryMessage），把消息放到chatService流中进行流式处理。websocket消息中包含JWT（Javascript web token），如果JWT校验不通过，chatService流会直接返回reject消息；如果JWT校验通过，chatService流会把消息发送到ChatSessionActor中；
+
+> 3. akka cluster：akka stream把用户消息发送到akka cluster，CookIM使用到akka cluster的DistributedPubSub，当用户进入会话的时候，订阅（Subscribe）对应的会话；当用户向会话发送消息的时候，会把消息发布（Publish）到订阅的actor中，此时，群聊中的用户就可以收到消息。
+
+---
+
+#### akka stream websocket graph
+
 ![CookIM stream](docs/CookIM-ChatStream.png)
+
+akka http在接收到websocket发送的消息之后，会把消息发送到chatService流里边进行处理，这里使用到akka stream graph：
+
+> 1. websocket发送的消息体包含JWT，flowFromWS用户接收websocket消息，并把消息里边的JWT进行解码，验证有效性；
+
+> 2. 对于JWT校验失败的消息，会经过filterFailure进行过滤；杜宇JWT校验成功的消息，会经过filterSuccess进行过滤；
+
+> 3. builder.materializedValue为akka stream的物化值，在akka stream创建的时候，会自动向connectedWs发送消息，connectedWs把消息转换成UserOnline消息，通过chatSinkActor发送给ChatSessionActor；
+
+> 4. chatActorSink在akka stream结束的时候，向down stream发送UserOffline消息；
+
+> 5. chatSource用于接收从ChatSessionActor中回送的消息，并且把消息发送给flowAcceptBack；
+
+> 6. flowAcceptBack提供keepAlive，保证连接不中断；
+
+> 7. flowReject和flowAcceptBack的消息最后统一通过flowBackWs处理成websocket形式的Message通过websocket回送给用户；
+
+---
+
+#### MongoDB数据库说明
+
+ - users： 用户表
+```
+*login（登录邮箱）
+nickname（昵称）
+password（密码SHA1）
+gender（性别：未知：0，男生：1，女生：2）
+avatar（头像，绝对路径，/upload/avatar/201610/26/xxxx.JPG）
+lastLogin（最后登录时间，timstamp）
+loginCount(登录次数)
+sessionsStatus（用户相关的会话状态列表）
+    [{sessionid: 会话id, newCount: 未读的新消息数量}]
+friends（用户的好友列表：[{uuid: 好友uuid}]）
+dateline（注册时间，timstamp）
+```
+
+ - sessions： 会话表（记录所有群聊私聊的会话信息）
+```
+*createuid（创建者的uid）
+*ouid（接收者的uid，只有当私聊的时候才有效）
+sessionIcon（会话的icon，对于群聊有效）
+sessionType（会话类型：0：私聊，1：群聊）
+publicType（可见类型：0：不公开邀请才能加入，1：公开）
+sessionName（群描述）
+dateline（创建日期，timestamp）
+usersStatus（会话对应的用户uuid数组）
+    [{uid: 用户uuid, online: 是否在线（true：在线，false：离线}]
+lastMsgid（最新发送的消息id）
+lastUpdate（最后更新时间，timstamp）
+dateline（创建时间，timstamp）
+```
+ - messages： 消息表（记录会话中的消息记录）
+```
+*uid（消息发送者的uid）
+*sessionid（所在的会话id）
+msgType（消息类型：）
+content（消息内容）
+fileInfo（文件内容）
+    {
+        filePath（文件路径）
+        fileName（文件名）
+        fileType（文件mimetype）
+        fileSize（文件大小）
+        fileThumb（缩略图）
+    }
+*dateline（创建日期，timestamp）
+```
+
+ - onlines：（在线用户表）
+```
+*id（唯一标识）
+*uid（在线用户uid）
+dateline（更新时间戳）
+```
+
+ - notifications：（接收通知表）
+```
+noticeType：通知类型（"joinFriend", "removeFriend", "inviteSession"）
+senduid：操作方uid
+*recvuid：接收方uid
+sessionid：对应的sessionid
+isRead：是否已读（0：未读，1：已读）
+dateline（更新时间戳）
+```
+
+
+#### 消息类型
+
+有两个websocket信道：ws-push和ws-chat
+
+> ws-push向用户下发消息提醒，当用户不在会话中，可以提醒用户有哪些会话有新消息
+
+/ws-push channel
+```
+上行消息，用于订阅推送消息：
+{ userToken: "xxx" }
+
+下行消息：
+acceptMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "accept", content: "xxx", dateline: "xxx" }
+rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
+keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
+textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
+offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
+joinSessionMsg: { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
+leaveSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "leave", content: "xxx", dateline: "xxx" }
+noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "xxx", sessionIcon: "xxx", msgType: "system", content: "xxx", dateline: "xxx" }
+
+下行到浏览器消息格式：
+pushMsg:       { 
+                    uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "xxx", 
+                    content: "xxx", 
+                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    dateline: "xxx" 
+               }
+```
+
+---
+
+> ws-chat为用户在会话中的聊天信道，用户在会话中发送消息以及接收消息用
+
+```
+/ws-chat channel
+上行消息：
+onlineMsg:     { userToken: "xxx", sessionToken: "xxx", msgType:"online", content:"" }
+textMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx" }
+fileMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx" }<#BinaryInfo#>binary_file_array_buffer
+
+下行消息：    
+rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
+keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
+textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
+offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
+joinSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
+leaveSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "leave", content: "xxx", dateline: "xxx" }
+noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "xxx", sessionIcon: "xxx", msgType: "system", content: "xxx", dateline: "xxx" }
+
+下行到浏览器消息格式：
+chatMsg:       { 
+                    uid: "xxx", nickname: "xxx", avatar: "xxx", msgType: "xxx", 
+                    content: "xxx", 
+                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    dateline: "xxx" 
+               }
+```    
