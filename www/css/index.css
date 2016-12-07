@@ -21,17 +21,17 @@ main {
     height: 32px;
 }
 
-/*左侧导航栏菜单占位符*/
-header, main, footer {
-    padding-left: 0px;
+/* sideNav padding*/
+header, main, footer, .top-right-menu {
+    padding-left: 0;
 }
 @media only screen and (max-width : 992px) {
-    header, main, footer {
+    header, main, footer, .top-right-menu {
         padding-left: 0;
     }
 }
 
-/* 页面切换 */
+/* route switch */
 .view {
     position: relative;
     /*top: 100px;*/
@@ -39,58 +39,58 @@ header, main, footer {
     transition: 300ms;
 }
 
-/* 页面切换向左滑动动画 */
+/* slide left */
 .animation-slideleft .view.ng-enter{
     left: -100%;
 }
 
 .animation-slideleft .view.ng-enter.ng-enter-active{
-    left: 0%;
+    left: 0;
 }
 
 .animation-slideleft .view.ng-leave{
-    left: 0%;
+    left: 0;
 }
 
 .animation-slideleft .view.ng-leave.ng-leave-active{
     left: 100%;
 }
 
-/* 页面切换向右滑动动画 */
+/* slide right */
 .animation-slideright .view.ng-enter{
     left: 100%;
 }
 
 .animation-slideright .view.ng-enter.ng-enter-active{
-    left: 0%;
+    left: 0;
 }
 
 .animation-slideright .view.ng-leave{
-    left: 0%;
+    left: 0;
 }
 
 .animation-slideright .view.ng-leave.ng-leave-active{
     left: -100%;
 }
 
-/* 页面切换向上滑动动画 */
+/* slide top */
 .animation-slidetop .view.ng-enter{
     top: 100%;
 }
 
 .animation-slidetop .view.ng-enter.ng-enter-active{
-    top: 0%;
+    top: 0;
 }
 
 .animation-slidetop .view.ng-leave{
-    top: 0%;
+    top: 0;
 }
 
 .animation-slidetop .view.ng-leave.ng-leave-active{
     top: -100%;
 }
 
-/* 页面切换淡入淡出动画 */
+/* slide fadein */
 .animation-fadein .view.ng-enter{
     opacity: 0;
 }

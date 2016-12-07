@@ -1035,6 +1035,7 @@ function showHideSideBar(isShow) {
     if (isShow) {
         if ($(window).width() > 992) {
             $('header, main, footer').css('padding-left', '240px');
+            $('.top-right-menu').css('padding-right', '240px');
             $('.button-collapse').sideNav('destroy');
             $('.button-collapse').sideNav({
                     'menuWidth': 240, // Default is 240
@@ -1044,6 +1045,7 @@ function showHideSideBar(isShow) {
             );
         } else {
             $('header, main, footer').css('padding-left', '0');
+            $('.top-right-menu').css('padding-right', '0');
             $('.button-collapse').sideNav('destroy');
             $('.button-collapse').sideNav({
                     'menuWidth': 240, // Default is 240
@@ -1054,6 +1056,7 @@ function showHideSideBar(isShow) {
         }
     } else {
         $('header, main, footer').css('padding-left', '0');
+        $('.top-right-menu').css('padding-right', '0');
     }
 }
 
