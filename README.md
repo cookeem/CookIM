@@ -59,7 +59,7 @@
 ### 安装前准备
 
 ---
-- ####安装Java 8+
+- #### 安装Java 8+
 
 下载jdk8二进制文件，下载链接位于：
 
@@ -96,7 +96,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.65-b01, mixed mode)
 
 ---
 
-- ####安装Scala 2.11+
+- #### 安装Scala 2.11+
 
 下载scala2.11，下载链接位于：
 ```sh
@@ -132,7 +132,7 @@ $ scala
 
 ---
 
-- ####安装SBT 0.13+
+- #### 安装SBT 0.13+
 
 下载sbt0.13.13，下载链接位于：
 ```sh
@@ -165,7 +165,7 @@ $ sbt
 ```
 ---
 
-- ####安装NodeJS 5+
+- #### 安装NodeJS 5+
 
 下载NodeJS，下载链接位于：
 ```sh
@@ -200,7 +200,7 @@ v5.10.1
 ```
 ---
 
-- ####安装MongoDB 3+
+- #### 安装MongoDB 3+
 
 下载mongoDB，下载链接位于：
 ```sh
@@ -255,7 +255,7 @@ $ mongod
 
 
 ### 运行
-- ####获取源代码
+- #### 获取源代码
 ```sh
 git clone https://github.com/cookeem/CookIM.git
 
@@ -263,7 +263,7 @@ cd CookIM
 ```
 ---
 
-- ####下载node依赖包
+- #### 下载node依赖包
 
 进入www目录，安装node的依赖包（npm有国内淘宝镜像，详情请百度）
 ```sh
@@ -272,14 +272,14 @@ $ npm install
 ```
 ---
 
-- ####开启mongoDB服务
+- #### 开启mongoDB服务
 
 ```sh
 $ mongod &
 ```
 ---
 
-- ####下载sbt的jar依赖包
+- #### 下载sbt的jar依赖包
 
 返回CookIM目录，打开一个终端，运行如下命令，下载依赖包，该过程请耐心等待，原因你懂的（sbt有国内OSChina镜像，详情请百度）
 
@@ -289,13 +289,13 @@ $ sbt console
 ```
 ---
 
-- ####使用预打包的libs运行程序
+- #### 使用预打包的libs运行程序
 
 如果嫌sbt下载jar依赖包非常慢，我们已经预先准备好相关的jar依赖包，位于```libs```目录
 
 ---
 
-- ####启动CookIM服务
+- #### 启动CookIM服务
 
 启动服务有两种方式，sbt方式以及java方式
 
@@ -322,12 +322,12 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8080 -n 2551
 
 ---
 
-- ####打开浏览器，访问以下网址8080
+- #### 打开浏览器，访问以下网址8080
 > http://localhost:8080
 
 ---
 
-- ####启动另一个CookIM服务
+- #### 启动另一个CookIM服务
 
 打开另外一个终端，启动另一个CookIM服务，测试服务间的消息通讯功能。
 
@@ -348,7 +348,7 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8081 -n 2552
 
 ---
 
-- ####打开浏览器，访问以下网址8081
+- #### 打开浏览器，访问以下网址8081
 > http://localhost:8081
 
 该演示启动了两个CookIM服务，访问地址分别为8080端口以及8081端口，用户通过两个浏览器分别访问不同的的CookIM服务，用户在浏览器中通过websocket发送消息到akka集群，akka集群通过分布式的消息订阅与发布，把消息推送到集群中相应的节点，实现消息在不同服务间的分布式通讯。
