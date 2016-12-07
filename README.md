@@ -25,9 +25,27 @@ PC
 ### 目录
 1. [功能](#功能)
 1. [安装前准备](#安装前准备)
+    1. [安装Java 8+](#安装Java 8+)
+    1. [安装Scala 2.11+](#安装Scala 2.11+)
+    1. [安装SBT 0.13+](#安装SBT 0.13+)
+    1. [安装NodeJS 5+](#安装NodeJS 5+)
+    1. [安装MongoDB 3+](#安装MongoDB 3+)
 1. [运行](#运行)
+    1. [获取源代码](#获取源代码)
+    1. [下载node依赖包](#下载node依赖包)
+    1. [开启mongoDB服务](#开启mongoDB服务)
+    1. [下载sbt的jar依赖包](#下载sbt的jar依赖包)
+    1. [使用预打包的libs运行程序](#使用预打包的libs运行程序)
+    1. [启动CookIM服务](#启动CookIM服务)
+    1. [打开浏览器，访问以下网址8080](#打开浏览器，访问以下网址8080)
+    1. [启动另一个CookIM服务](#启动另一个CookIM服务)
+    1. [打开浏览器，访问以下网址8081](#打开浏览器，访问以下网址8081)
 1. [架构](#架构)
-
+    1. [整体服务架构](#整体服务架构)
+    1. [akka stream websocket流计算graph](#akka stream websocket流计算graph)
+    1. [分布式订阅与发布时序](#分布式订阅与发布时序)
+    1. [MongoDB数据库说明](#MongoDB数据库说明)
+    1. [消息类型](#消息类型)
 ---
 
 ### 功能
@@ -38,7 +56,7 @@ PC
 ### 安装前准备
 
 ---
-- [2.1] **安装Java 8+**
+- ####安装Java 8+
 
 下载jdk8二进制文件，下载链接位于：
 
@@ -75,7 +93,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.65-b01, mixed mode)
 
 ---
 
-- [2.2] **安装Scala 2.11+**
+- ####安装Scala 2.11+
 
 下载scala2.11，下载链接位于：
 ```sh
@@ -111,7 +129,7 @@ $ scala
 
 ---
 
-- [2.3] **安装SBT 0.13+**
+- ####安装SBT 0.13+
 
 下载sbt0.13.13，下载链接位于：
 ```sh
@@ -144,7 +162,7 @@ $ sbt
 ```
 ---
 
-- [2.4] **安装NodeJS 5+**
+- ####安装NodeJS 5+
 
 下载NodeJS，下载链接位于：
 ```sh
@@ -179,7 +197,7 @@ v5.10.1
 ```
 ---
 
-- [2.5] **安装MongoDB 3+ (3.4.0测试有问题，建议使用3.2.9)**
+- ####安装MongoDB 3+
 
 下载mongoDB，下载链接位于：
 ```sh
@@ -234,47 +252,105 @@ $ mongod
 
 
 ### 运行
-- [3.1] **下载源代码**
+- ####获取源代码
 ```sh
 git clone https://github.com/cookeem/CookIM.git
 
 cd CookIM
 ```
+---
 
-- [3.2] **进入www目录，获取node_modules的javascript依赖**
+- ####下载node依赖包
+
+进入www目录，安装node的依赖包（npm有国内淘宝镜像，详情请百度）
 ```sh
 $ cd www
 $ npm install
 ```
+---
 
-- [3.3] **返回CookIM目录，打开一个终端，运行如下命令，启动MongoDB，启动CookIM服务，http端口8081，actorSystem端口2551。**
+- ####开启mongoDB服务
 
 ```sh
-$ mongod
+$ mongod &
+```
+---
+
+- ####下载sbt的jar依赖包
+
+返回CookIM目录，打开一个终端，运行如下命令，下载依赖包，该过程请耐心等待，原因你懂的（sbt有国内OSChina镜像，详情请百度）
+
+```sh
 $ cd ..
+$ sbt console
+```
+---
+
+- ####使用预打包的libs运行程序
+
+如果嫌sbt下载jar依赖包非常慢，我们已经预先准备好相关的jar依赖包，位于```libs```目录
+
+---
+
+- ####启动CookIM服务
+
+启动服务有两种方式，sbt方式以及java方式
+
+a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt下载了依赖）：
+```sh
+$ cd #CookIM directory#
 
 $ sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
 ```
+b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
+```sh
+$ cd #CookIM directory#
+
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8080 -n 2551 
+```
+
+以上命令启动了一个监听8080端口的WEB服务，akka system的监听端口为2551
+
+参数说明：
+
 -h 8080 表示HTTP服务监听8080端口
 
 -n 2551 表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
 
-- [3.4] **打开浏览器，访问以下网址：**
-```sh
-http://localhost:8080
-```
+---
 
-- [3.5] **打开另外一个终端，运行如下命令，启动另外一个CookIM服务，http端口8081，actorSystem端口2552。**
+- ####打开浏览器，访问以下网址8080
+> http://localhost:8080
+
+---
+
+- ####启动另一个CookIM服务
+
+打开另外一个终端，启动另一个CookIM服务，测试服务间的消息通讯功能。
+
+a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt下载了依赖）：
 ```sh
+$ cd #CookIM directory#
+
 $ sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
 ```
-
-- [3.6] **打开另外一个不同类型的浏览器，访问以下网址：**
+b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
 ```sh
-http://localhost:8081
+$ cd #CookIM directory#
+
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8081 -n 2552 
 ```
 
-该演示启动了两个CookIM服务，访问地址分别为8080端口以及8081端口，用户通过两个浏览器分别访问不同的的CookIM服务，用户在浏览器中通过websocket发送消息到akka集群，akka集群通过分布式的消息订阅与发布，把消息推送到集群中相应的节点，实现分布式通讯。
+以上命令启动了一个监听8081端口的WEB服务，akka system的监听端口为2552
+
+---
+
+- ####打开浏览器，访问以下网址8081
+> http://localhost:8081
+
+该演示启动了两个CookIM服务，访问地址分别为8080端口以及8081端口，用户通过两个浏览器分别访问不同的的CookIM服务，用户在浏览器中通过websocket发送消息到akka集群，akka集群通过分布式的消息订阅与发布，把消息推送到集群中相应的节点，实现消息在不同服务间的分布式通讯。
+
+> 你也可以把服务部署在不同的服务器上，请修改```conf/application.conf```配置文件中seed-nodes的配置，把localhost改为主机名
 
 ---
 
