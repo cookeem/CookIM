@@ -1,28 +1,14 @@
-## CookIM - 一个基于akka的分布式聊天程序
+# CookIM - 一个基于akka的分布式websocket聊天程序
 
 ![CookIM logo](docs/cookim.png)
 
 - [中文文档](README_CN.md)
 - [English document](README.md)
 
-PC
-
-![screen snapshot](docs/screen.png) 
-
-手机
-
-![screen snapshot](docs/screen2.png)
-
-- [演示地址](https://im.cookeem.com)
-
 ---
 
-![CookIM architecture](docs/CookIM-Flow.png)
-
-![CookIM stream](docs/CookIM-ChatStream.png)
-
-
 ### 目录
+1. [演示](#演示)
 1. [功能](#功能)
 1. [安装前准备](#安装前准备)
     1. [安装Java 8+](#安装Java 8+)
@@ -46,6 +32,23 @@ PC
     1. [分布式订阅与发布时序](#分布式订阅与发布时序)
     1. [MongoDB数据库说明](#MongoDB数据库说明)
     1. [消息类型](#消息类型)
+
+---
+
+###演示
+
+**PC**
+
+![screen snapshot](docs/screen.png) 
+
+**手机**
+
+![screen snapshot](docs/screen2.png)
+
+
+- **演示地址:** [https://im.cookeem.com](https://im.cookeem.com)
+
+
 ---
 
 ### 功能
