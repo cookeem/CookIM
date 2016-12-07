@@ -33,22 +33,24 @@
         <li><a href="#!/logout" class="red-text">Logout</a></li>
     </ul>
     <!-- top navbar-->
-    <nav id="top-navbar" ng-show="isLoading == false">
-        <div class="nav-wrapper yellow">
-            <a ng-show="showSideNavbar" href="javascript:void(0);" data-activates="topNavBar" class="button-collapse hide-on-large-only text-black">
-                <i class="material-icons black-text">menu</i>
-            </a>
-            <div class="center-align">
-                <a ng-if="titleInfo.mode == 'other'" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon responsive-img"> {{titleInfo.title}}</a>
-                <a ng-if="titleInfo.mode == 'group_session'" ng-click="showSessionMenu(titleInfo.sessionid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Group] {{titleInfo.title}}</a>
-                <a ng-if="titleInfo.mode == 'private_session'" ng-click="showUserMenu(titleInfo.uid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Private] {{titleInfo.title}}</a>
-                <ul ng-show="showAccoutMenu" class="right" ng-cloak>
-                    <!-- Dropdown Trigger -->
-                    <li><a class="dropdown-button black-text" href="#!" data-activates="topDropDown">Account<i class="material-icons right">arrow_drop_down</i></a></li>
-                </ul>
+    <div class="navbar-fixed">
+        <nav id="top-navbar" ng-show="isLoading == false" class="top-right-menu">
+            <div class="nav-wrapper yellow">
+                <a ng-show="showSideNavbar" href="javascript:void(0);" data-activates="topNavBar" class="button-collapse hide-on-large-only text-black">
+                    <i class="material-icons black-text">menu</i>
+                </a>
+                <div class="center-align">
+                    <a ng-if="titleInfo.mode == 'other'" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon responsive-img"> {{titleInfo.title}}</a>
+                    <a ng-if="titleInfo.mode == 'group_session'" ng-click="showSessionMenu(titleInfo.sessionid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Group] {{titleInfo.title}}</a>
+                    <a ng-if="titleInfo.mode == 'private_session'" ng-click="showUserMenu(titleInfo.uid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Private] {{titleInfo.title}}</a>
+                    <ul ng-show="showAccoutMenu" class="right" ng-cloak>
+                        <!-- Dropdown Trigger -->
+                        <li><a class="dropdown-button black-text" href="#!" data-activates="topDropDown">Account<i class="material-icons right">arrow_drop_down</i></a></li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </div>
     <!-- sidebar -->
     <ul ng-show="showSideNavbar" id="topNavBar" class="side-nav fixed">
         <li class="no-padding">
@@ -343,7 +345,6 @@
                 <ul>
                     <li><a class="btn-floating yellow darken-1" onclick="$('#chatImage').click();"><i class="material-icons">image</i></a></li>
                     <li><a class="btn-floating blue" onclick="$('#chatFile').click();"><i class="material-icons">attach_file</i></a></li>
-                    <li><a class="btn-floating green" onclick="$('body').animate({ scrollTop: 0 }, 'slow');$('#sendMessageMenu').trigger('click');"><i class="material-icons">vertical_align_top</i></a></li>
                 </ul>
             </div>
         </div>

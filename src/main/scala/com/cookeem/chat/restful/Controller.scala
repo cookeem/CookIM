@@ -699,7 +699,7 @@ object Controller {
                     filePath = s"$path/$filenameNew.thumb.png"
                     FileUtils.writeByteArrayToFile(new File(filePath), bgImg.bytes)
                     filePath = s"/$filePath"
-                    createGroupSession(uid, sessionName = sessionName, sessionIcon = filePath, publicType = 1).map { case (sessionCreated, errmsgCreated) =>
+                    createGroupSession(uid, sessionName = sessionName, sessionIcon = filePath, publicType = 0).map { case (sessionCreated, errmsgCreated) =>
                       //after session created user must join session first
                       joinSession(uid, sessionCreated).map { updateResult =>
                         if (updateResult.errmsg != "") {

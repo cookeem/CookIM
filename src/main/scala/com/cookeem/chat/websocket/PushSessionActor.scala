@@ -78,9 +78,11 @@ class PushSessionActor extends TraitPubSubActor {
     case ClusterText(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, content, dateline) if actorRef != ActorRef.noSender =>
       //when receive cluster push message
       //send back to websocket stream
-      futureSessionTokens.foreach { sessionTokens =>
-        sessionTokens.filter(_.sessionid == ssessionid).foreach { sessionToken =>
-          actorRef ! WsTextDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, content, dateline)
+      if (msgType != "online" && msgType != "offline") {
+        futureSessionTokens.foreach { sessionTokens =>
+          sessionTokens.filter(_.sessionid == ssessionid).foreach { sessionToken =>
+            actorRef ! WsTextDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, content, dateline)
+          }
         }
       }
 

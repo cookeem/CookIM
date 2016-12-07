@@ -32,7 +32,7 @@ class ChatSessionActor extends TraitPubSubActor {
       //publish user join session
       mediator ! Publish(sessionid, ClusterText(uid, nickname, avatar, sessionid, sessionName, sessionIcon, "online", s"User $nickname online session"))
       userOnlineOffline(uid, sessionid, isOnline = true)
-      createMessage(uid, sessionid, "online", s"User $nickname online session")
+//      createMessage(uid, sessionid, "online", s"User $nickname online session")
       consoleLog("SUCCESSFUL", s"User $nickname online session $sessionid")
 
     case UnsubscribeAck(Unsubscribe(ssessionid, None, `self`)) =>
@@ -40,7 +40,7 @@ class ChatSessionActor extends TraitPubSubActor {
       actorRef = ActorRef.noSender
       mediator ! Publish(sessionid, ClusterText(uid, nickname, avatar, sessionid, sessionName, sessionIcon, "offline", s"User $nickname offline session"))
       userOnlineOffline(uid, sessionid, isOnline = false)
-      createMessage(uid, sessionid, "offline", s"User $nickname offline session")
+//      createMessage(uid, sessionid, "offline", s"User $nickname offline session")
       consoleLog("SUCCESSFUL", s"User $nickname offline session $sessionid")
 
     case UserOnline(ref) =>
