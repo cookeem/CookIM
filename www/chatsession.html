@@ -59,7 +59,7 @@
                                 <div class="row"></div>
                                 <div class="row">
                                     <div ng-if="message.fileInfo.fileThumb != '/'" class="col s6 offset-s3 center-align">
-                                        <a ng-href="{{message.fileInfo.filePath}}"><img ng-src="{{message.fileInfo.fileThumb}}" class="z-depth-1 responsive-img"></a>
+                                        <a href="javascript:void(0)" data-featherlight="{{message.fileInfo.filePath}}"><img ng-src="{{message.fileInfo.fileThumb}}" class="z-depth-1 responsive-img"></a>
                                         <div>{{message.fileInfo.fileName}}</div>
                                     </div>
                                     <div ng-if="message.fileInfo.fileThumb == '/'" class="col s6 offset-s3 center-align">
