@@ -9,6 +9,12 @@
 
 ### 目录
 1. [演示](#演示)
+1. [运行在Docker](#运行在docker)
+    1. [获取镜像](#获取镜像)
+    1. [运行容器](#运行容器)
+    1. [调试容器](#调试容器)
+    1. [停止容器](#停止容器)
+    1. [以Docker-Compose方式启动](#以dockercompose方式启动)
 1. [安装前准备](#安装前准备)
     1. [安装Java8+](#安装java8)
     1. [安装Scala2.11+](#安装scala211)
@@ -45,6 +51,101 @@
 
 
 - **演示地址:** [https://im.cookeem.com](https://im.cookeem.com)
+
+---
+
+1. [运行在Docker](#运行在docker)
+    1. [获取镜像](#获取镜像)
+    2. [运行容器](#运行容器)
+    
+    
+### 运行在Docker
+  
+---
+
+#### 获取镜像
+
+```sh
+$ sudo docker pull cookeem/cookim
+```
+---
+
+#### 运行容器
+
+```sh
+$ sudo docker run -d -p 8080:8080 cookeem/cookim
+```
+
+浏览器访问：
+> http://localhost:8080
+
+如果想修改HTTP端口为18080，可以使用如下命令：
+
+```sh
+$ sudo docker run -d -p 18080:8080 cookeem/cookim
+```
+
+#### 调试容器
+
+以下命令可以获取容器ID
+```
+$ sudo docker ps
+       CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+       9c353289cf37        cookeem/cookim      "/root/cookim/entry.s"   4 seconds ago       Up 2 seconds        0.0.0.0:8080->8080/tcp   stoic_borg
+```
+
+运行以下命令进入容器进行调试
+```sh
+$ sudo docker exec -ti #CONTAINER ID# /bin/bash
+```
+
+---
+
+#### 停止容器
+
+以下命令停止容器
+```sh
+$ sudo docker stop #CONTAINER ID#
+$ sudo docker rm #CONTAINER ID#
+```
+
+---
+
+#### 以Docker-Compose方式启动
+
+- 启动集群
+
+进入CookIM所在目录，运行以下命令，以docker-compose方式启动CookIM集群，该集群启动了三个容器：mongodb、cookim1、cookim2
+```sh
+$ sudo docker-compose up -d
+Creating docker_mongodb_1
+Creating docker_cookim1_1
+Creating docker_cookim2_1
+```
+
+成功启动集群后，浏览器分别访问以下网址，对应不同的CookIM服务
+> http://localhost:8080
+> http://localhost:8081
+
+- 停止docker集群
+```sh
+$ sudo docker-compose stop
+$ sudo docker-compose rm
+```
+
+- 增加CookIM节点
+
+可以通过修改docker-compose.yml文件增加CookIM服务节点，例如增加第三个节点：
+
+```yaml
+      cookim3:
+        image: cookeem/cookim-cluster
+        ports:
+         - "8082:8080"
+        depends_on:
+         - mongodb
+         - cookim1
+```
 
 ---
 
@@ -373,7 +474,7 @@ akka http在接收到websocket发送的消息之后，会把消息发送到chatS
 
 > 1. websocket发送的消息体包含JWT，flowFromWS用户接收websocket消息，并把消息里边的JWT进行解码，验证有效性；
 
-> 2. 对于JWT校验失败的消息，会经过filterFailure进行过滤；杜宇JWT校验成功的消息，会经过filterSuccess进行过滤；
+> 2. 对于JWT校验失败的消息，会经过filterFailure进行过滤；对于JWT校验成功的消息，会经过filterSuccess进行过滤；
 
 > 3. builder.materializedValue为akka stream的物化值，在akka stream创建的时候，会自动向connectedWs发送消息，connectedWs把消息转换成UserOnline消息，通过chatSinkActor发送给ChatSessionActor；
 

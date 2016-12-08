@@ -1,0 +1,17 @@
+    version: '2'
+    services:
+      cookim1:
+        image: cookeem/cookim-cluster
+        ports:
+         - "8080:8080"
+        depends_on:
+         - mongodb
+      cookim2:
+        image: cookeem/cookim-cluster
+        ports:
+         - "8081:8080"
+        depends_on:
+         - mongodb
+         - cookim1
+      mongodb:
+        image: cookeem/mongodb

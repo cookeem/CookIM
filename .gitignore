@@ -6,3 +6,5 @@
 /project/target/
 /target/
 /upload/
+/Dockerfile
+/docker
