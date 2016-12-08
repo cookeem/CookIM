@@ -14,7 +14,7 @@
     1. [运行容器](#运行容器)
     1. [调试容器](#调试容器)
     1. [停止容器](#停止容器)
-    1. [以Docker-Compose方式启动](#以dockercompose方式启动)
+    1. [以Docker-Compose方式启动](#以docker-compose方式启动)
 1. [安装前准备](#安装前准备)
     1. [安装Java8+](#安装java8)
     1. [安装Scala2.11+](#安装scala211)
