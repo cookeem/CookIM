@@ -9,13 +9,16 @@
 
 ### 目录
 1. [演示](#演示)
-1. [运行在Docker](#运行在docker)
+1. [以Docker方式启动单节点CookIM](#以docker方式启动单节点cookim)
     1. [获取镜像](#获取镜像)
     1. [运行容器](#运行容器)
     1. [调试容器](#调试容器)
     1. [停止容器](#停止容器)
-    1. [以Docker-Compose方式启动](#以docker-compose方式启动)
-1. [安装前准备](#安装前准备)
+1. [以Docker-Compose方式启动CookIM集群](#以docker-compose方式启动cookim集群)
+    1. [启动集群](#启动集群)
+    1. [增加节点](#增加节点)
+    1. [停止集群](#停止集群)
+1. [手动安装前准备](#手动安装前准备)
     1. [安装Java8+](#安装java8)
     1. [安装Scala2.11+](#安装scala211)
     1. [安装SBT0.13+](#安装sbt013)
@@ -59,7 +62,7 @@
     2. [运行容器](#运行容器)
     
     
-### 运行在Docker
+### 以Docker方式启动单节点CookIM
   
 ---
 
@@ -111,9 +114,9 @@ $ sudo docker rm #CONTAINER ID#
 
 ---
 
-#### 以Docker-Compose方式启动
+### 以Docker-Compose方式启动CookIM集群
 
-- 启动集群
+#### 启动集群
 
 进入CookIM所在目录，运行以下命令，以docker-compose方式启动CookIM集群，该集群启动了三个容器：mongodb、cookim1、cookim2
 ```sh
@@ -127,29 +130,38 @@ Creating docker_cookim2_1
 > http://localhost:8080
 > http://localhost:8081
 
-- 停止docker集群
-```sh
-$ sudo docker-compose stop
-$ sudo docker-compose rm
-```
+---
 
-- 增加CookIM节点
+#### 增加节点
 
 可以通过修改docker-compose.yml文件增加CookIM服务节点，例如增加第三个节点：
 
 ```yaml
       cookim3:
         image: cookeem/cookim-cluster
+        volumes:
+         - /tmp:/root/cookim/upload
+        environment:
+          HOST_NAME: "cookim3"
+          WEB_PORT: "8082"
+          AKKA_PORT: "2552"
+          SEED_NODES: "cookim1:2551"
         ports:
-         - "8082:8080"
+         - "8082:8082"
         depends_on:
          - mongodb
          - cookim1
 ```
-
 ---
 
-### 安装前准备
+#### 停止集群
+```sh
+$ sudo docker-compose stop
+$ sudo docker-compose rm
+```
+---
+
+### 手动安装前准备
 
 ---
 #### 安装Java8+
@@ -396,13 +408,13 @@ a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt�
 ```sh
 $ cd #CookIM directory#
 
-$ sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
+$ sbt "run-main com.cookeem.chat.CookIM -w 8080 -a 2551"
 ```
 b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
 ```sh
 $ cd #CookIM directory#
 
-$ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8080 -n 2551 
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8080 -a 2551 
 ```
 
 以上命令启动了一个监听8080端口的WEB服务，akka system的监听端口为2551
@@ -411,7 +423,7 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8080 -n 2551
 
 -h 8080 表示HTTP服务监听8080端口
 
--n 2551 表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
+-a 2551 表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
 
 ---
 
@@ -428,13 +440,13 @@ a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt�
 ```sh
 $ cd #CookIM directory#
 
-$ sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
+$ sbt "run-main com.cookeem.chat.CookIM -w 8081 -a 2552"
 ```
 b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
 ```sh
 $ cd #CookIM directory#
 
-$ java -classpath "libs/*" com.cookeem.chat.CookIM -h 8081 -n 2552 
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552 
 ```
 
 以上命令启动了一个监听8081端口的WEB服务，akka system的监听端口为2552

@@ -23,17 +23,17 @@ trait TraitPubSubActor extends Actor {
 
   def eventReceive: Receive = {
     case MemberUp(member) =>
-    //      println(s"*** Member is Up: ${self} ${member.address}")
+//          println(s"*** Member is Up: $self ${member.address}")
     case UnreachableMember(member) =>
       cluster.down(member.address)
-    //      println(s"*** Member Unreachable: ${self} ${member.address}")
+//          println(s"*** Member Unreachable: $self ${member.address}")
     case MemberRemoved(member, previousStatus) =>
-    //      println(s"*** Member is Removed: ${self} ${member.address} after $previousStatus")
+//          println(s"*** Member is Removed: $self ${member.address} after $previousStatus")
     case MemberExited(member) =>
-    //      println(s"*** Member is Exited: ${self} ${member.address}")
+//          println(s"*** Member is Exited: $self ${member.address}")
     case LeaderChanged(leader) =>
-    //      println(s"*** Leader is Changed: ${self} ${leader}")
+//          println(s"*** Leader is Changed: $self $leader")
     case evt: MemberEvent => // ignore
-    //      println(s"*** Memver event ${self} ${evt.member.status} ${evt.member.address}")
+//          println(s"*** Memver event $self ${evt.member.status} ${evt.member.address}")
   }
 }

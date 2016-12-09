@@ -45,11 +45,11 @@ cd CookIM
 - [3.2] open a terminal, and run the command below to start up CookIM backend service:
 
 ```sh
-sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
+sbt "run-main com.cookeem.chat.CookIM -w 8080 -a 2551"
 ```
 -h 8080 is the port of HTTP service
 
--n 2551 is akka cluster seed node port, by default seed node is localhost:2551
+-a 2551 is akka cluster seed node port, by default seed node is localhost:2551
 
 - [3.3] open the browser, and access the url below:
 
@@ -57,7 +57,7 @@ http://localhost:8080
 
 - [3.4] open the other terminal, and run the command below to start up another CookIM backend service:
 ```sh
-sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
+sbt "run-main com.cookeem.chat.CookIM -w 8081 -a 2552"
 ```
 
 - [3.5] because CookIM applicaton use cookie, please open the other kind of browser, and access the url below:
