@@ -1,9 +1,9 @@
 分别打开不同终端，运行以下命令：
 
 ```
-sbt "run-main com.cookeem.chat.CookIM -h 8080 -n 2551"
+sbt "run-main com.cookeem.chat.CookIM -w 8080 -a 2551"
 
-sbt "run-main com.cookeem.chat.CookIM -h 8081 -n 2552"
+sbt "run-main com.cookeem.chat.CookIM -w 8081 -a 2552"
 ```
 
 浏览器访问：

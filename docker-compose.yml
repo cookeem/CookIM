@@ -2,16 +2,32 @@
     services:
       cookim1:
         image: cookeem/cookim-cluster
+        volumes:
+         - /tmp:/root/cookim/upload
+        environment:
+          HOST_NAME: "cookim1"
+          WEB_PORT: "8080"
+          AKKA_PORT: "2551"
+          SEED_NODES: "cookim1:2551"
         ports:
          - "8080:8080"
         depends_on:
          - mongodb
       cookim2:
         image: cookeem/cookim-cluster
+        volumes:
+         - /tmp:/root/cookim/upload
+        environment:
+          HOST_NAME: "cookim2"
+          WEB_PORT: "8081"
+          AKKA_PORT: "2552"
+          SEED_NODES: "cookim1:2551"
         ports:
-         - "8081:8080"
+         - "8081:8081"
         depends_on:
          - mongodb
          - cookim1
       mongodb:
+        volumes:
+         - /tmp:/root/cookim/upload
         image: cookeem/mongodb
