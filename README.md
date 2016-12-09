@@ -143,11 +143,11 @@ Creating docker_cookim2_1
          - /tmp:/root/cookim/upload
         environment:
           HOST_NAME: "cookim3"
-          WEB_PORT: "8082"
-          AKKA_PORT: "2552"
+          WEB_PORT: "8080"
+          AKKA_PORT: "2551"
           SEED_NODES: "cookim1:2551"
         ports:
-         - "8082:8082"
+         - "8082:8080"
         depends_on:
          - mongodb
          - cookim1
