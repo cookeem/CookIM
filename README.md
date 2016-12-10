@@ -9,6 +9,9 @@
 
 ### 目录
 1. [演示](#演示)
+    1. [PC演示](#PC演示)
+    1. [手机演示](#手机演示)
+    1. [演示地址](#演示地址)
 1. [以Docker方式启动单节点CookIM](#以docker方式启动单节点cookim)
     1. [获取镜像](#获取镜像)
     1. [运行容器](#运行容器)
@@ -41,21 +44,24 @@
     1. [消息类型](#消息类型)
 
 ---
+[返回目录](#目录)
 
 ###演示
 
-**PC**
+#### PC演示
 
 ![screen snapshot](docs/screen.png) 
 
-**手机**
+#### 手机演示
 
 ![screen snapshot](docs/screen2.png)
 
 
-- **演示地址:** [https://im.cookeem.com](https://im.cookeem.com)
+#### 演示地址
+[https://im.cookeem.com](https://im.cookeem.com)
 
 ---
+[返回目录](#目录)
 
 1. [运行在Docker](#运行在docker)
     1. [获取镜像](#获取镜像)
@@ -72,6 +78,7 @@
 $ sudo docker pull cookeem/cookim
 ```
 ---
+[返回目录](#目录)
 
 #### 运行容器
 
@@ -87,6 +94,10 @@ $ sudo docker run -d -p 8080:8080 cookeem/cookim
 ```sh
 $ sudo docker run -d -p 18080:8080 cookeem/cookim
 ```
+
+---
+
+[返回目录](#目录)
 
 #### 调试容器
 
@@ -104,6 +115,8 @@ $ sudo docker exec -ti #CONTAINER ID# /bin/bash
 
 ---
 
+[返回目录](#目录)
+
 #### 停止容器
 
 以下命令停止容器
@@ -113,6 +126,8 @@ $ sudo docker rm #CONTAINER ID#
 ```
 
 ---
+
+[返回目录](#目录)
 
 ### 以Docker-Compose方式启动CookIM集群
 
@@ -131,6 +146,8 @@ Creating docker_cookim2_1
 > http://localhost:8081
 
 ---
+
+[返回目录](#目录)
 
 #### 增加节点
 
@@ -154,6 +171,8 @@ Creating docker_cookim2_1
 ```
 ---
 
+[返回目录](#目录)
+
 #### 停止集群
 ```sh
 $ sudo docker-compose stop
@@ -161,9 +180,14 @@ $ sudo docker-compose rm
 ```
 ---
 
+[返回目录](#目录)
+
 ### 手动安装前准备
 
 ---
+
+[返回目录](#目录)
+
 #### 安装Java8+
 
 下载jdk8二进制文件，下载链接位于：
@@ -201,6 +225,8 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.65-b01, mixed mode)
 
 ---
 
+[返回目录](#目录)
+
 #### 安装Scala2.11+
 
 下载scala2.11，下载链接位于：
@@ -237,6 +263,8 @@ $ scala
 
 ---
 
+[返回目录](#目录)
+
 #### 安装SBT0.13+
 
 下载sbt0.13.13，下载链接位于：
@@ -269,6 +297,8 @@ $ sbt
 
 ```
 ---
+
+[返回目录](#目录)
 
 #### 安装Node5+
 
@@ -304,6 +334,8 @@ $ node -v
 v5.10.1
 ```
 ---
+
+[返回目录](#目录)
 
 #### 安装MongoDB3+
 
@@ -358,6 +390,8 @@ $ mongod
 ```
 ---
 
+[返回目录](#目录)
+
 
 ### 运行
 #### 获取源代码
@@ -368,6 +402,8 @@ cd CookIM
 ```
 ---
 
+[返回目录](#目录)
+
 #### 下载node依赖包
 
 进入www目录，安装node的依赖包（npm有国内淘宝镜像，详情请百度）
@@ -377,12 +413,16 @@ $ npm install
 ```
 ---
 
+[返回目录](#目录)
+
 #### 开启mongoDB服务
 
 ```sh
 $ mongod &
 ```
 ---
+
+[返回目录](#目录)
 
 #### 下载sbt的jar依赖包
 
@@ -394,11 +434,15 @@ $ sbt console
 ```
 ---
 
+[返回目录](#目录)
+
 #### 使用预打包的libs运行程序
 
 如果嫌sbt下载jar依赖包非常慢，我们已经预先准备好相关的jar依赖包，位于```libs```目录
 
 ---
+
+[返回目录](#目录)
 
 #### 启动CookIM服务
 
@@ -427,10 +471,14 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8080 -a 2551
 
 ---
 
+[返回目录](#目录)
+
 #### 打开浏览器，访问以下网址8080
 > http://localhost:8080
 
 ---
+
+[返回目录](#目录)
 
 #### 启动另一个CookIM服务
 
@@ -453,6 +501,8 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552
 
 ---
 
+[返回目录](#目录)
+
 #### 打开浏览器，访问以下网址8081
 > http://localhost:8081
 
@@ -461,6 +511,8 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552
 > 你也可以把服务部署在不同的服务器上，请修改```conf/application.conf```配置文件中seed-nodes的配置，把localhost改为主机名
 
 ---
+
+[返回目录](#目录)
 
 ### 架构
 
@@ -477,6 +529,8 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552
 > 3. akka cluster：akka stream把用户消息发送到akka cluster，CookIM使用到akka cluster的DistributedPubSub，当用户进入会话的时候，订阅（Subscribe）对应的会话；当用户向会话发送消息的时候，会把消息发布（Publish）到订阅的actor中，此时，群聊中的用户就可以收到消息。
 
 ---
+
+[返回目录](#目录)
 
 #### akka stream websocket graph
 
@@ -499,6 +553,8 @@ akka http在接收到websocket发送的消息之后，会把消息发送到chatS
 > 7. flowReject和flowAcceptBack的消息最后统一通过flowBackWs处理成websocket形式的Message通过websocket回送给用户；
 
 ---
+
+[返回目录](#目录)
 
 #### MongoDB数据库说明
 
@@ -566,6 +622,9 @@ isRead：是否已读（0：未读，1：已读）
 dateline（更新时间戳）
 ```
 
+---
+
+[返回目录](#目录)
 
 #### 消息类型
 
@@ -601,6 +660,8 @@ pushMsg:       {
 
 ---
 
+[返回目录](#目录)
+
 > ws-chat为用户在会话中的聊天信道，用户在会话中发送消息以及接收消息用
 
 ```
@@ -629,3 +690,7 @@ chatMsg:       {
                     dateline: "xxx" 
                }
 ```    
+
+---
+
+[返回目录](#目录)
