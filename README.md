@@ -537,7 +537,7 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552
 
 ![CookIM stream](docs/CookIM-ChatStream.png)
 
-akka http在接收到websocket发送的消息之后，会把消息发送到chatService流里边进行处理，这里使用到akka stream graph：
+ - akka http在接收到websocket发送的消息之后，会把消息发送到chatService流里边进行处理，这里使用到akka stream graph：
 
 > 1. websocket发送的消息体包含JWT，flowFromWS用户接收websocket消息，并把消息里边的JWT进行解码，验证有效性；
 
@@ -545,7 +545,7 @@ akka http在接收到websocket发送的消息之后，会把消息发送到chatS
 
 > 3. builder.materializedValue为akka stream的物化值，在akka stream创建的时候，会自动向connectedWs发送消息，connectedWs把消息转换成UserOnline消息，通过chatSinkActor发送给ChatSessionActor；
 
-> 4. chatActorSink在akka stream结束的时候，向down stream发送UserOffline消息；
+> 4. chatActorSink向chatSessionActor发送消息，在akka stream结束的时候，向down stream发送UserOffline消息；
 
 > 5. chatSource用于接收从ChatSessionActor中回送的消息，并且把消息发送给flowAcceptBack；
 
