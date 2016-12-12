@@ -40,7 +40,7 @@
     1. [打开浏览器，访问以下网址8081](#打开浏览器访问以下网址8081)
 1. [架构](#架构)
     1. [整体服务架构](#整体服务架构)
-    1. [akka stream websocket graph](#akkastreamwebsocketgraph)
+    1. [akka stream websocket graph](#akka-stream-websocket-graph)
     1. [MongoDB数据库说明](#mongodb数据库说明)
     1. [消息类型](#消息类型)
 
