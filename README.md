@@ -62,13 +62,7 @@
 [https://im.cookeem.com](https://im.cookeem.com)
 
 ---
-[返回目录](#目录)
 
-1. [运行在Docker](#运行在docker)
-    1. [获取镜像](#获取镜像)
-    2. [运行容器](#运行容器)
-    
-    
 ### 以Docker方式启动单节点CookIM
   
 ---
