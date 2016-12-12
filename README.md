@@ -2,8 +2,8 @@
 
 ![CookIM logo](docs/cookim.png)
 
-- [中文文档](README_CN.md)
-- [English document](README.md)
+- [中文文档](README.md)
+- [English document](README_EN.md)
 
 ---
 
@@ -453,22 +453,26 @@ a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt�
 ```sh
 $ cd #CookIM directory#
 
-$ sbt "run-main com.cookeem.chat.CookIM -w 8080 -a 2551"
+$ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551"
 ```
 b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
 ```sh
 $ cd #CookIM directory#
 
-$ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8080 -a 2551 
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551
 ```
 
 以上命令启动了一个监听8080端口的WEB服务，akka system的监听端口为2551
 
 参数说明：
 
--h 8080 表示HTTP服务监听8080端口
+-a,--akka-port <AKKA-PORT>： akka system 监听端口2551
 
--a 2551 表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
+-h,--host-name <HOST-NAME>： 外部访问本机的主机名
+
+-n,--nat： 是否使用NAT转换，docker模式下必须设置（可选）
+
+-s,--seed-nodes <SEED-NODES>：表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
 
 ---
 
@@ -489,13 +493,13 @@ a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt�
 ```sh
 $ cd #CookIM directory#
 
-$ sbt "run-main com.cookeem.chat.CookIM -w 8081 -a 2552"
+$ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551"
 ```
 b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
 ```sh
 $ cd #CookIM directory#
 
-$ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552 
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551 
 ```
 
 以上命令启动了一个监听8081端口的WEB服务，akka system的监听端口为2552
@@ -508,8 +512,6 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552
 > http://localhost:8081
 
 该演示启动了两个CookIM服务，访问地址分别为8080端口以及8081端口，用户通过两个浏览器分别访问不同的的CookIM服务，用户在浏览器中通过websocket发送消息到akka集群，akka集群通过分布式的消息订阅与发布，把消息推送到集群中相应的节点，实现消息在不同服务间的分布式通讯。
-
-> 你也可以把服务部署在不同的服务器上，请修改```conf/application.conf```配置文件中seed-nodes的配置，把localhost改为主机名
 
 ---
 
@@ -539,7 +541,7 @@ $ java -classpath "libs/*" com.cookeem.chat.CookIM -w 8081 -a 2552
 
  - akka http在接收到websocket发送的消息之后，会把消息发送到chatService流里边进行处理，这里使用到akka stream graph：
 
-> 1. websocket发送的消息体包含JWT，flowFromWS用户接收websocket消息，并把消息里边的JWT进行解码，验证有效性；
+> 1. websocket发送的消息体包含JWT，flowFromWS用于接收websocket消息，并把消息里边的JWT进行解码，验证有效性；
 
 > 2. 对于JWT校验失败的消息，会经过filterFailure进行过滤；对于JWT校验成功的消息，会经过filterSuccess进行过滤；
 
@@ -570,7 +572,7 @@ lastLogin（最后登录时间，timstamp）
 loginCount(登录次数)
 sessionsStatus（用户相关的会话状态列表）
     [{sessionid: 会话id, newCount: 未读的新消息数量}]
-friends（用户的好友列表：[{uuid: 好友uuid}]）
+friends（用户的好友列表：[好友uuid]）
 dateline（注册时间，timstamp）
 ```
 
@@ -587,7 +589,6 @@ usersStatus（会话对应的用户uuid数组）
     [{uid: 用户uuid, online: 是否在线（true：在线，false：离线}]
 lastMsgid（最新发送的消息id）
 lastUpdate（最后更新时间，timstamp）
-dateline（创建时间，timstamp）
 ```
  - messages： 消息表（记录会话中的消息记录）
 ```
