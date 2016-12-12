@@ -62,12 +62,6 @@
 [https://im.cookeem.com](https://im.cookeem.com)
 
 ---
-[Category](#category)
-
-1. [运行在Docker](#运行在docker)
-    1. [获取镜像](#获取镜像)
-    2. [运行容器](#运行容器)
-    
     
 ### Start single node CookIM in docker
   
