@@ -1,4 +1,4 @@
-# CookIM - 一个基于akka的分布式websocket聊天程序
+# CookIM - is a distributed websocket chat applications based on akka
 
 ![CookIM logo](docs/cookim.png)
 
@@ -7,114 +7,113 @@
 
 ---
 
-### 目录
+### Category
 
-1. [演示](#演示)
-    1. [PC演示](#PC演示)
-    1. [手机演示](#手机演示)
-    1. [演示地址](#演示地址)
-1. [以Docker方式启动单节点CookIM](#以docker方式启动单节点cookim)
-    1. [获取镜像](#获取镜像)
-    1. [运行容器](#运行容器)
-    1. [调试容器](#调试容器)
-    1. [停止容器](#停止容器)
-1. [以Docker-Compose方式启动CookIM集群](#以docker-compose方式启动cookim集群)
-    1. [启动集群](#启动集群)
-    1. [增加节点](#增加节点)
-    1. [停止集群](#停止集群)
-1. [手动安装前准备](#手动安装前准备)
-    1. [安装Java8+](#安装java8)
-    1. [安装Scala2.11+](#安装scala211)
-    1. [安装SBT0.13+](#安装sbt013)
-    1. [安装Node5+](#安装node5)
-    1. [安装MongoDB3+](#安装mongodb3)
-1. [运行](#运行)
-    1. [获取源代码](#获取源代码)
-    1. [下载node依赖包](#下载node依赖包)
-    1. [开启mongoDB服务](#开启mongodb服务)
-    1. [下载sbt的jar依赖包](#下载sbt的jar依赖包)
-    1. [使用预打包的libs运行程序](#使用预打包的libs运行程序)
-    1. [启动CookIM服务](#启动cookim服务)
-    1. [打开浏览器，访问以下网址8080](#打开浏览器访问以下网址8080)
-    1. [启动另一个CookIM服务](#启动另一个cookim服务)
-    1. [打开浏览器，访问以下网址8081](#打开浏览器访问以下网址8081)
-1. [架构](#架构)
-    1. [整体服务架构](#整体服务架构)
+1. [Demo](#demo)
+    1. [Demo on PC](#demo-on-pc)
+    1. [Demo on Mobile](#demo-on-mobile)
+    1. [Demo link](#demo-link)
+1. [Start single node CookIM in docker](#start-single-node-cookim-in-docker)
+    1. [Get docker image](#get-docker-image)
+    1. [Run docker](#run-docker)
+    1. [Debug docker](#debug-docker)
+    1. [Stop docker](#stop-docker)
+1. [Start multiple nodes CookIM in docker compose](#start-multiple-nodes-cookim-in-docker-compose)
+    1. [Start docker compose](#start-docker-compose)
+    1. [Add nodes in docker compose](#add-nodes-in-docker-compose)
+    1. [Stop docker compose](#stop-docker-compose)
+1. [Manual install prerequisites](#manual-install-prerequisites)
+    1. [Install Java 8+](#install-java-8)
+    1. [Install Scala 2.11+](#install-scala-211)
+    1. [Install SBT 0.13+](#install-sbt-013)
+    1. [Install Node 5+](#install-node-5)
+    1. [Install MongoDB 3+](#install-mongodb-3)
+1. [How to run](#how-to-run)
+    1. [Clone source code](#clone-source-code)
+    1. [Download Node dependencies](#download-node-dependencies)
+    1. [Start MongoDB server](#start-mongodb-server)
+    1. [Download SBT dependencies](#download-sbt-dependencies)
+    1. [Use prepared jar libs to run CookIM](#use-prepared-jar-libs-to-run-cookim)
+    1. [Start CookIM server](#start-cookim-server)
+    1. [Open browser and access web port 8080](#open-browser-and-access-web-port-8080)
+    1. [Start another CookIM server](#start-another-cookim-server)
+    1. [Open browser and access web port 8081](#open-browser-and-access-web-port-8081)
+1. [Architecture](#architecture)
+    1. [Architecture picture](#architecture-picture)
     1. [akka stream websocket graph](#akka-stream-websocket-graph)
-    1. [MongoDB数据库说明](#mongodb数据库说明)
-    1. [消息类型](#消息类型)
+    1. [MongoDB tables specification](#mongodb-tables-specification)
+    1. [Websocket message type](#websocket-message-type)
 
 ---
-[返回目录](#目录)
+[Category](#category)
 
-###演示
+###Demo
 
-#### PC演示
+#### Demo on PC
 
 ![screen snapshot](docs/screen.png) 
 
-#### 手机演示
+#### Demo on Mobile
 
 ![screen snapshot](docs/screen2.png)
 
 
-#### 演示地址
+#### Demo link
 [https://im.cookeem.com](https://im.cookeem.com)
 
 ---
-
-### 以Docker方式启动单节点CookIM
+    
+### Start single node CookIM in docker
   
 ---
 
-#### 获取镜像
+#### Get docker image
 
 ```sh
 $ sudo docker pull cookeem/cookim
 ```
 ---
-[返回目录](#目录)
+[Category](#category)
 
-#### 运行容器
+#### Run docker
 
 ```sh
 $ sudo docker run -d -p 8080:8080 cookeem/cookim
 ```
 
-浏览器访问：
+Browser to access:
 > http://localhost:8080
 
-如果想修改HTTP端口为18080，可以使用如下命令：
-
+If use want to modify HTTP port to 18080, just use the command below:
 ```sh
 $ sudo docker run -d -p 18080:8080 cookeem/cookim
 ```
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 调试容器
+#### Debug docker
 
-以下命令可以获取容器ID
+Run command below to obtain container ID
 ```
 $ sudo docker ps
        CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
        9c353289cf37        cookeem/cookim      "/root/cookim/entry.s"   4 seconds ago       Up 2 seconds        0.0.0.0:8080->8080/tcp   stoic_borg
 ```
 
-运行以下命令进入容器进行调试
+Run command below to debug container
 ```sh
 $ sudo docker exec -ti #CONTAINER ID# /bin/bash
 ```
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 停止容器
+#### Stop docker
 
-以下命令停止容器
+Run command below to stop container and remove container already exited
 ```sh
 $ sudo docker stop #CONTAINER ID#
 $ sudo docker rm #CONTAINER ID#
@@ -122,13 +121,13 @@ $ sudo docker rm #CONTAINER ID#
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-### 以Docker-Compose方式启动CookIM集群
+### Start multiple nodes CookIM in docker compose
 
-#### 启动集群
+#### Start docker compose
 
-进入CookIM所在目录，运行以下命令，以docker-compose方式启动CookIM集群，该集群启动了三个容器：mongodb、cookim1、cookim2
+Change into CookIM directory, run command below, start multiple nodes CookIM servers in docker compose mode. This way will start 3 container: mongodb, cookim1 and cookim2
 ```sh
 $ sudo docker-compose up -d
 Creating docker_mongodb_1
@@ -136,18 +135,17 @@ Creating docker_cookim1_1
 Creating docker_cookim2_1
 ```
 
-成功启动集群后，浏览器分别访问以下网址，对应不同的CookIM服务
+After run docker compose, use different browser to access the URLs below to connect to cookim1 and cookim2
 > http://localhost:8080
 > http://localhost:8081
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 增加节点
+#### Add nodes in docker compose
 
-可以通过修改docker-compose.yml文件增加CookIM服务节点，例如增加第三个节点：
-
+You can add config in ```docker-compose.yml``` (in CookIM directory) to add CookIM server nodes, this example show how to add cookim3 in docker compose: 
 ```yaml
       cookim3:
         image: cookeem/cookim-cluster
@@ -166,43 +164,41 @@ Creating docker_cookim2_1
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 停止集群
+#### Stop docker compose
 ```sh
 $ sudo docker-compose stop
 $ sudo docker-compose rm
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-### 手动安装前准备
+### Manual install prerequisites
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 安装Java8+
+#### Install Java 8+
 
-下载jdk8二进制文件，下载链接位于：
-
+Download JDK8 binary, download URL is here:
 ```sh
 http://www.oracle.com/technetwork/java/javase/downloads/index.html
 ```
 
-选择相应的版本，二进制文件地址例如：
-
+Download binary file, the URL like this:
 ```sh
 $ wget http://download.oracle.com/otn-pub/java/jdk/8u111-b14/jdk-8u111-linux-x64.tar.gz
 ```
 
-把二进制文件放到对应的目录，并解压二进制文件：
+Extract the compressed file in any directory you want:
 ```sh
 $ tar zxvf jdk-8u111-linux-x64.tar.gz
 ```
 
-设置全局环境变量，在文件末尾增加以下配置：
+Config the environment path variable, add config below at the end of /etc/profile:
 ```sh
 $ sudo vi /etc/profile
 export JAVA_HOME=<Your java binary directory>
@@ -210,7 +206,7 @@ export CLASSPATH=$JAVA_HOME/lib/tools.jar
 export PATH=$JAVA_HOME/bin:$PATH
 ```
 
-重新打开一个终端，让环境变量生效，检查java安装是否正确：
+Open a new terminal to make environment variable available, run command below to check install correct or not:
 ```sh
 $ java -version
 java version "1.8.0_65"
@@ -220,34 +216,34 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.65-b01, mixed mode)
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 安装Scala2.11+
+#### Install Scala 2.11+
 
-下载scala2.11，下载链接位于：
+Download Scala 2.11 binary, download URL is here:
 ```sh
 http://scala-lang.org/download/all.html
 ```
 
-选择相应的版本，二进制文件地址例如：
+Download binary file, the URL like this:
 
 ```sh
 $ wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz
 ```
 
-把二进制文件放到对应的目录，并解压二进制文件：
+Extract the compressed file in any directory you want:
 ```sh
 $ tar zxvf scala-2.11.8.tgz
 ```
 
-设置全局环境变量，在文件末尾增加以下配置：
+Config the environment path variable, add config below at the end of /etc/profile:
 ```sh
 $ sudo vi /etc/profile
 export SCALA_HOME=<Your scala binary directory>
 export PATH=$PATH:$SCALA_HOME/bin
 ```
 
-重新打开一个终端，让环境变量生效，检查scala安装是否正确：
+Open a new terminal to make environment variable available, run command below to check install correct or not:
 ```sh
 $ scala
   Welcome to Scala 2.11.8 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_65).
@@ -258,34 +254,33 @@ $ scala
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 安装SBT0.13+
+#### Install SBT 0.13+
 
-下载sbt0.13.13，下载链接位于：
+Download SBT 0.13.13 binary, download URL is here:
 ```sh
 http://www.scala-sbt.org/download.html
 ```
 
-选择相应的版本，二进制文件地址例如：
-
+Download binary file, the URL like this:
 ```sh
 $ wget https://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz
 ```
 
-把二进制文件放到对应的目录，并解压二进制文件：
+Extract the compressed file in any directory you want:
 ```sh
 $ tar zxvf sbt-0.13.13.tgz
 ```
 
-设置全局环境变量，在文件末尾增加以下配置：
+Config the environment path variable, add config below at the end of /etc/profile:
 ```sh
 $ sudo vi /etc/profile
 export SBT_HOME=<Your sbt binary directory>
 export PATH=$PATH:SBT_HOME/bin
 ```
 
-重新打开一个终端，让环境变量生效，检查sbt安装是否正确：
+Open a new terminal to make environment variable available, run command below to check install correct or not:
 ```sh
 $ sbt
 [info] Set current project to cookeem (in build file:/Users/cookeem/)
@@ -293,34 +288,33 @@ $ sbt
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 安装Node5+
+#### Install Node 5+
 
-下载NodeJS，下载链接位于：
+Download Node 5+ binary, download URL is here:
 ```sh
 https://nodejs.org/en/download/
 ```
 
-选择相应的版本，二进制文件地址例如：
-
+Download binary file, the URL like this:
 ```sh
 $ wget https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.xz
 ```
 
-把二进制文件放到对应的目录，并解压二进制文件：
+Extract the compressed file in any directory you want:
 ```sh
 $ tar zxvf node-v6.9.1-linux-x64.tar.xz
 ```
 
-设置全局环境变量，在文件末尾增加以下配置：
+Config the environment path variable, add config below at the end of /etc/profile:
 ```sh
 $ sudo vi /etc/profile
 export NODE_HOME=<Your node binary directory>
 export PATH=$PATH:NODE_HOME/bin
 ```
 
-重新打开一个终端，让环境变量生效，检查node和npm安装是否正确：
+Open a new terminal to make environment variable available, run command below to check install correct or not:
 ```sh
 $ npm -v
 3.8.3
@@ -330,39 +324,43 @@ v5.10.1
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 安装MongoDB3+
+#### Install MongoDB 3+
 
-下载mongoDB，下载链接位于：
+Download MongoDB 3+ binary, download URL is here:
 ```sh
 https://www.mongodb.com/download-center?jmp=nav#community
 ```
 
-选择相应的版本，二进制文件地址例如（3.4.X版本测试有问题，请选择低版本）：
+> Notice: 3.4.x MongoDB has unfixed bug in CookIM, please do not use this version, we recommend to use 3.2.11
+
+Download binary file, the URL like this:
 
 ```sh
 $ wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.2.9.tgz
 ```
 
-把二进制文件放到对应的目录，并解压二进制文件：
+Extract the compressed file in any directory you want:
 ```sh
 $ tar zxvf mongodb-linux-x86_64-amazon-3.2.9.tgz
 ```
 
-设置全局环境变量，在文件末尾增加以下配置：
+Config the environment path variable, add config below at the end of /etc/profile:
 ```sh
 $ sudo vi /etc/profile
 export MONGODB_HOME=<Your mongoDB binary directory>
 export PATH=$PATH:MONGODB_HOME/bin
 ```
 
-创建新的目录，mongodb默认数据文件位于/data/db
+Create mongodb database file directory, mongodb use /data/db as default  database file directory 
 ```sh
 $ sudo mkdir -p /data/db
 ```
 
-重新打开一个终端，让环境变量生效，启动mongodb，默认端口为27017：
+Open a new terminal to make environment variable available, run command below to check install correct or not.
+
+By default mongodb listen port 27017
 ```sh
 $ mongod
 2016-12-06T17:24:06.268+0800 I CONTROL  [initandlisten] MongoDB starting : pid=2854 port=27017 dbpath=/data/db 64-bit host=cookeemMac.local
@@ -385,11 +383,12 @@ $ mongod
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
 
-### 运行
-#### 获取源代码
+### How to run
+
+#### Clone source code
 ```sh
 git clone https://github.com/cookeem/CookIM.git
 
@@ -397,31 +396,31 @@ cd CookIM
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 下载node依赖包
+#### Download Node dependencies
 
-进入www目录，安装node的依赖包（npm有国内淘宝镜像，详情请百度）
+Go into ```www/``` directory, run command below to install node dependencies
 ```sh
 $ cd www
 $ npm install
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 开启mongoDB服务
+#### Start MongoDB server
 
 ```sh
 $ mongod &
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 下载sbt的jar依赖包
+#### Download SBT dependencies
 
-返回CookIM目录，打开一个终端，运行如下命令，下载依赖包，该过程请耐心等待，原因你懂的（sbt有国内OSChina镜像，详情请百度）
+Open another terminal, back to CookIM directory, run command below to download sbt dependencies, this will spend couples minutes
 
 ```sh
 $ cd ..
@@ -429,211 +428,210 @@ $ sbt console
 ```
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 使用预打包的libs运行程序
+#### Use prepared jar libs to run CookIM
 
-如果嫌sbt下载jar依赖包非常慢，我们已经预先准备好相关的jar依赖包，位于```libs```目录
+If use sbt to download dependencies is too slow, you can use the dependencies we prepared for you locate in ```libs``` directory
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 启动CookIM服务
+#### Start CookIM server
 
-启动服务有两种方式，sbt方式以及java方式
+There are two ways to start CookIM server: sbt and java
 
-a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt下载了依赖）：
+a. sbt way: change to CookIM directory, use sbt and sbt dependcies to start CookIM server:
 ```sh
 $ cd #CookIM directory#
 
 $ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551"
 ```
-b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
+b. java way: change to CookIM directory, use java and prepared jar libs to start CookIM server:
+```sh
+$ cd #CookIM directory#
+
+$ java -classpath "libs/*" com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551
+```
+
+Command above has start a web server listen port 8080 and akka system listen port 2551
+
+Parameters:
+
+ -a,--akka-port <AKKA-PORT>     akka cluster node port
+ 
+ -h,--host-name <HOST-NAME>     current web service external host name
+ 
+ -n,--nat                       is nat network or in docker(docker mode must set)
+ 
+ -s,--seed-nodes <SEED-NODES>   akka cluster seed nodes, seperate with comma, example:
+ 
+                                localhost:2551,localhost:2552
+
+---
+
+[Category](#category)
+
+#### Open browser and access web port 8080
+> http://localhost:8080
+
+---
+
+[Category](#category)
+
+#### Start another CookIM server
+
+Open another terminal, start another CookIM server to test message communication between servers:
+
+a. sbt way: change to CookIM directory, use sbt and sbt dependcies to start CookIM server:
+```sh
+$ cd #CookIM directory#
+
+$ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551"
+```
+b. java way: change to CookIM directory, use java and prepared jar libs to start CookIM server:
 ```sh
 $ cd #CookIM directory#
 
 $ java -classpath "libs/*" com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551
 ```
 
-以上命令启动了一个监听8080端口的WEB服务，akka system的监听端口为2551
-
-参数说明：
-
--a,--akka-port <AKKA-PORT>： akka system 监听端口2551
-
--h,--host-name <HOST-NAME>： 外部访问本机的主机名
-
--n,--nat： 是否使用NAT转换，docker模式下必须设置（可选）
-
--s,--seed-nodes <SEED-NODES>：表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
+Command above has start a web server listen port 8081 and akka system listen port 2552
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 打开浏览器，访问以下网址8080
-> http://localhost:8080
-
----
-
-[返回目录](#目录)
-
-#### 启动另一个CookIM服务
-
-打开另外一个终端，启动另一个CookIM服务，测试服务间的消息通讯功能。
-
-a. 进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt下载了依赖）：
-```sh
-$ cd #CookIM directory#
-
-$ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551"
-```
-b. 进入CookIM所在目录，也可以使用java方式启动服务（如果你没有使用sbt下载依赖，而是直接用```libs```目录的依赖包启动服务）：
-```sh
-$ cd #CookIM directory#
-
-$ java -classpath "libs/*" com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551 
-```
-
-以上命令启动了一个监听8081端口的WEB服务，akka system的监听端口为2552
-
----
-
-[返回目录](#目录)
-
-#### 打开浏览器，访问以下网址8081
+#### Open browser and access web port 8081
 > http://localhost:8081
 
-该演示启动了两个CookIM服务，访问地址分别为8080端口以及8081端口，用户通过两个浏览器分别访问不同的的CookIM服务，用户在浏览器中通过websocket发送消息到akka集群，akka集群通过分布式的消息订阅与发布，把消息推送到集群中相应的节点，实现消息在不同服务间的分布式通讯。
+---
+
+[Category](#category)
+
+### Architecture
+
+#### Architecture picture
+
+![Architecture picture](docs/CookIM-Flow.png)
+
+**CookIM server make from 3 parts: **
+
+> 1. akka http: provide web service, browser connect distributed chat servers by websocket
+
+> 2. akka stream: akka http receive websocket message (websocket message include TextMessage and BinaryMessage), then send message to chatService by akka stream way, websocket message include JWT(Javascript web token), if JWT verify failure, chatService stream will return reject message; if JWT verify success, chatService stream will send message to ChatSessionActor
+
+> 3. akka cluster：akka stream send websocket message to akka cluster ChatSessionActor, ChatSessionActor use DistributedPubSub to subscribe and publish message in akka cluster. When user online session, it will subscribe the session; when user send message in session, it will publish message in akka cluster, the actors who subscribe the session will receive the publish message
 
 ---
 
-[返回目录](#目录)
-
-### 架构
-
-#### 整体服务架构
-
-![CookIM architecture](docs/CookIM-Flow.png)
-
-**CookIM服务由三部分组成，基础原理如下：**
-
-> 1. akka http：用于提供web服务，浏览器通过websocket连接akka http来访问分布式聊天应用；
-
-> 2. akka stream：akka http在接收websocket发送的消息之后（消息包括文本消息：TextMessage以及二进制文件消息：BinaryMessage），把消息放到chatService流中进行流式处理。websocket消息中包含JWT（Javascript web token），如果JWT校验不通过，chatService流会直接返回reject消息；如果JWT校验通过，chatService流会把消息发送到ChatSessionActor中；
-
-> 3. akka cluster：akka stream把用户消息发送到akka cluster，CookIM使用到akka cluster的DistributedPubSub，当用户进入会话的时候，订阅（Subscribe）对应的会话；当用户向会话发送消息的时候，会把消息发布（Publish）到订阅的actor中，此时，群聊中的用户就可以收到消息。
-
----
-
-[返回目录](#目录)
+[Category](#category)
 
 #### akka stream websocket graph
 
 ![CookIM stream](docs/CookIM-ChatStream.png)
 
- - akka http在接收到websocket发送的消息之后，会把消息发送到chatService流里边进行处理，这里使用到akka stream graph：
+ - When akka http receive messsage from websocket, it will send message to chatService flow, here we use akka stream graph:
 
-> 1. websocket发送的消息体包含JWT，flowFromWS用于接收websocket消息，并把消息里边的JWT进行解码，验证有效性；
+> 1. Websocket message body include JWT, flowFromWS use to receive websocket message and decode JWT;
 
-> 2. 对于JWT校验失败的消息，会经过filterFailure进行过滤；对于JWT校验成功的消息，会经过filterSuccess进行过滤；
+> 2. When JWT verify failure, it will broadcast to filterFailure to filter to fail message; When JWT verify success, it will broadcast to filterSuccess to filter to success message;
 
-> 3. builder.materializedValue为akka stream的物化值，在akka stream创建的时候，会自动向connectedWs发送消息，connectedWs把消息转换成UserOnline消息，通过chatSinkActor发送给ChatSessionActor；
+> 3. When akka stream created, builder.materializedValue will send message to connectedWs, connectedWs convert message receive to UserOnline message, then send to chatSinkActor finally send to ChatSessionActor; 
 
-> 4. chatActorSink向chatSessionActor发送消息，在akka stream结束的时候，向down stream发送UserOffline消息；
+> 4. chatActorSink send message to chatSessionActor, when akka stream closed if will send UserOffline message to down stream;
 
-> 5. chatSource用于接收从ChatSessionActor中回送的消息，并且把消息发送给flowAcceptBack；
+> 5. chatSource receive message back from ChatSessionActor, then send message back to flowAcceptBack;
 
-> 6. flowAcceptBack提供keepAlive，保证连接不中断；
+> 6. flowAcceptBack will let the websocket connection keepAlive;
 
-> 7. flowReject和flowAcceptBack的消息最后统一通过flowBackWs处理成websocket形式的Message通过websocket回送给用户；
+> 7. flowReject and flowAcceptBack messages finally send to flowBackWs, flowBackWs convert messages to websocket format then send back to users;
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### MongoDB数据库说明
+#### MongoDB tables specification
 
- - users： 用户表
+ - users: users table
 ```
-*login（登录邮箱）
-nickname（昵称）
-password（密码SHA1）
-gender（性别：未知：0，男生：1，女生：2）
-avatar（头像，绝对路径，/upload/avatar/201610/26/xxxx.JPG）
-lastLogin（最后登录时间，timstamp）
-loginCount(登录次数)
-sessionsStatus（用户相关的会话状态列表）
-    [{sessionid: 会话id, newCount: 未读的新消息数量}]
-friends（用户的好友列表：[好友uuid]）
-dateline（注册时间，timstamp）
+*login (login email)
+nickname (nickname)
+password (password SHA1)
+gender (gender: unknow:0, boy:1, girl:2)
+avatar (avatar abs path, example: /upload/avatar/201610/26/xxxx.JPG)
+lastLogin (last login timestamp)
+loginCount (login counts)
+sessionsStatus (user joined sessions status)
+    [{sessionid: session id, newCount: unread message count in this session}]
+friends (user's friends list: [friends uid])
+dateline (register timestamp)
 ```
 
- - sessions： 会话表（记录所有群聊私聊的会话信息）
+ - sessions: sessions table
 ```
-*createuid（创建者的uid）
-*ouid（接收者的uid，只有当私聊的时候才有效）
-sessionIcon（会话的icon，对于群聊有效）
-sessionType（会话类型：0：私聊，1：群聊）
-publicType（可见类型：0：不公开邀请才能加入，1：公开）
-sessionName（群描述）
-dateline（创建日期，timestamp）
-usersStatus（会话对应的用户uuid数组）
-    [{uid: 用户uuid, online: 是否在线（true：在线，false：离线}]
-lastMsgid（最新发送的消息id）
-lastUpdate（最后更新时间，timstamp）
+*createuid (creator uid)
+*ouid (receiver uid, when session type is private available)
+sessionIcon (session icon, when session type is group available)
+sessionType (session type: 0:private, 1:group)
+publicType (public type: 0:not public, 1:public)
+sessionName (session name)
+dateline (created timestamp)
+usersStatus (users who joined this session status)
+    [{uid: uid, online: (true, false)}]
+lastMsgid (last message id)
+lastUpdate (last update timestamp)
 ```
- - messages： 消息表（记录会话中的消息记录）
+ - messages: messages tables
 ```
-*uid（消息发送者的uid）
-*sessionid（所在的会话id）
-msgType（消息类型：）
-content（消息内容）
-fileInfo（文件内容）
+*uid (send user uid)
+*sessionid (relative session id)
+msgType (message type)
+content (message content)
+fileInfo (file information)
     {
-        filePath（文件路径）
-        fileName（文件名）
-        fileType（文件mimetype）
-        fileSize（文件大小）
-        fileThumb（缩略图）
+        filePath
+        fileName
+        fileType
+        fileSize
+        fileThumb
     }
-*dateline（创建日期，timestamp）
+*dateline (created timestamp)
 ```
 
- - onlines：（在线用户表）
+ - onlines: online users table
 ```
-*id（唯一标识）
-*uid（在线用户uid）
-dateline（更新时间戳）
+*uid (online user id)
+dateline (last update timestamp)
 ```
 
- - notifications：（接收通知表）
+ - notifications: receive notifications table
 ```
-noticeType：通知类型（"joinFriend", "removeFriend", "inviteSession"）
-senduid：操作方uid
-*recvuid：接收方uid
-sessionid：对应的sessionid
-isRead：是否已读（0：未读，1：已读）
-dateline（更新时间戳）
+noticeType (notification type: "joinFriend", "removeFriend", "inviteSession")
+senduid (send user id)
+*recvuid (receive user id)
+sessionid (relative session id)
+isRead (notification is read: 0:not read, 1:already read)
+dateline (created timestamp)
 ```
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-#### 消息类型
+#### Websocket message type
 
-有两个websocket信道：ws-push和ws-chat
+There are two websocket channel: ws-push and ws-chat
 
-> ws-push向用户下发消息提醒，当用户不在会话中，可以提醒用户有哪些会话有新消息
+> ws-push send sessions new message to users, when user not online the session, they still can receive which sessions has new messages
 
 /ws-push channel
 ```
-上行消息，用于订阅推送消息：
+up message, use to subscribe push message:
 { userToken: "xxx" }
 
-下行消息：
+down message:
 acceptMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "accept", content: "xxx", dateline: "xxx" }
 rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
 keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
@@ -645,7 +643,7 @@ joinSessionMsg: { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", 
 leaveSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "leave", content: "xxx", dateline: "xxx" }
 noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "xxx", sessionIcon: "xxx", msgType: "system", content: "xxx", dateline: "xxx" }
 
-下行到浏览器消息格式：
+message push to browser:
 pushMsg:       { 
                     uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "xxx", 
                     content: "xxx", 
@@ -656,18 +654,18 @@ pushMsg:       {
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
-> ws-chat为用户在会话中的聊天信道，用户在会话中发送消息以及接收消息用
+> ws-chat is session chat channel, user send and receive session messages in this channel
 
 ```
 /ws-chat channel
-上行消息：
+up message: 
 onlineMsg:     { userToken: "xxx", sessionToken: "xxx", msgType:"online", content:"" }
 textMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"text", content:"xxx" }
 fileMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName:"xxx", fileSize: 999, fileType: "xxx" }<#BinaryInfo#>binary_file_array_buffer
 
-下行消息：    
+down message:   
 rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
 keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
 textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
@@ -678,7 +676,7 @@ joinSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", s
 leaveSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "leave", content: "xxx", dateline: "xxx" }
 noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "xxx", sessionIcon: "xxx", msgType: "system", content: "xxx", dateline: "xxx" }
 
-下行到浏览器消息格式：
+message push to browser:
 chatMsg:       { 
                     uid: "xxx", nickname: "xxx", avatar: "xxx", msgType: "xxx", 
                     content: "xxx", 
@@ -689,5 +687,5 @@ chatMsg:       {
 
 ---
 
-[返回目录](#目录)
+[Category](#category)
 
