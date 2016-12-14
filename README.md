@@ -2,8 +2,8 @@
 
 ![CookIM logo](docs/cookim.png)
 
-- [中文文档](README.md)
-- [English document](README_EN.md)
+- [中文文档](README_CN.md)
+- [English document](README.md)
 
 ---
 
