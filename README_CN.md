@@ -5,6 +5,8 @@
 - [中文文档](README_CN.md)
 - [English document](README.md)
 
+- [GitHub项目地址](https://github.com/cookeem/CookIM/)
+
 ---
 
 ### 目录
