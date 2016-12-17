@@ -10,7 +10,7 @@
         <ul ng-if="notifications.length > 0" class="collection">
             <li ng-repeat="notification in notifications" class="collection-item avatar">
                 <a ng-click="showUserMenu(notification.uid)" href="javascript:void(0)">
-                    <img ng-src="{{notification.avatar}}" alt="{{notification.nickname}}" class="circle">
+                    <img ng-src="{{'/api/getFile?id='+notification.avatar}}" alt="{{notification.nickname}}" class="circle">
                     {{notification.nickname}}
                     <span ng-if="notification.isRead == 0" class="chip red white-text">NEW</span>
                 </a>

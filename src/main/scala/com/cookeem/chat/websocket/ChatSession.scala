@@ -1,9 +1,5 @@
 package com.cookeem.chat.websocket
 
-import java.io.{ByteArrayInputStream, File}
-import java.text.SimpleDateFormat
-import java.util.UUID
-
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws.TextMessage.Strict
@@ -15,19 +11,15 @@ import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.event._
 import com.cookeem.chat.mongo.MongoLogic._
 import com.cookeem.chat.mongo._
-import com.sksamuel.scrimage.Image
-import com.sksamuel.scrimage.nio.PngWriter
-import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 /**
   * Created by cookeem on 16/9/25.
   */
 class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer) {
-  implicit val fileInfoWrites = Json.writes[FileInfo]
   implicit val chatMessageWrites = Json.writes[ChatMessage]
 
   val chatSessionActor = actorSystem.actorOf(Props(classOf[ChatSessionActor]))
@@ -99,38 +91,18 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
       val flowAccept: FlowShape[WsMessageUp, WsMessageDown] = builder.add(
         Flow[WsMessageUp].collect {
           case WsTextUp(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content) =>
-            WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content)
+            Future(
+              WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content)
+            )
           case WsBinaryUp(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, bs, fileName, fileSize, fileType) =>
-            val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
-            val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
-            val path = s"upload/$path1/$path2"
-            val dir = new File(path)
-            if (!dir.exists()) {
-              dir.mkdirs()
-            }
-            var fileNameNew = UUID.randomUUID().toString
-            if (fileType == "image/jpeg" || fileType == "image/gif" || fileType == "image/png") {
-              fileNameNew = s"$fileNameNew.${fileType.replace("image/", "")}"
-            }
-            var filePath = s"$path/$fileNameNew"
             val bytes = bs.toArray
-            FileUtils.writeByteArrayToFile(new File(filePath), bytes)
-            var fileThumb = ""
-            try {
-              if (fileType == "image/jpeg" || fileType == "image/gif" || fileType == "image/png") {
-                fileThumb = s"$filePath.thumb.png"
-                //resize image
-                implicit val writer = PngWriter.NoCompression
-                val bytesImage = Image.fromStream(new ByteArrayInputStream(bytes)).bound(200, 200).bytes
-                FileUtils.writeByteArrayToFile(new File(fileThumb), bytesImage)
-              }
-            } catch { case e: Throwable =>
-              consoleLog("ERROR", s"chat upload image error: $e")
+            writeGridFile(uid, bytes, fileName, fileType).map { fileid =>
+              var futureThumbid = createThumbId(uid, bytes, fileName, fileType)
+              futureThumbid.map( thumbid => (fileid, thumbid))
+            }.flatMap(t => t).map { case (fileid, thumbid) =>
+              WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, fileName, fileType, fileid, thumbid)
             }
-            filePath = s"/$filePath"
-            fileThumb = s"/$fileThumb"
-            WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb)
-        }
+        }.buffer(1024 * 1024, OverflowStrategy.fail).mapAsync(6)(t => t)
       )
 
       val mergeAccept: UniformFanInShape[WsMessageDown, WsMessageDown] = builder.add(Merge[WsMessageDown](2))
@@ -152,12 +124,10 @@ class ChatSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
       val flowBackWs: FlowShape[WsMessageDown, Strict] = builder.add(
         Flow[WsMessageDown].collect {
           case WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, dateline) =>
-            val fileInfo = FileInfo()
-            val chatMessage = ChatMessage(uid, nickname, avatar, msgType, content, fileInfo, dateline)
+            val chatMessage = ChatMessage(uid, nickname, avatar, msgType, content, fileName = "", fileType = "", fileid = "", thumbid = "", dateline)
             TextMessage(Json.stringify(Json.toJson(chatMessage)))
-          case WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) =>
-            val fileInfo = FileInfo(filePath, fileName, fileSize, fileType, fileThumb)
-            val chatMessage = ChatMessage(uid, nickname, avatar, msgType, content = "", fileInfo, dateline)
+          case WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline) =>
+            val chatMessage = ChatMessage(uid, nickname, avatar, msgType, content = "", fileName, fileType, fileid, thumbid, dateline)
             TextMessage(Json.stringify(Json.toJson(chatMessage)))
         }
       )

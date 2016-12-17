@@ -7,7 +7,7 @@
                     <div class="row">
                         <div class="input-field col s12 center-align">
                             <div class="col s6 offset-s3 m6 offset-m3 l6 offset-l3">
-                                <img ng-src="{{changeUserInfoData.avatar}}" alt="" id="avatarImage" class="circle responsive-img" onclick="$('#avatarInput').click();">
+                                <img ng-src="{{'/api/getFile?id='+changeUserInfoData.avatar}}" alt="" id="avatarImage" class="circle responsive-img" onclick="$('#avatarInput').click();">
                                 <input id="avatarInput" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="showImage(this);">
                                 <div>Select your avatar</div>
                             </div>

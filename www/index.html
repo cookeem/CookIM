@@ -14,7 +14,7 @@
     <link href="fonts/fonts.css" rel="stylesheet">
 
     <!--materialize css-->
-    <link href="jslib/materialize.min.css" rel="stylesheet">
+    <link href="jslib/materialize/materialize.min.css" rel="stylesheet">
 
     <!--featherlight css-->
     <link href="jslib/featherlight.min.css" rel="stylesheet">
@@ -41,8 +41,8 @@
                 </a>
                 <div class="center-align">
                     <a ng-if="titleInfo.mode == 'other'" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon responsive-img"> {{titleInfo.title}}</a>
-                    <a ng-if="titleInfo.mode == 'group_session'" ng-click="showSessionMenu(titleInfo.sessionid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Group] {{titleInfo.title}}</a>
-                    <a ng-if="titleInfo.mode == 'private_session'" ng-click="showUserMenu(titleInfo.uid)" href="javascript:void(0);" class="black-text"><img ng-src="{{titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Private] {{titleInfo.title}}</a>
+                    <a ng-if="titleInfo.mode == 'group_session'" ng-click="showSessionMenu(titleInfo.sessionid)" href="javascript:void(0);" class="black-text"><img ng-src="{{'/api/getFile?id='+titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Group] {{titleInfo.title}}</a>
+                    <a ng-if="titleInfo.mode == 'private_session'" ng-click="showUserMenu(titleInfo.uid)" href="javascript:void(0);" class="black-text"><img ng-src="{{'/api/getFile?id='+titleInfo.icon}}" class="top-navbar-icon circle responsive-img"> [Private] {{titleInfo.title}}</a>
                     <ul ng-show="showAccoutMenu" class="right" ng-cloak>
                         <!-- Dropdown Trigger -->
                         <li><a class="dropdown-button black-text" href="#!" data-activates="topDropDown">Account<i class="material-icons right">arrow_drop_down</i></a></li>
@@ -75,7 +75,7 @@
                         <ul>
                             <li ng-repeat="session in joinedSessions" class="collection-item">
                                 <a ng-href="{{'#!/chatsession/'+session.sessionid}}" class="black-text" style="padding-left: 10px; padding-right: 10px; float: left; ">
-                                    <img ng-src="{{session.sessionIcon}}" class="circle" width="40" style="vertical-align: middle">
+                                    <img ng-src="{{'/api/getFile?id='+session.sessionIcon}}" class="circle" width="40" style="vertical-align: middle">
                                     &nbsp;
                                     {{session.sessionName}}
                                     <span ng-if="session.newCount > 0" class="chip red white-text right secondary-content" style="margin-top: 8px;">{{session.newCount}}</span>
@@ -128,7 +128,7 @@
                 <div class="row">
                     <div class="input-field col s12 center-align">
                         <div class="col s4 offset-s4 m4 offset-m4 l4 offset-l4">
-                            <img ng-src="{{sessionDataEdit.sessionIcon}}" alt="" id="chatIconEdit" class="circle responsive-img" onclick="$('#chatIconInputEdit').click();">
+                            <img ng-src="{{'/api/getFile?id='+sessionDataEdit.sessionIcon}}" alt="" id="chatIconEdit" class="circle responsive-img" onclick="$('#chatIconInputEdit').click();">
                             <input id="chatIconInputEdit" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="showChatIconEdit(this);">
                         </div>
                     </div>
@@ -162,7 +162,7 @@
                 <hr>
                 <div ng-if="joinedUsers.onlineUsers.length > 0" class="row">
                     <div ng-repeat="onlineUser in joinedUsers.onlineUsers" class="col s3 m2 l2 center-align">
-                        <a ng-click="showUserMenu(onlineUser.uid)" href="javascript:void(0)"><img ng-src="{{onlineUser.avatar}}" alt="{{onlineUser.nickname}}" class="responsive-img circle"></a>
+                        <a ng-click="showUserMenu(onlineUser.uid)" href="javascript:void(0)"><img ng-src="{{'/api/getFile?id='+onlineUser.avatar}}" alt="{{onlineUser.nickname}}" class="responsive-img circle"></a>
                         <div>{{onlineUser.nickname}}</div>
                     </div>
                 </div>
@@ -171,7 +171,7 @@
                 <hr>
                 <div ng-if="joinedUsers.offlineUsers.length > 0" class="row">
                     <div ng-repeat="offlineUser in joinedUsers.offlineUsers" class="col s3 m2 l1 center-align">
-                        <a ng-click="showUserMenu(offlineUser.uid)" href="javascript:void(0)"><img ng-src="{{offlineUser.avatar}}" alt="{{offlineUser.nickname}}" class="grey-image responsive-img circle"></a>
+                        <a ng-click="showUserMenu(offlineUser.uid)" href="javascript:void(0)"><img ng-src="{{'/api/getFile?id='+offlineUser.avatar}}" alt="{{offlineUser.nickname}}" class="grey-image responsive-img circle"></a>
                         <div class="grey-text">{{offlineUser.nickname}}</div>
                     </div>
                 </div>
@@ -367,19 +367,19 @@
 </footer>
 </body>
 <!--jquery js-->
-<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script src="jslib/jquery/dist/jquery.min.js"></script>
 
 <!-- materialize js -->
-<script src="jslib/materialize.min.js"></script>
+<script src="jslib/materialize/materialize.min.js"></script>
 
 <!-- angular js -->
-<script src="node_modules/angular/angular.min.js"></script>
-<script src="node_modules/angular-route/angular-route.min.js"></script>
-<script src="node_modules/angular-animate/angular-animate.min.js"></script>
-<script src="node_modules/angular-cookies/angular-cookies.min.js"></script>
+<script src="jslib/angular/angular.min.js"></script>
+<script src="jslib/angular-route/angular-route.min.js"></script>
+<script src="jslib/angular-animate/angular-animate.min.js"></script>
+<script src="jslib/angular-cookies/angular-cookies.min.js"></script>
 
 <!-- materialize angular js -->
-<script src="jslib/angular-materialize.min.js"></script>
+<script src="jslib/materialize/angular-materialize.min.js"></script>
 
 <!--featherlight js-->
 <script src="jslib/featherlight.min.js"></script>

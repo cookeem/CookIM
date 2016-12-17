@@ -51,7 +51,7 @@ object Route {
         }
       })
       Future {
-        val mapPattern = Seq("chat", "upload")
+        val mapPattern = Seq("chat")
         var isIgnore = false
         mapPattern.foreach(pattern =>
           isIgnore = isIgnore || rawUri.startsWith(s"/$pattern")

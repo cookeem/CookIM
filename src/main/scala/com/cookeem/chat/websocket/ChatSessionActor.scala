@@ -32,7 +32,6 @@ class ChatSessionActor extends TraitPubSubActor {
       //publish user join session
       mediator ! Publish(sessionid, ClusterText(uid, nickname, avatar, sessionid, sessionName, sessionIcon, "online", s"User $nickname online session"))
       userOnlineOffline(uid, sessionid, isOnline = true)
-//      createMessage(uid, sessionid, "online", s"User $nickname online session")
       consoleLog("SUCCESSFUL", s"User $nickname online session $sessionid")
 
     case UnsubscribeAck(Unsubscribe(ssessionid, None, `self`)) =>
@@ -40,7 +39,6 @@ class ChatSessionActor extends TraitPubSubActor {
       actorRef = ActorRef.noSender
       mediator ! Publish(sessionid, ClusterText(uid, nickname, avatar, sessionid, sessionName, sessionIcon, "offline", s"User $nickname offline session"))
       userOnlineOffline(uid, sessionid, isOnline = false)
-//      createMessage(uid, sessionid, "offline", s"User $nickname offline session")
       consoleLog("SUCCESSFUL", s"User $nickname offline session $sessionid")
 
     case UserOnline(ref) =>
@@ -75,7 +73,7 @@ class ChatSessionActor extends TraitPubSubActor {
         createMessage(uid, sessionid, msgType, content = content)
       }
 
-    case WsBinaryDown(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) if ssessionid != "" =>
+    case WsBinaryDown(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline) if ssessionid != "" =>
       //user send binary message
       uid = suid
       nickname = snickname
@@ -83,8 +81,8 @@ class ChatSessionActor extends TraitPubSubActor {
       sessionid = ssessionid
       sessionName = ssessionName
       sessionIcon = ssessionIcon
-      mediator ! Publish(sessionid, ClusterBinary(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline))
-      createMessage(uid, sessionid, msgType, filePath = filePath, fileName = fileName, fileSize = fileSize, fileType = fileType, fileThumb = fileThumb)
+      mediator ! Publish(sessionid, ClusterBinary(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline))
+      createMessage(uid, sessionid, msgType, fileName = fileName, fileType = fileType, fileid = fileid, thumbid = thumbid)
 
     case ClusterText(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, content, dateline) if actorRef != ActorRef.noSender =>
       //when receive cluster push message
@@ -93,11 +91,11 @@ class ChatSessionActor extends TraitPubSubActor {
         actorRef ! WsTextDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, content, dateline)
       }
 
-    case ClusterBinary(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) if actorRef != ActorRef.noSender =>
+    case ClusterBinary(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline) if actorRef != ActorRef.noSender =>
       //when receive cluster push message
       //send back to websocket stream
       getSessionNameIcon(suid, ssessionid).map { sessionToken =>
-        actorRef ! WsBinaryDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline)
+        actorRef ! WsBinaryDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline)
       }
 
   }

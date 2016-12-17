@@ -10,12 +10,12 @@
         <ul class="collection" ng-if="listSessionsResults.length > 0">
             <li ng-repeat="session in listSessionsResults" class="collection-item avatar">
                 <div ng-if="listSessionsData.isPublic == 0">
-                    <a ng-href="#!/chatsession/{{session.sessionid}}"><img ng-src="{{session.sessionIcon}}" class="circle"></a>
+                    <a ng-href="#!/chatsession/{{session.sessionid}}"><img ng-src="{{'/api/getFile?id='+session.sessionIcon}}" class="circle"></a>
                     <a ng-href="#!/chatsession/{{session.sessionid}}" class="title blue-text"><span ng-if="session.sessionType == 1" class="red-text">[Group]</span><span ng-if="session.sessionType == 0" class="red-text">[Private]</span> {{session.sessionName}}</a>
                     <span ng-if="session.newCount > 0" class="chip red white-text" style="margin-left: 10px">{{session.newCount}}</span>
                 </div>
                 <div ng-if="listSessionsData.isPublic == 1">
-                    <span><img ng-src="{{session.sessionIcon}}" class="circle"></span>
+                    <span><img ng-src="{{'/api/getFile?id='+session.sessionIcon}}" class="circle"></span>
                     <span class="title green-text">
                         <span ng-if="session.sessionType == 1" class="red-text">[Group]</span>
                         <span ng-if="session.sessionType == 0" class="red-text">[Private]</span>

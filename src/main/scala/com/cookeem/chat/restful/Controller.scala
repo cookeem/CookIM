@@ -1,17 +1,13 @@
 package com.cookeem.chat.restful
 
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.UUID
 
 import akka.actor.ActorRef
-import com.cookeem.chat.common.CommonUtils.{timeToStr, _}
+import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.event.ChatMessage
-import com.cookeem.chat.mongo.FileInfo
-import com.cookeem.chat.mongo.MongoLogic.{getSessionMenu, _}
+import com.cookeem.chat.mongo.MongoLogic._
 import com.sksamuel.scrimage.{Color, Image}
 import com.sksamuel.scrimage.nio.PngWriter
-import org.apache.commons.io.FileUtils
 import play.api.libs.json._
 import reactivemongo.bson._
 
@@ -32,12 +28,7 @@ object Controller {
         )
       }
     } else {
-      val avatar = gender match {
-        case 1 => "images/avatar/boy.jpg"
-        case 2 => "images/avatar/girl.jpg"
-        case _ => "images/avatar/unknown.jpg"
-      }
-      registerUser(login, nickname, password, gender, avatar).map { case (uid, userTokenStr, errmsg) =>
+      registerUser(login, nickname, password, gender).map { case (uid, userTokenStr, errmsg) =>
         var successmsg = ""
         if (uid != "") {
           successmsg = "register user success, thank you for join us"
@@ -165,7 +156,7 @@ object Controller {
     }
   }
 
-  def updateUserInfoCtl(userTokenStr: String, nickname: String = "", gender: Int = 0, avatar: String = "")(implicit ec: ExecutionContext): Future[JsObject] = {
+  def updateUserInfoCtl(userTokenStr: String, nickname: String = "", gender: Int = 0, avatarBytes: Array[Byte] = Array[Byte](), avatarFileName: String = "", avatarFileType: String = "")(implicit ec: ExecutionContext): Future[JsObject] = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
       Future(
@@ -176,7 +167,7 @@ object Controller {
       )
     } else {
       val uid = userToken.uid
-      updateUserInfo(uid, nickname, gender, avatar).map { updateResult =>
+      updateUserInfo(uid, nickname, gender, avatarBytes, avatarFileName, avatarFileType).map { updateResult =>
         if (updateResult.errmsg != "") {
           Json.obj(
             "errmsg" -> updateResult.errmsg,
@@ -250,7 +241,7 @@ object Controller {
     }
   }
 
-  def createGroupSessionCtl(userTokenStr: String, sessionName: String, sessionIcon: String, publicType: Int)(implicit ec: ExecutionContext, notificationActor: ActorRef): Future[JsObject] = {
+  def createGroupSessionCtl(userTokenStr: String, sessionName: String, sessionIconBytes: Array[Byte], sessionIconFileName: String, sessionIconFileType: String, publicType: Int)(implicit ec: ExecutionContext, notificationActor: ActorRef): Future[JsObject] = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
       Future(
@@ -262,7 +253,7 @@ object Controller {
       )
     } else {
       val uid = userToken.uid
-      createGroupSession(uid, sessionName, sessionIcon, publicType).map { case (sessionid, errmsg) =>
+      createGroupSession(uid, sessionName, sessionIconBytes, sessionIconFileName, sessionIconFileType, publicType).map { case (sessionid, errmsg) =>
         if (errmsg != "") {
           Json.obj(
             "sessionid" -> sessionid,
@@ -311,7 +302,7 @@ object Controller {
     }
   }
 
-  def editGroupSessionCtl(userTokenStr: String, sessionid: String, sessionName: String, sessionIcon: String, publicType: Int)(implicit ec: ExecutionContext): Future[JsObject] = {
+  def editGroupSessionCtl(userTokenStr: String, sessionid: String, sessionName: String, sessionIconBytes: Array[Byte], sessionIconFileName: String, sessionIconFileType: String, publicType: Int)(implicit ec: ExecutionContext): Future[JsObject] = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
       Future(
@@ -322,7 +313,7 @@ object Controller {
       )
     } else {
       val uid = userToken.uid
-      editGroupSession(uid, sessionid, sessionName, sessionIcon, publicType).map { errmsg =>
+      editGroupSession(uid, sessionid, sessionName, sessionIconBytes, sessionIconFileName, sessionIconFileType, publicType).map { errmsg =>
         if (errmsg != "") {
           Json.obj(
             "errmsg" -> errmsg,
@@ -356,9 +347,9 @@ object Controller {
               var jsonMessage: JsValue = JsNull
               if (messageLast != null && userLast != null) {
                 var content = messageLast.content
-                if (messageLast.fileInfo.fileThumb != "") {
+                if (messageLast.thumbid != "") {
                   content = "send a [PHOTO]"
-                } else if (messageLast.fileInfo.filePath != "") {
+                } else if (messageLast.fileid != "") {
                   content = "send a [FILE]"
                 }
                 jsonMessage = Json.obj(
@@ -449,7 +440,6 @@ object Controller {
   }
 
   def listMessagesCtl(userTokenStr: String, sessionid: String, page: Int = 1, count: Int = 10)(implicit ec: ExecutionContext): Future[JsObject] = {
-    implicit val fileInfoWrites = Json.writes[FileInfo]
     implicit val chatMessageWrites = Json.writes[ChatMessage]
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
@@ -482,7 +472,7 @@ object Controller {
                   snickname = user.nickname
                   savatar = user.avatar
                 }
-                val chatMessage = ChatMessage(suid, snickname, savatar, message.msgType, message.content, message.fileInfo, timeToStr(message.dateline))
+                val chatMessage = ChatMessage(suid, snickname, savatar, message.msgType, message.content, message.fileName, message.fileType, message.fileid, message.thumbid, timeToStr(message.dateline))
                 Json.toJson(chatMessage)
               }
             )
@@ -670,7 +660,6 @@ object Controller {
                 //private session and ouid not empty
                 friends = (ouid +: friends).distinct
                 generateNewGroupSession(uid, friends).map { case (sessionName, sessionIcons) =>
-                  var filePath = ""
                   try {
                     implicit val writer = PngWriter.NoCompression
                     var bgImg = Image.filled(200, 200, Color.White)
@@ -687,19 +676,7 @@ object Controller {
                       val y = (i / 2) * 100 + 5
                       bgImg = bgImg.overlay(avatarImg, x, y)
                     }
-                    val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
-                    val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
-                    val pathRoot = "upload/avatar"
-                    val path = s"$pathRoot/$path1/$path2"
-                    val dir = new File(path)
-                    if (!dir.exists()) {
-                      dir.mkdirs()
-                    }
-                    val filenameNew = UUID.randomUUID().toString
-                    filePath = s"$path/$filenameNew.thumb.png"
-                    FileUtils.writeByteArrayToFile(new File(filePath), bgImg.bytes)
-                    filePath = s"/$filePath"
-                    createGroupSession(uid, sessionName = sessionName, sessionIcon = filePath, publicType = 0).map { case (sessionCreated, errmsgCreated) =>
+                    createGroupSession(uid, sessionName = sessionName, sessionIconBytes = bgImg.bytes, sessionIconFileName = s"$uid.thumb.png", sessionIconFileType = "image/png", publicType = 0).map { case (sessionCreated, errmsgCreated) =>
                       //after session created user must join session first
                       joinSession(uid, sessionCreated).map { updateResult =>
                         if (updateResult.errmsg != "") {
@@ -988,6 +965,22 @@ object Controller {
         )
       }
     }
+  }
+
+  def getFileMetaCtl(id: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    getGridFileMetaData(id).map { case (fid, fileName, fileType, fileSize, fileMetaData, errmsg) =>
+      Json.obj(
+        "id" -> id,
+        "fileName" -> fileName,
+        "fileType" -> fileType,
+        "fileSize" -> fileSize,
+        "errmsg" -> errmsg
+      )
+    }
+  }
+
+  def getFileCtl(id: String)(implicit ec: ExecutionContext): Future[(String, String, Long, BSONDocument, Array[Byte], String)] = {
+    getGridFile(id)
   }
 
 
