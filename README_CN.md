@@ -30,11 +30,9 @@
     1. [安装Java8+](#安装java8)
     1. [安装Scala2.11+](#安装scala211)
     1. [安装SBT0.13+](#安装sbt013)
-    1. [安装Node5+](#安装node5)
     1. [安装MongoDB3+](#安装mongodb3)
 1. [运行](#运行)
     1. [获取源代码](#获取源代码)
-    1. [下载node依赖包](#下载node依赖包)
     1. [开启mongoDB服务](#开启mongodb服务)
     1. [下载sbt的jar依赖包](#下载sbt的jar依赖包)
     1. [使用预打包的libs运行程序](#使用预打包的libs运行程序)
@@ -299,43 +297,6 @@ $ sbt
 
 [返回目录](#目录)
 
-#### 安装Node5+
-
-下载NodeJS，下载链接位于：
-```sh
-https://nodejs.org/en/download/
-```
-
-选择相应的版本，二进制文件地址例如：
-
-```sh
-$ wget https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.xz
-```
-
-把二进制文件放到对应的目录，并解压二进制文件：
-```sh
-$ tar zxvf node-v6.9.1-linux-x64.tar.xz
-```
-
-设置全局环境变量，在文件末尾增加以下配置：
-```sh
-$ sudo vi /etc/profile
-export NODE_HOME=<Your node binary directory>
-export PATH=$PATH:NODE_HOME/bin
-```
-
-重新打开一个终端，让环境变量生效，检查node和npm安装是否正确：
-```sh
-$ npm -v
-3.8.3
-
-$ node -v
-v5.10.1
-```
----
-
-[返回目录](#目录)
-
 #### 安装MongoDB3+
 
 下载mongoDB，下载链接位于：
@@ -398,17 +359,6 @@ $ mongod
 git clone https://github.com/cookeem/CookIM.git
 
 cd CookIM
-```
----
-
-[返回目录](#目录)
-
-#### 下载node依赖包
-
-进入www目录，安装node的依赖包（npm有国内淘宝镜像，详情请百度）
-```sh
-$ cd www
-$ npm install
 ```
 ---
 
@@ -642,7 +592,7 @@ acceptMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", s
 rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
 keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
 textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
-fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx", dateline: "xxx" }
 onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
 offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
 joinSessionMsg: { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
@@ -652,8 +602,7 @@ noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: 
 下行到浏览器消息格式：
 pushMsg:       { 
                     uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "xxx", 
-                    content: "xxx", 
-                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    content: "xxx", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx",
                     dateline: "xxx" 
                }
 ```
@@ -675,7 +624,7 @@ fileMsg:       { userToken: "xxx", sessionToken: "xxx", msgType:"file", fileName
 rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
 keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
 textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
-fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx", dateline: "xxx" }
 onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
 offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
 joinSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
@@ -685,8 +634,7 @@ noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: 
 下行到浏览器消息格式：
 chatMsg:       { 
                     uid: "xxx", nickname: "xxx", avatar: "xxx", msgType: "xxx", 
-                    content: "xxx", 
-                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    content: "xxx", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx",
                     dateline: "xxx" 
                }
 ```    

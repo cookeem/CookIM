@@ -30,11 +30,9 @@
     1. [Install Java 8+](#install-java-8)
     1. [Install Scala 2.11+](#install-scala-211)
     1. [Install SBT 0.13+](#install-sbt-013)
-    1. [Install Node 5+](#install-node-5)
     1. [Install MongoDB 3+](#install-mongodb-3)
 1. [How to run](#how-to-run)
     1. [Clone source code](#clone-source-code)
-    1. [Download Node dependencies](#download-node-dependencies)
     1. [Start MongoDB server](#start-mongodb-server)
     1. [Download SBT dependencies](#download-sbt-dependencies)
     1. [Use prepared jar libs to run CookIM](#use-prepared-jar-libs-to-run-cookim)
@@ -294,42 +292,6 @@ $ sbt
 
 [Category](#category)
 
-#### Install Node 5+
-
-Download Node 5+ binary, download URL is here:
-```sh
-https://nodejs.org/en/download/
-```
-
-Download binary file, the URL like this:
-```sh
-$ wget https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.xz
-```
-
-Extract the compressed file in any directory you want:
-```sh
-$ tar zxvf node-v6.9.1-linux-x64.tar.xz
-```
-
-Config the environment path variable, add config below at the end of /etc/profile:
-```sh
-$ sudo vi /etc/profile
-export NODE_HOME=<Your node binary directory>
-export PATH=$PATH:NODE_HOME/bin
-```
-
-Open a new terminal to make environment variable available, run command below to check install correct or not:
-```sh
-$ npm -v
-3.8.3
-
-$ node -v
-v5.10.1
-```
----
-
-[Category](#category)
-
 #### Install MongoDB 3+
 
 Download MongoDB 3+ binary, download URL is here:
@@ -397,17 +359,6 @@ $ mongod
 git clone https://github.com/cookeem/CookIM.git
 
 cd CookIM
-```
----
-
-[Category](#category)
-
-#### Download Node dependencies
-
-Go into ```www/``` directory, run command below to install node dependencies
-```sh
-$ cd www
-$ npm install
 ```
 ---
 
@@ -640,7 +591,7 @@ acceptMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", s
 rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
 keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
 textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
-fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx", dateline: "xxx" }
 onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
 offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
 joinSessionMsg: { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
@@ -650,8 +601,7 @@ noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: 
 message push to browser:
 pushMsg:       { 
                     uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "xxx", 
-                    content: "xxx", 
-                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    content: "xxx", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx",
                     dateline: "xxx" 
                }
 ```
@@ -673,7 +623,7 @@ down message:
 rejectMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "reject", content: "xxx", dateline: "xxx" }
 keepAlive:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: "", sessionIcon: "", msgType: "keepalive", content: "", dateline: "xxx" }
 textMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "text", content: "xxx", dateline: "xxx" }
-fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx", dateline: "xxx" }
+fileMsg:       { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "file", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx", dateline: "xxx" }
 onlineMsg:     { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "online", content: "xxx", dateline: "xxx" }
 offlineMsg:    { uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "offline", content: "xxx", dateline: "xxx" }
 joinSessionMsg:{ uid: "xxx", nickname: "xxx", avatar: "xxx", sessionid: "xxx", sessionName: "xxx", sessionIcon: "xxx", msgType: "join", content: "xxx", dateline: "xxx" }
@@ -683,8 +633,7 @@ noticeMsg:     { uid: "", nickname: "", avatar: "", sessionid: "", sessionName: 
 message push to browser:
 chatMsg:       { 
                     uid: "xxx", nickname: "xxx", avatar: "xxx", msgType: "xxx", 
-                    content: "xxx", 
-                    fileInfo: { filePath: "xxx", fileName: "xxx", fileSize: 999, fileType: "xxx", fileThumb: "xxx" },
+                    content: "xxx", fileName: "xxx", fileType: "xxx", fileid: "xxx", thumbid: "xxx",
                     dateline: "xxx" 
                }
 ```    
