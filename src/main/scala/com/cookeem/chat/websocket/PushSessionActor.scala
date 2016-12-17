@@ -86,12 +86,12 @@ class PushSessionActor extends TraitPubSubActor {
         }
       }
 
-    case ClusterBinary(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) if actorRef != ActorRef.noSender =>
+    case ClusterBinary(suid, snickname, savatar, ssessionid, ssessionName, ssessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline) if actorRef != ActorRef.noSender =>
       //when receive cluster push message
       //send back to websocket stream
       futureSessionTokens.foreach { sessionTokens =>
         sessionTokens.filter(_.sessionid == ssessionid).foreach { sessionToken =>
-          actorRef ! WsBinaryDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline)
+          actorRef ! WsBinaryDown(suid, snickname, savatar, sessionToken.sessionid, sessionToken.sessionName, sessionToken.sessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline)
         }
       }
   }

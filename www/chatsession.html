@@ -15,7 +15,7 @@
                             <div class="card-content">
                                 <a ng-click="showUserMenu(message.uid)" href="javascript:void(0)">
                                     <div class="chip">
-                                        <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                        <img ng-src="{{'/api/getFile?id='+message.avatar}}" alt="{{message.nickname}}">
                                         {{message.nickname}}
                                     </div>
                                 </a>
@@ -34,7 +34,7 @@
                         <div class="card-stacked">
                             <div class="card-content">
                                 <div class="chip blue white-text">
-                                    <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                    <img ng-src="{{'/api/getFile?id='+message.avatar}}" alt="{{message.nickname}}">
                                     {{message.nickname}}
                                 </div>
                                 {{message.dateline}}
@@ -51,20 +51,20 @@
                             <div class="card-content">
                                 <a ng-click="showUserMenu(message.uid)" href="javascript:void(0)">
                                     <div class="chip">
-                                        <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                        <img ng-src="{{'/api/getFile?id='+message.avatar}}" alt="{{message.nickname}}">
                                         {{message.nickname}}
                                     </div>
                                 </a>
                                 {{message.dateline}}
                                 <div class="row"></div>
                                 <div class="row">
-                                    <div ng-if="message.fileInfo.fileThumb != '/'" class="col s6 offset-s3 center-align">
-                                        <a href="javascript:void(0)" data-featherlight="{{message.fileInfo.filePath}}"><img ng-src="{{message.fileInfo.fileThumb}}" class="z-depth-1 responsive-img"></a>
-                                        <div>{{message.fileInfo.fileName}}</div>
+                                    <div ng-if="message.thumbid != ''" class="col s6 offset-s3 center-align">
+                                        <a target="_blank" ng-href="{{'/api/getFile?id='+message.fileid}}"><img ng-src="{{'/api/getFile?id='+message.thumbid}}" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileName}}</div>
                                     </div>
-                                    <div ng-if="message.fileInfo.fileThumb == '/'" class="col s6 offset-s3 center-align">
-                                        <a ng-href="{{message.fileInfo.filePath}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
-                                        <div>{{message.fileInfo.fileName}}</div>
+                                    <div ng-if="message.thumbid == ''" class="col s6 offset-s3 center-align">
+                                        <a ng-href="{{'/api/getFile?id='+message.fileid}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileName}}</div>
                                     </div>
                                 </div>
                             </div>
@@ -80,19 +80,19 @@
                         <div class="card-stacked">
                             <div class="card-content">
                                 <div class="chip blue white-text">
-                                    <img ng-src="{{message.avatar}}" alt="{{message.nickname}}">
+                                    <img ng-src="{{'/api/getFile?id='+message.avatar}}" alt="{{message.nickname}}">
                                     {{message.nickname}}
                                 </div>
                                 {{message.dateline}}
                                 <div class="row"></div>
                                 <div class="row">
-                                    <div ng-if="message.fileInfo.fileThumb != '/'" class="col s6 offset-s3 center-align">
-                                        <a href="javascript:void(0)" data-featherlight="{{message.fileInfo.filePath}}"><img ng-src="{{message.fileInfo.fileThumb}}" class="z-depth-1 responsive-img"></a>
-                                        <div>{{message.fileInfo.fileName}}</div>
+                                    <div ng-if="message.thumbid != ''" class="col s6 offset-s3 center-align">
+                                        <a target="_blank" ng-href="{{'/api/getFile?id='+message.fileid}}"><img ng-src="{{'/api/getFile?id='+message.thumbid}}" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileName}}</div>
                                     </div>
-                                    <div ng-if="message.fileInfo.fileThumb == '/'" class="col s6 offset-s3 center-align">
-                                        <a target="_blank" ng-href="{{message.fileInfo.filePath}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
-                                        <div>{{message.fileInfo.fileName}}</div>
+                                    <div ng-if="message.thumbid == ''" class="col s6 offset-s3 center-align">
+                                        <a target="_blank" ng-href="{{'/api/getFile?id='+message.fileid}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileName}}</div>
                                     </div>
                                 </div>
                             </div>

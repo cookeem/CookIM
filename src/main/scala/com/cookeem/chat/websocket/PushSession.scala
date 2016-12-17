@@ -19,7 +19,6 @@ import scala.concurrent.duration._
   * Created by cookeem on 16/9/25.
   */
 class PushSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer) {
-  implicit val fileInfoWrites = Json.writes[FileInfo]
   implicit val pushMessageWrites = Json.writes[PushMessage]
 
   val pushSessionActor = actorSystem.actorOf(Props(classOf[PushSessionActor]))
@@ -80,12 +79,10 @@ class PushSession()(implicit ec: ExecutionContext, actorSystem: ActorSystem, mat
       val flowBackWs: FlowShape[WsMessageDown, Strict] = builder.add(
         Flow[WsMessageDown].collect {
           case WsTextDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, dateline) =>
-            val fileInfo = FileInfo()
-            val pushMessage = PushMessage(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, fileInfo, dateline)
+            val pushMessage = PushMessage(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content, fileName = "", fileType = "", fileid = "", thumbid = "", dateline)
             TextMessage(Json.stringify(Json.toJson(pushMessage)))
-          case WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, filePath, fileName, fileSize, fileType, fileThumb, dateline) =>
-            val fileInfo = FileInfo(filePath, fileName, fileSize, fileType, fileThumb)
-            val pushMessage = PushMessage(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content = "", fileInfo, dateline)
+          case WsBinaryDown(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, fileName, fileType, fileid, thumbid, dateline) =>
+            val pushMessage = PushMessage(uid, nickname, avatar, sessionid, sessionName, sessionIcon, msgType, content = "", fileName, fileType, fileid, thumbid, dateline)
             TextMessage(Json.stringify(Json.toJson(pushMessage)))
         }
       )

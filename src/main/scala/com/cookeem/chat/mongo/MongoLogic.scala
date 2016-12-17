@@ -1,5 +1,6 @@
 package com.cookeem.chat.mongo
 
+import java.io.{ByteArrayInputStream, File}
 import java.util.Date
 
 import akka.actor.ActorRef
@@ -7,12 +8,16 @@ import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.event.WsTextDown
 import com.cookeem.chat.jwt.JwtOps._
 import com.cookeem.chat.mongo.MongoOps._
+import com.sksamuel.scrimage.Image
+import com.sksamuel.scrimage.nio.PngWriter
+import org.apache.commons.io.FileUtils
 import play.api.libs.json.JsObject
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson._
 import reactivemongo.play.json.BSONFormats
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 /**
   * Created by cookeem on 16/10/28.
   */
@@ -33,10 +38,11 @@ object MongoLogic {
   implicit def userHandler = Macros.handler[User]
   implicit def userStatusHandler = Macros.handler[UserStatus]
   implicit def sessionHandler = Macros.handler[Session]
-  implicit def fileInfoHandler = Macros.handler[FileInfo]
   implicit def messageHandler = Macros.handler[Message]
   implicit def onlineHandler = Macros.handler[Online]
   implicit def notificationHandler = Macros.handler[Notification]
+
+  val defaultAvatar = getDefaultAvatar
 
   //create users collection and index
   def createUsersCollection(): Future[String] = {
@@ -91,7 +97,7 @@ object MongoLogic {
   }
 
   //register new user
-  def registerUser(login: String, nickname: String, password: String, gender: Int, avatar: String): Future[(String, String, String)] = {
+  def registerUser(login: String, nickname: String, password: String, gender: Int): Future[(String, String, String)] = {
     var errmsg = ""
     val token = ""
     if (!isEmail(login)) {
@@ -102,13 +108,18 @@ object MongoLogic {
       errmsg = "password must at least 6 charactors"
     } else if (!(gender == 1 || gender == 2)) {
       errmsg = "gender must be boy or girl"
-    } else if (avatar.length < 6) {
-      errmsg = "avatar must at least 6 charactors"
     }
     if (errmsg != "") {
       Future(("", token, errmsg))
     } else {
       for {
+        avatar <- defaultAvatar.map { avatarMap =>
+          gender match {
+            case 1 => avatarMap("boy")
+            case 2 => avatarMap("girl")
+            case _ => avatarMap("unknown")
+          }
+        }
         user <- findCollectionOne[User](usersCollection, document("login" -> login))
         (uid, token, errmsg) <- {
           if (user != null) {
@@ -137,8 +148,7 @@ object MongoLogic {
   }
 
   //update users info
-  def updateUserInfo(uid: String, nickname: String = "", gender: Int = 0, avatar: String = ""): Future[UpdateResult] = {
-    var errmsg = ""
+  def updateUserInfo(uid: String, nickname: String = "", gender: Int = 0, avatarBytes: Array[Byte] = Array[Byte](), avatarFileName: String = "", avatarFileType: String = ""): Future[UpdateResult] = {
     var update = document()
     var sets = document()
     if (nickname.getBytes.length >= 4) {
@@ -147,26 +157,21 @@ object MongoLogic {
     if (gender == 1 || gender == 2) {
       sets = sets.merge(document("gender" -> gender))
     }
-    if (avatar.startsWith("images/")) {
-      val avatarDefault = gender match {
-        case 1 => "images/avatar/boy.jpg"
-        case 2 => "images/avatar/girl.jpg"
-        case _ => "images/avatar/unknown.jpg"
+    var avatarId = Future("")
+    if (avatarBytes.isEmpty) {
+      avatarId = gender match {
+        case 1 => defaultAvatar.map(m => m("boy"))
+        case 2 => defaultAvatar.map(m => m("girl"))
+        case _ => defaultAvatar.map(m => m("unknown"))
       }
-      sets = sets.merge(document("avatar" -> avatarDefault))
-    } else if (avatar.length >= 16) {
-      sets = sets.merge(document("avatar" -> avatar))
-    }
-    if (sets == document()) {
-      errmsg = "nothing to update"
     } else {
+      avatarId = createThumbId(uid, avatarBytes, avatarFileName, avatarFileType)
+    }
+    avatarId.map { avatarFileId =>
+      sets = sets.merge(document("avatar" -> avatarFileId))
       update = document("$set" -> sets)
-    }
-    if (errmsg != "") {
-      Future(UpdateResult(n = 0, errmsg = errmsg))
-    } else {
       updateCollection(usersCollection, document("_id" -> uid), update)
-    }
+    }.flatMap(t => t)
   }
 
   def loginAction(login: String, pwd: String): Future[(String, String)] = {
@@ -348,7 +353,7 @@ object MongoLogic {
   }
 
   //create a new group session
-  def createGroupSession(uid: String, sessionName: String, sessionIcon: String, publicType: Int)(implicit notificationActor: ActorRef): Future[(String, String)] = {
+  def createGroupSession(uid: String, sessionName: String, sessionIconBytes: Array[Byte], sessionIconFileName: String, sessionIconFileType: String, publicType: Int)(implicit notificationActor: ActorRef): Future[(String, String)] = {
     var errmsg = ""
     val selector = document("_id" -> uid)
     val sessionType = 1
@@ -364,25 +369,28 @@ object MongoLogic {
         } else if (!(publicType == 0 || publicType == 1)) {
           errmsg = "publicType error"
           Future("", errmsg)
-        } else if (sessionIcon.length < 1) {
+        } else if (sessionIconBytes.isEmpty) {
           errmsg = "please select chat icon"
           Future("", errmsg)
         } else {
-          val newSession = Session("", createuid = uid, ouid = "", sessionName = sessionName, sessionIcon = sessionIcon, sessionType = sessionType, publicType = publicType)
-          val insRet = insertCollection[Session](sessionsCollection, newSession)
-          for {
-            (sessionid, errormsg) <- insRet
-            retJoin <- {
-              var retJoin = Future(UpdateResult(n = 0, errmsg = errormsg))
-              if (errormsg == "") {
-                retJoin = joinSession(uid, sessionid)
+          val sessionIconId = createThumbId(uid, sessionIconBytes, sessionIconFileName, sessionIconFileType)
+          sessionIconId.map { sessionIconFileId =>
+            val newSession = Session("", createuid = uid, ouid = "", sessionName = sessionName, sessionIcon = sessionIconFileId, sessionType = sessionType, publicType = publicType)
+            val insRet = insertCollection[Session](sessionsCollection, newSession)
+            for {
+              (sessionid, errormsg) <- insRet
+              retJoin <- {
+                var retJoin = Future(UpdateResult(n = 0, errmsg = errormsg))
+                if (errormsg == "") {
+                  retJoin = joinSession(uid, sessionid)
+                }
+                retJoin
               }
+            } yield {
               retJoin
             }
-          } yield {
-            retJoin
-          }
-          insRet
+            insRet
+          }.flatMap(t => t)
         }
       }
     } yield {
@@ -430,9 +438,8 @@ object MongoLogic {
   }
 
   //edit group session info
-  def editGroupSession(uid: String, sessionid: String, sessionName: String, sessionIcon: String, publicType: Int): Future[String] = {
+  def editGroupSession(uid: String, sessionid: String, sessionName: String, sessionIconBytes: Array[Byte], sessionIconFileName: String, sessionIconFileType: String, publicType: Int): Future[String] = {
     var errmsg = ""
-    val sessionType = 1
     for {
       user <- findCollectionOne[User](usersCollection, document("_id" -> uid))
       session <- findCollectionOne[Session](sessionsCollection, document("_id" -> sessionid))
@@ -450,18 +457,20 @@ object MongoLogic {
           errmsg = "publicType error"
           Future(errmsg)
         } else {
-          var sessionIconNew = session.sessionIcon
-          if (sessionIcon.length > 0) {
-            sessionIconNew = sessionIcon
+          var sessionIconNew = Future(session.sessionIcon)
+          if (sessionIconBytes.nonEmpty) {
+            sessionIconNew = createThumbId(uid, sessionIconBytes, sessionIconFileName, sessionIconFileType)
           }
-          val update = document(
-            "$set" -> document(
-              "sessionName" -> sessionName,
-              "sessionIcon" -> sessionIconNew,
-              "publicType" -> publicType
+          sessionIconNew.map{ sessionIconFileId =>
+            val update = document(
+              "$set" -> document(
+                "sessionName" -> sessionName,
+                "sessionIcon" -> sessionIconFileId,
+                "publicType" -> publicType
+              )
             )
-          )
-          updateCollection(sessionsCollection, document("_id" -> sessionid), update).map(_.errmsg)
+            updateCollection(sessionsCollection, document("_id" -> sessionid), update).map(_.errmsg)
+          }.flatMap(t => t)
         }
       }
     } yield {
@@ -793,9 +802,8 @@ object MongoLogic {
   }
 
   //create a new message
-  def createMessage(uid: String, sessionid: String, msgType: String, content: String = "", filePath: String = "", fileName: String = "", fileSize: Long = 0L, fileType: String = "", fileThumb: String = ""): Future[(String, String)] = {
-    val fileInfo = FileInfo(filePath, fileName, fileSize, fileType, fileThumb)
-    val message = Message("", uid, sessionid, msgType, content, fileInfo)
+  def createMessage(uid: String, sessionid: String, msgType: String, content: String = "", fileName: String = "", fileType: String = "", fileid: String = "", thumbid: String = ""): Future[(String, String)] = {
+    val message = Message("", uid, sessionid, msgType, content, fileName, fileType, fileid, thumbid)
     for {
       (msgid, errmsg) <- insertCollection[Message](messagesCollection, message)
       session <- {
@@ -1156,4 +1164,94 @@ object MongoLogic {
     }
   }
 
+  def writeGridFile(uid: String, bytes: Array[Byte], fileName: String, fileType: String): Future[String] = {
+    val metadata = document("uid" -> uid)
+    saveGridFile(bytes = bytes, fileName = fileName, contentType = fileType, metaData = metadata).map { case (id, errmsg) =>
+      id match {
+        case bsid: BSONObjectID => bsid.stringify
+        case _ => ""
+      }
+    }
+  }
+
+  def getGridFile(bsid: String): Future[(String, String, Long, BSONDocument, Array[Byte], String)] = {
+    readGridFile(bsid)
+  }
+
+  def getGridFileMetaData(bsid: String): Future[(BSONValue, String, String, Long, BSONDocument, String)] = {
+    getGridFileMetaById(bsid)
+  }
+
+  def getDefaultAvatar: Future[Map[String, String]] = {
+    for {
+      (idBoy, fileNameBoy, fileTypeBoy, fileSizeBoy, fileMetaDataBoy, errmsgBoy) <- getGridFileMeta(document("metadata" -> document("avatar" -> "boy")))
+      bsidBoy <- {
+        if (fileNameBoy == "") {
+          val bytes = FileUtils.readFileToByteArray(new File("www/images/avatar/boy.jpg"))
+          saveGridFile(bytes, fileName = "boy.jpg", contentType = "image/jpeg", metaData = document("avatar" -> "boy")).map(_._1)
+        } else {
+          Future(idBoy)
+        }
+      }
+
+      (idGirl, fileNameGirl, fileTypeGirl, fileSizeGirl, fileMetaDataGirl, errmsgGirl) <- getGridFileMeta(document("metadata" -> document("avatar" -> "girl")))
+      bsidGirl <- {
+        if (fileNameGirl == "") {
+          val bytes = FileUtils.readFileToByteArray(new File("www/images/avatar/girl.jpg"))
+          saveGridFile(bytes, fileName = "girl.jpg", contentType = "image/jpeg", metaData = document("avatar" -> "girl")).map(_._1)
+        } else {
+          Future(idGirl)
+        }
+      }
+
+      (idUnknown, fileNameUnknown, fileTypeUnknown, fileSizeUnknown, fileMetaDataUnknown, errmsgUnknown) <- getGridFileMeta(document("metadata" -> document("avatar" -> "unknown")))
+      bsidUnknown <- {
+        if (fileNameUnknown == "") {
+          val bytes = FileUtils.readFileToByteArray(new File("www/images/avatar/unknown.jpg"))
+          saveGridFile(bytes, fileName = "unknown.jpg", contentType = "image/jpeg", metaData = document("avatar" -> "unknown")).map(_._1)
+        } else {
+          Future(idUnknown)
+        }
+      }
+    } yield {
+      var idBoyStr = ""
+      var idGirlStr = ""
+      var idUnknownStr = ""
+      bsidBoy match {
+        case bsid: BSONObjectID =>
+          idBoyStr = bsid.stringify
+        case _ =>
+      }
+      bsidGirl match {
+        case bsid: BSONObjectID =>
+          idGirlStr = bsid.stringify
+        case _ =>
+      }
+      bsidUnknown match {
+        case bsid: BSONObjectID =>
+          idUnknownStr = bsid.stringify
+        case _ =>
+      }
+      Map(
+        "boy" -> idBoyStr,
+        "girl" -> idGirlStr,
+        "unknow" -> idUnknownStr
+      )
+    }
+  }
+
+  def createThumbId(uid: String, bytes: Array[Byte], fileName: String, fileType: String): Future[String] = {
+    var futureThumbid = Future("")
+    try {
+      if (fileType == "image/jpeg" || fileType == "image/gif" || fileType == "image/png") {
+        //resize image
+        implicit val writer = PngWriter.NoCompression
+        val bytesImage = Image.fromStream(new ByteArrayInputStream(bytes)).bound(200, 200).bytes
+        futureThumbid = writeGridFile(uid, bytesImage, s"$fileName.thumb.png", "image/png")
+      }
+    } catch { case e: Throwable =>
+      consoleLog("ERROR", s"create thumb error: $e")
+    }
+    futureThumbid
+  }
 }

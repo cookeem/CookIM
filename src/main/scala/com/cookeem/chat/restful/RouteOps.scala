@@ -1,28 +1,19 @@
 package com.cookeem.chat.restful
 
-import java.io.File
-import java.nio.file.Paths
-import java.text.SimpleDateFormat
-import java.util.UUID
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.FileInfo
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.FileIO
+import akka.util.ByteString
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.mongo.MongoLogic._
 import com.cookeem.chat.restful.Controller._
 import com.cookeem.chat.websocket.{ChatSession, PushSession}
-import com.sksamuel.scrimage.Image
-import com.sksamuel.scrimage.nio.PngWriter
-import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
   * Created by cookeem on 16/11/3.
@@ -65,48 +56,48 @@ object RouteOps {
     routeGetSessionHeader ~
     routeGetSessionMenu ~
     routeGetUserMenu ~
-    routeListNotifications
+    routeListNotifications ~
+    routeGetFileMeta ~
+    routeGetFile
   }
 
-  //mix multiform to Future[Map[String, String]]. if include file upload, save to pathroot and return path
-  def multiPartExtract(formData: Multipart.FormData, pathRoot: String)(implicit ec: ExecutionContext, materializer: ActorMaterializer): Future[Map[String, String]] = {
+  // mix multiform to Future[Map[String, ByteString]].
+  // if part type is file, then part name have prefix "binary!", and ByteString content is {"fileName": "xxx", "fileType": "xxx"} ++ <#HeaderInfo#> ++ file content bytestring
+  def multiPartExtract(formData: Multipart.FormData)(implicit ec: ExecutionContext, materializer: ActorMaterializer): Future[Map[String, ByteString]] = {
     formData.parts.map { part =>
       if (part.filename.isDefined) {
-        val fileInfo = FileInfo(part.name, part.filename.get, part.entity.contentType)
-        val contentType = fileInfo.contentType.value
-        val path1 = new SimpleDateFormat("yyyyMM").format(System.currentTimeMillis())
-        val path2 = new SimpleDateFormat("dd").format(System.currentTimeMillis())
-        val path = s"$pathRoot/$path1/$path2"
-        val dir = new File(path)
-        if (!dir.exists()) {
-          dir.mkdirs()
-        }
-        val filenameNew = UUID.randomUUID().toString
-        var avatarPath = s"$path/$filenameNew"
-        if (contentType == "image/jpeg" || contentType == "image/gif" || contentType == "image/png") {
-          avatarPath = s"$avatarPath.${contentType.replace("image/", "")}.thumb.png"
-        } else {
-          avatarPath = ""
-        }
-        part.entity.dataBytes.runWith(FileIO.toPath(Paths.get(avatarPath))).map { _ =>
-          try {
-            if (contentType == "image/jpeg" || contentType == "image/gif" || contentType == "image/png") {
-              //crop and resize image
-              implicit val writer = PngWriter.NoCompression
-              val bytesImage = Image.fromFile(new File(avatarPath)).cover(200, 200).bytes
-              FileUtils.writeByteArrayToFile(new File(avatarPath), bytesImage)
-            }
-            avatarPath = s"/$avatarPath"
-          } catch { case e: Throwable =>
-            consoleLog("ERROR", s"images process error: $e")
-            avatarPath = ""
-          }
-          (part.name, avatarPath)
-        }
+        val contentType = part.entity.contentType.value
+        val jsonHeaderInfo = Json.obj(
+          "fileName" -> part.filename.get,
+          "fileType" -> contentType
+        )
+        val bsHeaderInfo = ByteString(Json.stringify(jsonHeaderInfo) + "<#HeaderInfo#>")
+        part.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map(bs => (s"binary!${part.name}", bsHeaderInfo ++ bs))
       } else {
-        part.entity.toStrict(5.seconds).map(e => (part.name, e.data.utf8String))
+        part.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map(bs => (part.name, bs))
       }
-    }.mapAsync[(String, String)](6)(t => t).runFold(Map[String, String]())(_ + _)
+    }.mapAsync[(String, ByteString)](6)(t => t).runFold(Map[String, ByteString]())(_ + _)
+  }
+
+  def extractHeaderInfo(paramBytes: Map[String, ByteString], key: String): (Array[Byte], String, String) = {
+    var bytes = Array[Byte]()
+    var fileName = ""
+    var fileType = ""
+    if (paramBytes.contains(s"binary!$key")) {
+      try {
+        val bs = paramBytes(s"binary!$key")
+        val splitor = "<#HeaderInfo#>"
+        val (bsJson, bsBin) = bs.splitAt(bs.indexOfSlice(splitor))
+        val jsonStr = bsJson.utf8String
+        bytes = bsBin.drop(splitor.length).toArray
+        val json = Json.parse(jsonStr)
+        fileName = getJsonString(json, "fileName")
+        fileType = getJsonString(json, "fileType")
+      } catch { case e: Throwable =>
+          consoleLog("ERROR", s"extract header info error: key = $key, $e")
+      }
+    }
+    (bytes, fileName, fileType)
   }
 
   def routeWebsocket(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer) = {
@@ -133,8 +124,6 @@ object RouteOps {
         getFromFile("www/index.html")
       } ~ pathPrefix("chat") {
         getFromDirectory("www")
-      } ~ pathPrefix("upload") {
-        getFromDirectory("upload")
       } ~ path("ping") {
         val headers = List(
           RawHeader("X-MyObject-Id", "myobjid"),
@@ -234,16 +223,16 @@ object RouteOps {
   def routeUserInfoUpdate(implicit ec: ExecutionContext, materializer: ActorMaterializer) = post {
     path("api" / "updateUser") {
       entity(as[Multipart.FormData]) { formData =>
-        //mix file upload and text formdata to Map[String, String]
-        val futureParams: Future[Map[String, String]] = multiPartExtract(formData, "upload/avatar")
+        val futureParams: Future[Map[String, ByteString]] = multiPartExtract(formData)
         complete {
           // complete support nest future
-          futureParams.map { params =>
+          futureParams.map { paramBytes =>
+            val params = paramBytes.filterNot { case (k, v) => k.startsWith("binary!")}.map { case (k, v) => (k, v.utf8String)}
             val userTokenStr = paramsGetString(params, "userToken", "")
             val nickname = paramsGetString(params, "nickname", "")
             val gender = paramsGetInt(params, "gender", 0)
-            val avatar = paramsGetString(params, "avatar", "")
-            updateUserInfoCtl(userTokenStr, nickname, gender, avatar).map { json =>
+            val (avatarBytes, avatarFileName, avatarFileType) = extractHeaderInfo(paramBytes, "avatar")
+            updateUserInfoCtl(userTokenStr, nickname, gender, avatarBytes, avatarFileName, avatarFileType).map { json =>
               HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
             }
           }
@@ -285,16 +274,16 @@ object RouteOps {
   def routeCreateGroupSession(implicit ec: ExecutionContext, materializer: ActorMaterializer, notificationActor: ActorRef) = post {
     path("api" / "createGroupSession") {
       entity(as[Multipart.FormData]) { formData =>
-        //mix file upload and text formdata to Map[String, String]
-        val futureParams: Future[Map[String, String]] = multiPartExtract(formData, "upload/avatar")
+        val futureParams: Future[Map[String, ByteString]] = multiPartExtract(formData)
         complete {
           // complete support nest future
-          futureParams.map { params =>
+          futureParams.map { paramBytes =>
+            val params = paramBytes.filterNot { case (k, v) => k.startsWith("binary!")}.map { case (k, v) => (k, v.utf8String)}
             val userTokenStr = paramsGetString(params, "userToken", "")
             val publicType = paramsGetInt(params, "publicType", 0)
             val sessionName = paramsGetString(params, "sessionName", "")
-            val sessionIcon = paramsGetString(params, "sessionIcon", "")
-            createGroupSessionCtl(userTokenStr, sessionName, sessionIcon, publicType).map { json =>
+            val (sessionIconBytes, sessionIconFileName, sessionIconFileType) = extractHeaderInfo(paramBytes, "sessionIcon")
+            createGroupSessionCtl(userTokenStr, sessionName, sessionIconBytes, sessionIconFileName, sessionIconFileType, publicType).map { json =>
               HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
             }
           }
@@ -321,16 +310,17 @@ object RouteOps {
     path("api" / "editGroupSession") {
       entity(as[Multipart.FormData]) { formData =>
         //mix file upload and text formdata to Map[String, String]
-        val futureParams: Future[Map[String, String]] = multiPartExtract(formData, "upload/avatar")
+        val futureParams: Future[Map[String, ByteString]] = multiPartExtract(formData)
         complete {
           // complete support nest future
-          futureParams.map { params =>
+          futureParams.map { paramBytes =>
+            val params = paramBytes.filterNot { case (k, v) => k.startsWith("binary!")}.map { case (k, v) => (k, v.utf8String)}
             val userTokenStr = paramsGetString(params, "userToken", "")
             val publicType = paramsGetInt(params, "publicType", 0)
             val sessionid = paramsGetString(params, "sessionid", "")
             val sessionName = paramsGetString(params, "sessionName", "")
-            val sessionIcon = paramsGetString(params, "sessionIcon", "")
-            editGroupSessionCtl(userTokenStr, sessionid, sessionName, sessionIcon, publicType).map { json =>
+            val (sessionIconBytes, sessionIconFileName, sessionIconFileType) = extractHeaderInfo(paramBytes, "sessionIcon")
+            editGroupSessionCtl(userTokenStr, sessionid, sessionName, sessionIconBytes, sessionIconFileName, sessionIconFileType, publicType).map { json =>
               HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
             }
           }
@@ -563,6 +553,50 @@ object RouteOps {
           listNotificationsCtl(userTokenStr, page, count) map { json =>
             HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
           }
+        }
+      }
+    }
+  }
+
+  def routeGetFileMeta(implicit ec: ExecutionContext) = get {
+    path("api" / "getFileMeta") {
+      parameterMap { params =>
+        val id = paramsGetString(params, "id", "")
+        complete {
+          getFileMetaCtl(id) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
+  def routeGetFile(implicit ec: ExecutionContext) = get {
+    path("api" / "getFile") {
+      parameterMap { params =>
+        val id = paramsGetString(params, "id", "")
+        onComplete(getFileCtl(id)) {
+          case Success((fileName, fileType, fileSize, fileMetaData, fileBytes, errmsg)) =>
+            withPrecompressedMediaTypeSupport {
+              var contentType = ContentTypes.`application/octet-stream`
+              withPrecompressedMediaTypeSupport
+              var headerDisposition = RawHeader("Content-Disposition", s"""attachment; filename="$fileName"""")
+              if (fileType == "image/jpeg") {
+                contentType = ContentType(MediaTypes.`image/jpeg`)
+              } else if (fileType == "image/png") {
+                contentType = ContentType(MediaTypes.`image/png`)
+              } else if (fileType == "image/gif") {
+                contentType = ContentType(MediaTypes.`image/gif`)
+              }
+              if (contentType != ContentTypes.`application/octet-stream`) {
+                headerDisposition = RawHeader("Content-Disposition", s"""inline; filename="$fileName"""")
+              }
+              respondWithHeaders(headerDisposition) {
+                complete(HttpEntity(contentType, ByteString(fileBytes)))
+              }
+            }
+          case Failure(e) =>
+            complete((StatusCodes.InternalServerError, s"An error occurred: $e"))
         }
       }
     }

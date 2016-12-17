@@ -1,0 +1,104 @@
+{
+  "_args": [
+    [
+      "angular-animate@1.5.8",
+      "/Volumes/Share/Spark_program/DistributedWebChat/www"
+    ]
+  ],
+  "_cnpm_publish_time": 1469201403964,
+  "_from": "angular-animate@1.5.8",
+  "_id": "angular-animate@1.5.8",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/angular-animate",
+  "_nodeVersion": "4.4.7",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/angular-animate-1.5.8.tgz_1469201403735_0.004368406254798174"
+  },
+  "_npmUser": {
+    "email": "angular-core+npm@google.com",
+    "name": "angularcore"
+  },
+  "_npmVersion": "2.15.8",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "angular-animate",
+    "raw": "angular-animate@1.5.8",
+    "rawSpec": "1.5.8",
+    "scope": null,
+    "spec": "1.5.8",
+    "type": "version"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npm.taobao.org/angular-animate/download/angular-animate-1.5.8.tgz",
+  "_shasum": "535f7369225aba7fb15bf7134c71b15bc635c586",
+  "_shrinkwrap": null,
+  "_spec": "angular-animate@1.5.8",
+  "_where": "/Volumes/Share/Spark_program/DistributedWebChat/www",
+  "author": {
+    "email": "angular-core+npm@google.com",
+    "name": "Angular Core Team"
+  },
+  "bugs": {
+    "url": "https://github.com/angular/angular.js/issues"
+  },
+  "dependencies": {},
+  "description": "AngularJS module for animations",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "noattachment": false,
+    "shasum": "535f7369225aba7fb15bf7134c71b15bc635c586",
+    "size": 76438,
+    "tarball": "http://registry.npm.taobao.org/angular-animate/download/angular-animate-1.5.8.tgz"
+  },
+  "gitHead": "688b68844cf95420e1793327f69d0c25589c23d1",
+  "homepage": "http://angularjs.org",
+  "jspm": {
+    "shim": {
+      "angular-animate": {
+        "deps": [
+          "angular"
+        ]
+      }
+    }
+  },
+  "keywords": [
+    "angular",
+    "framework",
+    "browser",
+    "animation",
+    "client-side"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "email": "a.kalinovski@gmail.com",
+      "name": "akalinovski"
+    },
+    {
+      "email": "angular-core+npm@google.com",
+      "name": "angularcore"
+    },
+    {
+      "email": "pete@bacondarwin.com",
+      "name": "petebd"
+    }
+  ],
+  "name": "angular-animate",
+  "optionalDependencies": {},
+  "publish_time": 1469201403964,
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angular/angular.js.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.5.8"
+}

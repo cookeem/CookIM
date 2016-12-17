@@ -1,0 +1,100 @@
+{
+  "_args": [
+    [
+      "angular-cookies@1.5.8",
+      "/Volumes/Share/Scala_program/CookIM/www"
+    ]
+  ],
+  "_cnpm_publish_time": 1469201424817,
+  "_from": "angular-cookies@1.5.8",
+  "_id": "angular-cookies@1.5.8",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/angular-cookies",
+  "_nodeVersion": "4.4.7",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/angular-cookies-1.5.8.tgz_1469201424585_0.8652908557560295"
+  },
+  "_npmUser": {
+    "email": "angular-core+npm@google.com",
+    "name": "angularcore"
+  },
+  "_npmVersion": "2.15.8",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "angular-cookies",
+    "raw": "angular-cookies@1.5.8",
+    "rawSpec": "1.5.8",
+    "scope": null,
+    "spec": "1.5.8",
+    "type": "version"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npm.taobao.org/angular-cookies/download/angular-cookies-1.5.8.tgz",
+  "_shasum": "08f39fa2e17b6e3a916cd3ba7352f9d702e8a9fe",
+  "_shrinkwrap": null,
+  "_spec": "angular-cookies@1.5.8",
+  "_where": "/Volumes/Share/Scala_program/CookIM/www",
+  "author": {
+    "email": "angular-core+npm@google.com",
+    "name": "Angular Core Team"
+  },
+  "bugs": {
+    "url": "https://github.com/angular/angular.js/issues"
+  },
+  "dependencies": {},
+  "description": "AngularJS module for cookies",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "noattachment": false,
+    "shasum": "08f39fa2e17b6e3a916cd3ba7352f9d702e8a9fe",
+    "size": 6265,
+    "tarball": "http://registry.npm.taobao.org/angular-cookies/download/angular-cookies-1.5.8.tgz"
+  },
+  "gitHead": "a2247a1efb436f0293289fb74ebd76fbe52a7422",
+  "homepage": "http://angularjs.org",
+  "jspm": {
+    "shim": {
+      "angular-cookies": {
+        "deps": [
+          "angular"
+        ]
+      }
+    }
+  },
+  "keywords": [
+    "angular",
+    "framework",
+    "browser",
+    "cookies",
+    "client-side"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "email": "angular-core+npm@google.com",
+      "name": "angularcore"
+    },
+    {
+      "email": "pete@bacondarwin.com",
+      "name": "petebd"
+    }
+  ],
+  "name": "angular-cookies",
+  "optionalDependencies": {},
+  "publish_time": 1469201424817,
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angular/angular.js.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.5.8"
+}

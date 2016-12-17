@@ -9,7 +9,7 @@
         <div class="row"></div>
         <ul ng-if="friends.length > 0" class="collection">
             <li ng-repeat="friend in friends" class="collection-item avatar">
-                <a ng-click="showUserMenu(friend.uid)" href="javascript:void(0)" class="title blue-text"><img ng-src="{{friend.avatar}}" alt="{{friend.nickname}}" class="circle">
+                <a ng-click="showUserMenu(friend.uid)" href="javascript:void(0)" class="title blue-text"><img ng-src="{{'/api/getFile?id='+friend.avatar}}" alt="{{friend.nickname}}" class="circle">
                     {{friend.nickname}}
                 </a>
                 <div class="grey-text">{{friend.dateline}}</div>

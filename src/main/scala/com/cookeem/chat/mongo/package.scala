@@ -12,8 +12,7 @@ package object mongo {
   case class SessionStatus(sessionid: String, newCount: Int)
   case class Session(var _id: String, createuid: String, ouid: String, var sessionName: String, var sessionIcon: String, sessionType: Int, publicType: Int, usersStatus: List[UserStatus] = List(), lastMsgid: String = "", lastUpdate: Long = System.currentTimeMillis(), dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
   case class UserStatus(uid: String, online: Boolean)
-  case class Message(var _id: String, uid: String, sessionid: String, msgType: String, content: String = "", fileInfo: FileInfo, dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
-  case class FileInfo(filePath: String = "", fileName: String = "", fileSize: Long = 0L, fileType: String = "", fileThumb: String = "")
+  case class Message(var _id: String, uid: String, sessionid: String, msgType: String, content: String = "", fileName: String = "", fileType: String = "", fileid: String = "", thumbid: String = "", dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
   case class Online(var _id: String, uid: String, dateline: Date = new Date()) extends BaseMongoObj
   case class Notification(var _id: String, noticeType: String, senduid: String, recvuid: String, sessionid: String, isRead: Int = 0, dateline: Long = System.currentTimeMillis()) extends BaseMongoObj
 

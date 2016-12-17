@@ -2,7 +2,7 @@ package com.cookeem.chat.websocket
 
 import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import com.cookeem.chat.event._
-import com.cookeem.chat.mongo.MongoLogic.createMessage
+import com.cookeem.chat.mongo.MongoLogic._
 
 /**
   * Created by cookeem on 16/9/25.
