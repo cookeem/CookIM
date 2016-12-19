@@ -8,6 +8,7 @@
 ---
 
 - [GitHub项目地址](https://github.com/cookeem/CookIM/)
+- [OSChina项目地址](https://git.oschina.net/cookeem/CookIM/)
 
 ---
 

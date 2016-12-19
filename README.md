@@ -8,6 +8,7 @@
 ---
 
 - [GitHub project](https://github.com/cookeem/CookIM/)
+- [OSChina project](https://git.oschina.net/cookeem/CookIM/)
 
 ---
 
