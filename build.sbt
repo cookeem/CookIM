@@ -35,12 +35,12 @@ libraryDependencies ++= {
  )
 }
 
-//sbt使用代理
-javaOptions in console ++= Seq(
-  "-Dhttp.proxyHost=cmproxy-sgs.gmcc.net",
-  "-Dhttp.proxyPort=8081"
-)
-javaOptions in run ++= Seq(
-  "-Dhttp.proxyHost=cmproxy-sgs.gmcc.net",
-  "-Dhttp.proxyPort=8081"
-)
+////sbt使用代理
+//javaOptions in console ++= Seq(
+//  "-Dhttp.proxyHost=cmproxy-sgs.gmcc.net",
+//  "-Dhttp.proxyPort=8081"
+//)
+//javaOptions in run ++= Seq(
+//  "-Dhttp.proxyHost=cmproxy-sgs.gmcc.net",
+//  "-Dhttp.proxyPort=8081"
+//)
