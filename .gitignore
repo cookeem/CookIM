@@ -6,5 +6,5 @@
 /project/target/
 /target/
 /upload/
-/Dockerfile
 /docker
+/mongo

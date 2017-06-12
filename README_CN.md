@@ -18,20 +18,11 @@
     1. [PC演示](#PC演示)
     1. [手机演示](#手机演示)
     1. [演示地址](#演示地址)
-1. [以Docker方式启动单节点CookIM](#以docker方式启动单节点cookim)
-    1. [获取镜像](#获取镜像)
-    1. [运行容器](#运行容器)
-    1. [调试容器](#调试容器)
-    1. [停止容器](#停止容器)
 1. [以Docker-Compose方式启动CookIM集群](#以docker-compose方式启动cookim集群)
     1. [启动集群](#启动集群)
     1. [增加节点](#增加节点)
+    1. [调试容器](#调试容器)
     1. [停止集群](#停止集群)
-1. [手动安装前准备](#手动安装前准备)
-    1. [安装Java8+](#安装java8)
-    1. [安装Scala2.11+](#安装scala211)
-    1. [安装SBT0.13+](#安装sbt013)
-    1. [安装MongoDB3+](#安装mongodb3)
 1. [运行](#运行)
     1. [获取源代码](#获取源代码)
     1. [开启mongoDB服务](#开启mongodb服务)
@@ -46,6 +37,10 @@
     1. [akka stream websocket graph](#akka-stream-websocket-graph)
     1. [MongoDB数据库说明](#mongodb数据库说明)
     1. [消息类型](#消息类型)
+1. [ChangeLog](#ChangeLog)
+    1. [0.1.0-SNAPSHOT](#010-snapshot)
+    1. [0.2.0-SNAPSHOT](#020-snapshot)
+    
 
 ---
 [返回目录](#目录)
@@ -66,77 +61,20 @@
 
 ---
 
-### 以Docker方式启动单节点CookIM
-  
----
-
-#### 获取镜像
-
-```sh
-$ sudo docker pull cookeem/cookim
-```
----
-[返回目录](#目录)
-
-#### 运行容器
-
-```sh
-$ sudo docker run -d -p 8080:8080 cookeem/cookim
-```
-
-浏览器访问：
-> http://localhost:8080
-
-如果想修改HTTP端口为18080，可以使用如下命令：
-
-```sh
-$ sudo docker run -d -p 18080:8080 cookeem/cookim
-```
-
----
-
-[返回目录](#目录)
-
-#### 调试容器
-
-以下命令可以获取容器ID
-```
-$ sudo docker ps
-       CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-       9c353289cf37        cookeem/cookim      "/root/cookim/entry.s"   4 seconds ago       Up 2 seconds        0.0.0.0:8080->8080/tcp   stoic_borg
-```
-
-运行以下命令进入容器进行调试
-```sh
-$ sudo docker exec -ti #CONTAINER ID# /bin/bash
-```
-
----
-
-[返回目录](#目录)
-
-#### 停止容器
-
-以下命令停止容器
-```sh
-$ sudo docker stop #CONTAINER ID#
-$ sudo docker rm #CONTAINER ID#
-```
-
----
-
-[返回目录](#目录)
-
 ### 以Docker-Compose方式启动CookIM集群
 
 #### 启动集群
 
-进入CookIM所在目录，运行以下命令，以docker-compose方式启动CookIM集群，该集群启动了三个容器：mongodb、cookim1、cookim2
+进入CookIM所在目录，运行以下命令，以docker-compose方式启动CookIM集群，该集群启动了三个容器：mongo、cookim1、cookim2
 ```sh
+$ git clone git clone https://github.com/cookeem/CookIM
+
+$ cd CookIM
+
 $ sudo docker-compose up -d
-Creating docker_mongodb_1
-Creating docker_cookim1_1
-Creating docker_cookim2_1
+Creating mongo
+Creating cookim1
+Creating cookim2
 ```
 
 成功启动集群后，浏览器分别访问以下网址，对应不同的CookIM服务
@@ -153,19 +91,34 @@ Creating docker_cookim2_1
 
 ```yaml
       cookim3:
-        image: cookeem/cookim-cluster
-        volumes:
-         - /tmp:/root/cookim/upload
+        image: cookeem/cookim
+        container_name: cookim3
+        hostname: cookim3
         environment:
-          HOST_NAME: "cookim3"
-          WEB_PORT: "8080"
-          AKKA_PORT: "2551"
-          SEED_NODES: "cookim1:2551"
+          HOST_NAME: cookim3
+          WEB_PORT: 8080
+          AKKA_PORT: 2551
+          SEED_NODES: cookim1:2551
         ports:
-         - "8082:8080"
+        - "8082:8080"
         depends_on:
-         - mongodb
-         - cookim1
+        - mongo
+        - cookim1
+```
+---
+
+[返回目录](#目录)
+
+#### 调试容器
+
+查看cookim1容器日志输出
+```sh
+$ sudo docker logs -f cookim1
+```
+
+进入cookim1容器进行调试
+```sh
+$ sudo docker exec -ti cookim1 bash
 ```
 ---
 
@@ -174,7 +127,7 @@ Creating docker_cookim2_1
 #### 停止集群
 ```sh
 $ sudo docker-compose stop
-$ sudo docker-compose rm
+$ sudo docker-compose rm -f
 ```
 ---
 
@@ -644,3 +597,19 @@ chatMsg:       {
 
 [返回目录](#目录)
 
+### ChangeLog
+#### 0.1.0-SNAPSHOT
+
+---
+
+[返回目录](#目录)
+
+#### 0.2.0-SNAPSHOT
+
+* CookIM支持MongoDB 3.4.4
+* 更新akka版本为2.5.2
+* 更新容器启动方式，只保留docker-compose方式启动集群
+
+---
+
+[返回目录](#目录)
