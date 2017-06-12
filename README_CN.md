@@ -26,9 +26,7 @@
 1. [运行](#运行)
     1. [本地运行需求](#本地运行需求)
     1. [获取源代码](#获取源代码)
-    1. [开启mongoDB服务](#开启mongodb服务)
-    1. [下载sbt的jar依赖包](#下载sbt的jar依赖包)
-    1. [使用预打包的libs运行程序](#使用预打包的libs运行程序)
+    1. [配置与打包](#配置与打包)
     1. [启动CookIM服务](#启动cookim服务)
     1. [打开浏览器，访问以下网址8080](#打开浏览器访问以下网址8080)
     1. [启动另一个CookIM服务](#启动另一个cookim服务)
@@ -157,11 +155,37 @@ cd CookIM
 
 [返回目录](#目录)
 
+#### 配置与打包
+
+配置文件位于conf/application.conf，请务必配置mongodb的uri配置
+```sh
+mongodb {
+  dbname = "cookim"
+  uri = "mongodb://mongo:27017/local"
+}
+```
+
+对CookIM进行打包fatjar，打包后文件位于```target/scala-2.11/CookIM-assembly-0.2.0-SNAPSHOT.jar```
+```sh
+sbt clean assembly
+```
+
+---
+
+[返回目录](#目录)
+
 #### 启动CookIM服务
 
-使用sbt方式启动服务：
+CookIM的数据保存在MongoDB中，启动CookIM前务必先启动MongoDB
+
+a. 调试方式启动服务：
 ```sh
 $ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551"
+```
+
+b. 产品方式启动服务：
+```sh
+$ java -classpath "target/scala-2.11/CookIM-assembly-0.2.0-SNAPSHOT.jar" com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551
 ```
 
 以上命令启动了一个监听8080端口的WEB服务，akka system的监听端口为2551
@@ -191,9 +215,14 @@ $ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhos
 
 打开另外一个终端，启动另一个CookIM服务，测试服务间的消息通讯功能。
 
-进入CookIM所在目录，使用sbt方式启动服务（如果你使用sbt下载了依赖）：
+a. 调试方式启动服务：
 ```sh
 $ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551"
+```
+
+b. 产品方式启动服务：
+```sh
+$ java -classpath "target/scala-2.11/CookIM-assembly-0.2.0-SNAPSHOT.jar" com.cookeem.chat.CookIM -h localhost -w 8081 -a 2552 -s localhost:2551
 ```
 
 以上命令启动了一个监听8081端口的WEB服务，akka system的监听端口为2552
