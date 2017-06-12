@@ -130,12 +130,6 @@ $ sudo docker-compose rm
 
 [Category](#category)
 
-### Manual install prerequisites
-
----
-
-[Category](#category)
-
 ### How to run
 
 #### Prerequisites
