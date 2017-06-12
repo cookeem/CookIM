@@ -157,7 +157,7 @@ cd CookIM
 
 #### 配置与打包
 
-配置文件位于conf/application.conf，请务必配置mongodb的uri配置
+配置文件位于```conf/application.conf```，请务必配置mongodb的uri配置
 ```sh
 mongodb {
   dbname = "cookim"
