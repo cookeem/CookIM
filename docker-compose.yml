@@ -1,33 +1,37 @@
     version: '2'
     services:
+      mongo:
+        image: mongo:3.4.4
+        container_name: mongo
+        hostname: mongo
+        volumes:
+        - ./mongo:/data/db
+        ports:
+        - "27017:27017"
       cookim1:
-        image: cookeem/cookim-cluster
-        volumes:
-         - /tmp:/root/cookim/upload
+        image: cookeem/cookim
+        container_name: cookim1
+        hostname: cookim1
         environment:
-          HOST_NAME: "cookim1"
-          WEB_PORT: "8080"
-          AKKA_PORT: "2551"
-          SEED_NODES: "cookim1:2551"
+          HOST_NAME: cookim1
+          WEB_PORT: 8080
+          AKKA_PORT: 2551
+          SEED_NODES: cookim1:2551
         ports:
-         - "8080:8080"
+        - "8080:8080"
         depends_on:
-         - mongodb
+        - mongo
       cookim2:
-        image: cookeem/cookim-cluster
-        volumes:
-         - /tmp:/root/cookim/upload
+        image: cookeem/cookim
+        container_name: cookim2
+        hostname: cookim2
         environment:
-          HOST_NAME: "cookim2"
-          WEB_PORT: "8080"
-          AKKA_PORT: "2551"
-          SEED_NODES: "cookim1:2551"
+          HOST_NAME: cookim2
+          WEB_PORT: 8080
+          AKKA_PORT: 2551
+          SEED_NODES: cookim1:2551
         ports:
-         - "8081:8080"
+        - "8081:8080"
         depends_on:
-         - mongodb
-         - cookim1
-      mongodb:
-        volumes:
-         - /tmp:/root/cookim/upload
-        image: cookeem/mongodb
+        - mongo
+        - cookim1
