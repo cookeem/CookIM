@@ -1,0 +1,134 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cookim
+  labels:
+    app: cookim
+spec:
+  type: NodePort
+  selector:
+    app: cookim
+  ports:
+  - name: port-80
+    port: 80
+    targetPort: 80
+    nodePort: 30205
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cookim-headless
+  labels:
+    app: cookim-headless
+spec:
+  clusterIP: None
+  ports:
+  - name: tcp-2551
+    protocol: TCP
+    port: 2551
+  - name: tcp-80
+    protocol: TCP
+    port: 80
+  selector:
+    app: cookim
+
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: cookim-budget
+spec:
+  selector:
+    matchLabels:
+      app: cookim
+  minAvailable: 2
+
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: cookim
+spec:
+  serviceName: cookim-headless
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: cookim
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+        scheduler.alpha.kubernetes.io/affinity: >
+            {
+              "podAntiAffinity": {
+                "requiredDuringSchedulingRequiredDuringExecution": [{
+                  "labelSelector": {
+                    "matchExpressions": [{
+                      "key": "app",
+                      "operator": "In",
+                      "values": ["cookim-headless"]
+                    }]
+                  },
+                  "topologyKey": "kubernetes.io/hostname"
+                }]
+              }
+            }
+
+        # pod.beta.kubernetes.io/init-containers: '[
+        #     {
+        #         "name": "install",
+        #         "image": "k8s-registry:5000/centos:latest",
+        #         "command": ["bash", "-c", "
+        #           IFS=- read -r -a array <<< $(hostname) \n
+        #           ordinal=${array[-1]} \n
+        #           echo cookim-$ordinal >> /cookim-data/a.txt \n
+        #         "],
+        #         "volumeMounts": [
+        #             {
+        #                 "name": "esgv",
+        #                 "mountPath": "/cookim-data"
+        #             }
+        #         ]
+        #     }
+        # ]'
+
+    spec:
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: timezone
+        hostPath:
+          path: /etc/timezone
+      containers:
+      - name: cookim
+        imagePullPolicy: IfNotPresent
+        image: k8s-registry:5000/cookeem/cookim:0.2.0-SNAPSHOT
+        ports:
+        - containerPort: 2551
+          protocol: TCP
+        - containerPort: 80
+          protocol: TCP
+        env:
+        - name: "HOST_NAME"
+          value: "$(HOSTNAME)"
+        - name: "WEB_PORT"
+          value: "80"
+        - name: "AKKA_PORT"
+          value: "2551"
+        - name: "SEED_NODES"
+          value: "cookim-0.cookim-headless.default.svc.cluster.local:2551"
+        volumeMounts:
+        - name: localtime
+          mountPath: "/etc/localtime"
+          readOnly: true
+        - name: timezone
+          mountPath: "/etc/timezone"
+          readOnly: true
+        resources: 
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "2Gi"
+
