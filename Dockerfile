@@ -13,7 +13,7 @@ ADD www /root/cookim/www
 WORKDIR /root/cookim
 
 RUN echo '#!/bin/ash' >> /root/cookim/run.sh
-RUN echo 'java -classpath "/root/cookim/cookim.jar" com.cookeem.chat.CookIM -n -h $HOST_NAME -w $WEB_PORT -a $AKKA_PORT -s $SEED_NODES' >> /root/cookim/run.sh
+RUN echo 'java -classpath "/root/cookim/cookim.jar" com.cookeem.chat.CookIM -n -h $(hostname -f) -w $WEB_PORT -a $AKKA_PORT -s $SEED_NODES' >> /root/cookim/run.sh
 RUN chmod a+x /root/cookim/run.sh
 
 CMD [ "/root/cookim/run.sh" ]
