@@ -103,7 +103,7 @@ spec:
           path: /etc/timezone
       containers:
       - name: cookim
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         image: k8s-registry:5000/cookeem/cookim:0.2.0-SNAPSHOT
         ports:
         - containerPort: 2551
@@ -111,8 +111,6 @@ spec:
         - containerPort: 80
           protocol: TCP
         env:
-        - name: "HOST_NAME"
-          value: "$(HOSTNAME)"
         - name: "WEB_PORT"
           value: "80"
         - name: "AKKA_PORT"
