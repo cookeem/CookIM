@@ -52,7 +52,7 @@ metadata:
   name: cookim
 spec:
   serviceName: cookim-headless
-  replicas: 3
+  replicas: 4
   template:
     metadata:
       labels:
@@ -104,7 +104,7 @@ spec:
       containers:
       - name: cookim
         imagePullPolicy: Always
-        image: k8s-registry:5000/cookeem/cookim:0.2.0-SNAPSHOT
+        image: k8s-registry:5000/cookeem/cookim:0.2.1-SNAPSHOT
         ports:
         - containerPort: 2551
           protocol: TCP
