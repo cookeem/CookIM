@@ -129,17 +129,21 @@ printenv
 export MY_DOCKER_HOME=/var/jenkins_home/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/docker_1.13.1
 export PATH=$PATH:$MY_DOCKER_HOME/bin
 export DOCKER_HOST=tcp://ci-docker:2375
+
 # 设置版本信息
 export APP_VERSION_NAME=`cat VERSION`
 
+# 把文件复制到项目目录
 mv target/cookim-${APP_VERSION_NAME}-allinone.jar cookim.jar
 
+# 构建docker镜像
 docker build -t k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME -f Dockerfile_k8s .
+
 # 把docker镜像推送到k8s-registry:5000
 docker push k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME
 
 # 使用kubectl拉起镜像
-# kubectl apply -f deploy/kubernetes/cookim.yaml
+kubectl apply -f deploy/kubernetes/cookim.yaml
 ```
     
 - "保存"项目
