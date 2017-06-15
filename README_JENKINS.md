@@ -128,11 +128,14 @@ printenv
 # 设置DOCKER_HOME
 export MY_DOCKER_HOME=/var/jenkins_home/tools/org.jenkinsci.plugins.docker.commons.tools.DockerTool/docker_1.13.1
 export PATH=$PATH:$MY_DOCKER_HOME/bin
+export DOCKER_HOST=tcp://ci-docker:2375
 # 设置版本信息
 export APP_VERSION_NAME=`cat VERSION`
-docker -H tcp://ci-docker:2375 build -t k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME -f Dockerfile_k8s .
+
+docker build -t k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME -f Dockerfile_k8s .
 # 把docker镜像推送到k8s-registry:5000
-docker -H tcp://ci-docker:2375 push k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME
+docker push k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME
+
 # 使用kubectl拉起镜像
 # kubectl apply -f deploy/kubernetes/cookim.yaml
 ```
