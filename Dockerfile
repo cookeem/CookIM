@@ -6,7 +6,7 @@ MAINTAINER cookeem@qq.com
 
 RUN mkdir -p /root/cookim/
 
-ADD target/scala-2.11/CookIM-assembly-0.2.0-SNAPSHOT.jar /root/cookim/cookim.jar
+ADD cookim.jar /root/cookim/
 ADD conf /root/cookim/conf
 ADD www /root/cookim/www
 

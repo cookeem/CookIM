@@ -132,6 +132,8 @@ export DOCKER_HOST=tcp://ci-docker:2375
 # 设置版本信息
 export APP_VERSION_NAME=`cat VERSION`
 
+mv target/cookim-${APP_VERSION_NAME}-allinone.jar cookim.jar
+
 docker build -t k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME -f Dockerfile_k8s .
 # 把docker镜像推送到k8s-registry:5000
 docker push k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME
