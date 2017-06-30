@@ -143,7 +143,7 @@ docker build -t k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME -f Dockerfile
 docker push k8s-registry:5000/cookeem/cookim:$APP_VERSION_NAME
 
 # 使用kubectl拉起镜像
-kubectl apply -f deploy/kubernetes/cookim.yaml
+kubectl apply -f kubernetes/cookim.yaml
 ```
     
 - "保存"项目
