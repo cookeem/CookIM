@@ -52,7 +52,7 @@ metadata:
   name: cookim
 spec:
   serviceName: cookim-headless
-  replicas: 4
+  replicas: 3
   template:
     metadata:
       labels:
