@@ -535,6 +535,18 @@ object MongoLogic {
     }
   }
 
+  def getUserInfoByName(nickname: String): Future[List[User]] = {
+    for {
+      users <- {
+        var users = Future(List[User]())
+        users = findCollection[User](usersCollection, document("nickname" -> nickname))
+        users
+      }
+    } yield {
+      (users)
+    }
+  }
+
   //get session info and users who join this session
   def getJoinedUsers(sessionid: String): Future[(Session, List[User])] = {
     for {

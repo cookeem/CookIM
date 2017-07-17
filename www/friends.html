@@ -6,6 +6,22 @@
                 <div class="search-results"></div>
             </div>
         </div>
+        <div class="search">
+            <div class="search-wrapper card">
+                <input id="searchNewFriends" placeholder="Search by nickname" ng-model="nickName"><i class="material-icons" ng-click="getFriendsByNickname(nickName)">search</i>
+            </div>
+            <ul ng-if="searchResult.length > 0" class="collection">
+                <li ng-repeat="friend in searchResult" class="collection-item avatar">
+                    <a ng-click="showUserMenu(friend.uid)" href="javascript:void(0)" class="title blue-text"><img ng-src="{{'/api/getFile?id='+friend.avatar}}" alt="{{friend.nickname}}" class="circle">
+                        {{friend.nickname}}
+                    </a>
+                    <div class="grey-text">{{friend.dateline}}</div>
+                    <div class="secondary-content right-align" ng-if="friend.uid != uid">
+                        <a ng-click="showJoinFriendModal(friend.uid, friend.nickname)" href="javascript:void(0);" class="btn-floating tooltipped green right" data-position="bottom" data-delay="50" data-tooltip="add friend"><i class="material-icons">add</i></a>
+                    </div>
+                </li>
+            </ul>
+        </div>
         <div class="row"></div>
         <ul ng-if="friends.length > 0" class="collection">
             <li ng-repeat="friend in friends" class="collection-item avatar">

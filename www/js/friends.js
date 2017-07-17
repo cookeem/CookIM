@@ -27,7 +27,31 @@ app.controller('friendsAppCtl', function($rootScope, $scope, $http, $timeout) {
     }, 0);
 
     $rootScope.getUserTokenRepeat();
-
+    $scope.searchResult = [];
+    $rootScope.getFriendsByNickname = function(nickName) {
+        $rootScope.verifyUserToken();
+        var postData = {
+            "userToken": $rootScope.userToken,
+            "nickName" : nickName
+        };
+        $http({
+            method  : 'POST',
+            url     : '/api/getUserInfoByName',
+            data    : $.param(postData),
+            headers : { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8' }
+        }).then(function successCallback(response) {
+            console.log(response.data);
+            if (response.data.errmsg) {
+                $rootScope.errmsg = response.data.errmsg;
+                window.location.href = '#!/error';
+            } else {
+                $scope.searchResult = response.data.userInfo;
+                console.log($scope.searchResult);
+            }
+        }, function errorCallback(response) {
+            console.error("http request error:" + response.data);
+        });
+    };
     $scope.friends = [];
     $scope.getFriendsSubmit = function() {
         $rootScope.verifyUserToken();
