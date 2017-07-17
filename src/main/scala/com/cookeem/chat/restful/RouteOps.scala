@@ -48,6 +48,7 @@ object RouteOps {
     routeJoinGroupSession ~
     routeLeaveGroupSession ~
     routeGetJoinedUsers ~
+    routeGetUserInfoByName ~
     routeGetFriends ~
     routeInviteFriends ~
     routeJoinFriend ~
@@ -429,6 +430,21 @@ object RouteOps {
       }
     }
   }
+
+  def routeGetUserInfoByName(implicit ec: ExecutionContext) = post {
+    path("api" / "getUserInfoByName") {
+      formFieldMap { params =>
+        val userTokenStr = paramsGetString(params, "userToken", "")
+        val nickName = paramsGetString(params, "nickName", "")
+        complete {
+          getUserInfoByNameCtl(userTokenStr, nickName) map { json =>
+            HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+          }
+        }
+      }
+    }
+  }
+
 
   def routeGetFriends(implicit ec: ExecutionContext) = post {
     path("api" / "getFriends") {

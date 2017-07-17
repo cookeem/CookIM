@@ -538,6 +538,32 @@ object Controller {
     }
   }
 
+  def getUserInfoByNameCtl(userTokenStr: String, nickName: String)(implicit ec: ExecutionContext): Future[JsObject] = {
+    getUserInfoByName(nickName).map { users =>
+      if (users == null) {
+        Json.obj(
+          "errmsg" -> "user not exist",
+          "successmsg" -> "",
+          "userInfo" -> JsNull
+        )
+      } else {
+        Json.obj(
+          "errmsg" -> "",
+          "successmsg" -> "get user info success",
+          "userInfo" -> users.map { user =>
+            Json.obj(
+            "uid" -> user._id,
+            "nickname" -> user.nickname,
+            "avatar" -> user.avatar,
+            "gender" -> user.gender,
+            "dateline" -> timeToStr(user.dateline)
+          )
+          }
+        )
+    }
+  }
+  }
+
   def getJoinedUsersCtl(userTokenStr: String, sessionid: String)(implicit ec: ExecutionContext): Future[JsObject] = {
     val userToken = verifyUserToken(userTokenStr)
     if (userToken.uid == "") {
