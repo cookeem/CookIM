@@ -1,20 +1,39 @@
 package com.cookeem.chat
 
 import java.net.InetAddress
+import java.security.{KeyStore, SecureRandom}
+import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.Http
+import akka.http.scaladsl.{Http, HttpsConnectionContext}
 import akka.stream.ActorMaterializer
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.restful.Route
 import com.cookeem.chat.websocket.NotificationActor
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.cli.{DefaultParser, HelpFormatter, Options, Option => CliOption}
+import com.cookeem.chat.common.CommonUtils
 
 /**
   * Created by cookeem on 16/9/25.
   */
 object CookIM extends App {
+  val serverContext: HttpsConnectionContext = {
+    val gSecret = CommonUtils.config.getString("ssl.storeSecret")
+    val password = gSecret.toCharArray
+    val jks = "/mykeystore.jks"
+
+    val context = SSLContext.getInstance("TLS")
+    val ks = KeyStore.getInstance("jks")
+    ks.load(getClass.getResourceAsStream(jks), password)
+    val keyManagerFactory = KeyManagerFactory.getInstance("SunX509")
+    keyManagerFactory.init(ks, password)
+    val trustManagerFactory = TrustManagerFactory.getInstance("SunX509")
+    trustManagerFactory.init(ks)
+    context.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
+    new HttpsConnectionContext(context)
+  }
+
   val options = new Options()
   options.addOption(
     CliOption
@@ -100,8 +119,8 @@ object CookIM extends App {
       implicit val materializer = ActorMaterializer()
       import system.dispatcher
       implicit val notificationActor = system.actorOf(Props(classOf[NotificationActor]))
-      Http().bindAndHandle(Route.logRoute, "0.0.0.0", webPort)
-      consoleLog("INFO",s"CookIM server started! Access url: http://$hostName:$webPort/")
+      Http().bindAndHandle(Route.logRoute, "0.0.0.0", webPort, connectionContext = serverContext)
+      consoleLog("INFO",s"CookIM server started! Access url: https://$hostName:$webPort/")
     }
   } catch {
     case e: Throwable =>
