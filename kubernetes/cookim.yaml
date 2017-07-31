@@ -104,7 +104,7 @@ spec:
       containers:
       - name: cookim
         imagePullPolicy: Always
-        image: k8s-registry:5000/cookeem/cookim:0.2.2-SNAPSHOT
+        image: k8s-registry:5000/cookeem/cookim:0.2.3-SNAPSHOT
         ports:
         - containerPort: 2551
           protocol: TCP

@@ -21,6 +21,9 @@ object CommonUtils {
   val configJwt = config.getConfig("jwt")
   val configJwtSecret = configJwt.getString("secret")
 
+  val configSsl = config.getConfig("ssl")
+  val configSslSecret = configSsl.getString("storeSecret")
+
   case class CustomException(message: String = "", cause: Throwable = null) extends Exception(message, cause)
 
   def consoleLog(logType: String, msg: String) = {

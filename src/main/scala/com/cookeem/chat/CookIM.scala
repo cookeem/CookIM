@@ -5,7 +5,7 @@ import java.security.{KeyStore, SecureRandom}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.{Http, HttpsConnectionContext}
+import akka.http.scaladsl.{ConnectionContext, Http, HttpsConnectionContext}
 import akka.stream.ActorMaterializer
 import com.cookeem.chat.common.CommonUtils._
 import com.cookeem.chat.restful.Route
@@ -18,11 +18,9 @@ import com.cookeem.chat.common.CommonUtils
   * Created by cookeem on 16/9/25.
   */
 object CookIM extends App {
-  val serverContext: HttpsConnectionContext = {
-    val gSecret = CommonUtils.config.getString("ssl.storeSecret")
-    val password = gSecret.toCharArray
+  val serverContext: ConnectionContext = if (CommonUtils.configSslSecret != "") {
+    val password = CommonUtils.configSslSecret.toCharArray
     val jks = "/mykeystore.jks"
-
     val context = SSLContext.getInstance("TLS")
     val ks = KeyStore.getInstance("jks")
     ks.load(getClass.getResourceAsStream(jks), password)
@@ -32,6 +30,8 @@ object CookIM extends App {
     trustManagerFactory.init(ks)
     context.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
     new HttpsConnectionContext(context)
+  } else {
+    ConnectionContext.noEncryption()
   }
 
   val options = new Options()

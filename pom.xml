@@ -7,7 +7,7 @@
   <name>CookIM</name>
   <groupId>com.cookeem</groupId>
   <artifactId>cookim</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.3-SNAPSHOT</version>
 
 
   <properties>
