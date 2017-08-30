@@ -62,8 +62,13 @@
                                         <a target="_blank" ng-href="{{'/api/getFile?id='+message.fileid}}"><img ng-src="{{'/api/getFile?id='+message.thumbid}}" class="z-depth-1 responsive-img"></a>
                                         <div>{{message.fileName}}</div>
                                     </div>
-                                    <div ng-if="message.thumbid == ''" class="col s6 offset-s3 center-align">
+                                    <div ng-if="message.thumbid == '' && message.fileType != 'audio/wav'" class="col s6 offset-s3 center-align">
                                         <a ng-href="{{'/api/getFile?id='+message.fileid}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileName}}</div>
+                                    </div>
+                                    <div ng-if="message.fileType == 'audio/wav'" class="col s6 offset-s3 center-align">
+                                        <audio ng-src="{{'/api/getFile?id='+message.fileid}}"  controls="controls">
+                                        </audio>
                                         <div>{{message.fileName}}</div>
                                     </div>
                                 </div>
@@ -90,8 +95,13 @@
                                         <a target="_blank" ng-href="{{'/api/getFile?id='+message.fileid}}"><img ng-src="{{'/api/getFile?id='+message.thumbid}}" class="z-depth-1 responsive-img"></a>
                                         <div>{{message.fileName}}</div>
                                     </div>
-                                    <div ng-if="message.thumbid == ''" class="col s6 offset-s3 center-align">
+                                    <div ng-if="message.thumbid == '' && message.fileType != 'audio/wav'" class="col s6 offset-s3 center-align">
                                         <a target="_blank" ng-href="{{'/api/getFile?id='+message.fileid}}"><img src="images/file.png" class="z-depth-1 responsive-img"></a>
+                                        <div>{{message.fileName}}</div>
+                                    </div>
+                                    <div ng-if="message.fileType == 'audio/wav'" class="col s6 offset-s3 center-align">
+                                        <audio ng-src="{{'/api/getFile?id='+message.fileid}}"  controls="controls">
+                                        </audio>
                                         <div>{{message.fileName}}</div>
                                     </div>
                                 </div>

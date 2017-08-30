@@ -336,7 +336,7 @@
 <footer ng-if="!isLoading && showMessageArea" class="page-footer yellow bottom-fixed" style="padding-top: 0;" ng-cloak>
     <!--send message panel-->
     <div class="row" style="margin-bottom: 0">
-        <div class="input-field col s2 center-align">
+        <div class="input-field col s1 center-align">
             <div class="fixed-action-btn click-to-toggle" style="position: initial; padding-top: 0px;">
                 <a id="sendMessageMenu" class="btn-floating waves-effect waves-light black "><i class="material-icons">add</i></a>
                 <ul>
@@ -345,24 +345,33 @@
                 </ul>
             </div>
         </div>
-        <div class="input-field col s8 right-align">
-            <input id="chatImage" type="file" style="display: none" accept="image/x-png,image/gif,image/jpeg" onchange="angular.element('#app').scope().sendChatImage()">
-            <input id="chatFile" type="file" style="display: none" onchange="angular.element('#app').scope().sendChatFile()">
-            <textarea ng-keyup="$event.keyCode == 13 && sendChatMessage()" id="messageContent" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
+        <div ng-init="isSendingText=true" class="input-field col s1 center-align">
+            <a id="sendMode" class="btn-floating waves-effect waves-light black " ng-click="isSendingText=!isSendingText"><i ng-show="isSendingText" class="material-icons">mic</i><i ng-show="!isSendingText" class="material-icons">keyboard</i></a>
         </div>
-        <div class="input-field col s2 center-align">
+        <div class="input-field col s8 right-align" ng-if="isSendingText" style="height: 3rem" ng-cloak>
+            <input id="chatImage" type="file" style="display: none" ng-hide="true" accept="image/x-png,image/gif,image/jpeg" onchange="angular.element('#app').scope().sendChatImage()"/>
+            <input id="chatFile" type="file" style="display: none" ng-hide="true" onchange="angular.element('#app').scope().sendChatFile()"/>
+            <textarea  ng-keyup="$event.keyCode == 13 && sendChatMessage()" id="messageContent" class="materialize-textarea" style="padding-bottom: 0; padding-top: 0; height: 2rem; min-height: 2rem;"></textarea>
+        </div>
+        <div class="input-field col s2 center-align" ng-if="isSendingText" ng-cloak>
             <a ng-click="sendChatMessage()" class="btn-floating waves-effect waves-light black"><i class="material-icons">send</i></a>
+        </div>
+        <div class="input-field col s10 center-align" ng-if="!isSendingText" style="height: 3rem" ng-cloak>
+            <a class="waves-effect waves-light black btn" style="width: 100%; height: 2rem;" ng-click="changeMode()">{{recodeBtnTxt}}</a>
         </div>
     </div>
 </footer>
 <footer ng-if="!isLoading && !showMessageArea" class="page-footer yellow" style="padding-top: 0;" ng-cloak>
     <div class="footer-copyright">
         <div class="container black-text" align="center">
-            © 2016 Copyright cookeem.com
+            © 2017 Copyright cookeem.com
         </div>
     </div>
 </footer>
 </body>
+<!--MediaStreamRecorder-->
+<script src="jslib/MediaStreamRecorder/MediaStreamRecorder.js"></script>
+
 <!--jquery js-->
 <script src="jslib/jquery/dist/jquery.min.js"></script>
 
