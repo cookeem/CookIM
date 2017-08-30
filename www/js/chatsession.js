@@ -237,6 +237,65 @@ app.controller('chatSessionAppCtl', function($rootScope, $scope, $cookies, $time
         }
     };
 
+    $rootScope.isRecording = false;
+    $rootScope.recodeBtnTxt = "Click to start speaking";
+    $rootScope.changeMode = function() {
+        if ($rootScope.isRecording)
+        {
+            console.log("send");
+            $rootScope.sendVoice();
+            $rootScope.recodeBtnTxt = "Click to start speaking";
+            $rootScope.isRecording = false;
+        }
+        else
+        {
+            console.log("speak");
+            $rootScope.startRecord();
+            $rootScope.recodeBtnTxt = "Click to send voice";
+            $rootScope.isRecording = true;
+        }
+    };
 
+    var mediaRecorder;
+    var mediaConstraints = {
+        audio: true
+    };
+
+    $rootScope.startRecord = function() {
+        navigator.mediaDevices.getUserMedia(mediaConstraints).then(onMediaSuccess).catch(onMediaError);
+    };
+
+    $rootScope.sendVoice = function() {
+        mediaRecorder.stop();
+        mediaRecorder.stream.stop();
+    };
+
+    function onMediaSuccess(stream) {
+        mediaRecorder = new MediaStreamRecorder(stream);
+        mediaRecorder.stream = stream;
+        mediaRecorder.mimeType = 'audio/wav';
+
+        mediaRecorder.audioChannels = 1;
+        mediaRecorder.ondataavailable = function(blob) {
+            var isFitSize = blob.size < 4 * 1024 * 1024;
+            if (isFitSize)
+            {
+                $rootScope.sendWsBinary($rootScope.wsChatSession, blob, $rootScope.userToken, $scope.sessionToken);
+            }
+            else
+            {
+                Materialize.toast('Voice file size limit 4M!', 3000);
+            }
+        };
+
+        var timeInterval = 365*24*60*60*1000;
+
+        // get blob after specific time interval
+        mediaRecorder.start(timeInterval);
+    }
+
+    function onMediaError(e) {
+        console.error('media error', e);
+    }
 });
 
