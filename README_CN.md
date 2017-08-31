@@ -1,5 +1,9 @@
 # CookIM - 一个基于akka的分布式websocket聊天程序
 
+- 支持私聊、群聊
+- 支持分布式多个服务端通信
+- 支持文本消息、文件消息、语音消息（感谢[ft115637850](https://github.com/ft115637850)的PR）
+
 ![CookIM logo](docs/cookim.png)
 
 - [中文文档](README_CN.md)

@@ -1,5 +1,9 @@
 # CookIM - is a distributed websocket chat applications based on akka
 
+- Support private message and group message
+- Support chat servers cluster communication
+- Now we support send text message, file message and voice message. Thanks for [ft115637850](https://github.com/ft115637850) 's PR for voice message.
+
 ![CookIM logo](docs/cookim.png)
 
 - [中文文档](README_CN.md)
