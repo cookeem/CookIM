@@ -16,7 +16,7 @@ object CommonUtils {
 
   val configMongo = config.getConfig("mongodb")
   val configMongoDbname = configMongo.getString("dbname")
-  val configMongoUri = configMongo.getString("uri")
+  var configMongoUri = configMongo.getString("uri")
 
   val configJwt = config.getConfig("jwt")
   val configJwtSecret = configJwt.getString("secret")

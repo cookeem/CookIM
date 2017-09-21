@@ -17,6 +17,7 @@
           WEB_PORT: 8080
           AKKA_PORT: 2551
           SEED_NODES: cookim1:2551
+          MONGO_URI: mongodb://mongo:27017/local
         ports:
         - "8080:8080"
         depends_on:
@@ -30,6 +31,7 @@
           WEB_PORT: 8080
           AKKA_PORT: 2551
           SEED_NODES: cookim1:2551
+          MONGO_URI: mongodb://mongo:27017/local
         ports:
         - "8081:8080"
         depends_on:

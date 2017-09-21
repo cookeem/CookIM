@@ -43,6 +43,7 @@
 1. [ChangeLog](#ChangeLog)
     1. [0.1.0-SNAPSHOT](#010-snapshot)
     1. [0.2.0-SNAPSHOT](#020-snapshot)
+    1. [0.2.4-SNAPSHOT](#024-snapshot)
 
 ---
 [Category](#category)
@@ -100,6 +101,7 @@ You can add config in ```docker-compose.yml``` (in CookIM directory) to add Cook
           WEB_PORT: 8080
           AKKA_PORT: 2551
           SEED_NODES: cookim1:2551
+          MONGO_URI: mongodb://mongo:27017/local
         ports:
         - "8082:8080"
         depends_on:
@@ -189,24 +191,31 @@ $ cd #CookIM directory#
 
 $ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551"
 ```
-b. java production way:
+b. pack and compile fat jar:
 ```sh
-$ java -classpath "target/scala-2.11/CookIM-assembly-0.2.0-SNAPSHOT.jar" com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551
+$ sbt assembly
+```
+
+c. java production way:
+```sh
+$ java -classpath "target/scala-2.11/CookIM-assembly-0.2.4-SNAPSHOT.jar" com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551
 ```
 
 Command above has start a web server listen port 8080 and akka system listen port 2551
 
 Parameters:
 
+ -a <AKKA-PORT> -h <HOST-NAME> [-m <MONGO-URI>] [-n] -s <SEED-NODES> -w
+       <WEB-PORT>
  -a,--akka-port <AKKA-PORT>     akka cluster node port
- 
  -h,--host-name <HOST-NAME>     current web service external host name
- 
- -n,--nat                       is nat network or in docker(docker mode must set)
- 
- -s,--seed-nodes <SEED-NODES>   akka cluster seed nodes, seperate with comma, example:
- 
+ -m,--mongo-uri <MONGO-URI>     mongodb connection uri, example:
+                                mongodb://localhost:27017/local
+ -n,--nat                       is nat network or in docker
+ -s,--seed-nodes <SEED-NODES>   akka cluster seed nodes, seperate with
+                                comma, example:
                                 localhost:2551,localhost:2552
+ -w,--web-port <WEB-PORT>       web service port
 
 ---
 
@@ -436,6 +445,16 @@ chatMsg:       {
 * CookIM now support MongoDB 3.4.4
 * Upgrade akka version to 2.5.2
 * Update docker-compose startup CookIM cluster readme
+
+---
+
+[Category](#category)
+
+#### 0.2.4-SNAPSHOT
+
+* Now support send voice message, required WebRTC support browser, now Chrome Firefox and the new Safari11 available.
+* Configurate mongodb connection params by command line.
+* Update docker startup mode.
 
 ---
 

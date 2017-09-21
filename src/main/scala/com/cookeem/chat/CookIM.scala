@@ -83,6 +83,16 @@ object CookIM extends App {
       .argName("SEED-NODES")
       .build()
   )
+  options.addOption(
+    CliOption
+      .builder("m")
+      .longOpt("mongo-uri")
+      .desc("mongodb connection uri, example: mongodb://localhost:27017/local")
+      .hasArg()
+      .required(false)
+      .argName("MONGO-URI")
+      .build()
+  )
   try {
     val parser = new DefaultParser()
     val cmd = parser.parse(options, args)
@@ -91,6 +101,10 @@ object CookIM extends App {
     val webPort = cmd.getOptionValue("w").toInt
     val akkaPort = cmd.getOptionValue("a").toInt
     val seedNodes = cmd.getOptionValue("s")
+    var mongoUri = cmd.getOptionValue("m")
+    if (mongoUri != null) {
+      configMongoUri = mongoUri
+    }
     if (!(webPort > 0 && akkaPort > 0)) {
       throw CustomException("web-port and akka-port should greater than 0")
     } else if (hostName == "" || seedNodes == "") {

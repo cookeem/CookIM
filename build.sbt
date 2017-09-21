@@ -1,6 +1,6 @@
 name := "CookIM"
 
-version := "0.2.3-SNAPSHOT"
+version := "0.2.4-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 

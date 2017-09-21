@@ -43,7 +43,7 @@
 1. [ChangeLog](#ChangeLog)
     1. [0.1.0-SNAPSHOT](#010-snapshot)
     1. [0.2.0-SNAPSHOT](#020-snapshot)
-    
+    1. [0.2.4-SNAPSHOT](#024-snapshot)    
 
 ---
 [返回目录](#目录)
@@ -102,6 +102,7 @@ Creating cookim2
           WEB_PORT: 8080
           AKKA_PORT: 2551
           SEED_NODES: cookim1:2551
+          MONGO_URI: mongodb://mongo:27017/local
         ports:
         - "8082:8080"
         depends_on:
@@ -187,22 +188,31 @@ a. 调试方式启动服务：
 $ sbt "run-main com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551"
 ```
 
-b. 产品方式启动服务：
+b. 打包编译：
 ```sh
-$ java -classpath "target/scala-2.11/CookIM-assembly-0.2.0-SNAPSHOT.jar" com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551
+$ sbt assembly
+```
+
+c. 产品方式启动服务：
+```sh
+$ java -classpath "target/scala-2.11/CookIM-assembly-0.2.4-SNAPSHOT.jar" com.cookeem.chat.CookIM -h localhost -w 8080 -a 2551 -s localhost:2551
 ```
 
 以上命令启动了一个监听8080端口的WEB服务，akka system的监听端口为2551
 
 参数说明：
 
--a,--akka-port <AKKA-PORT>： akka system 监听端口2551
-
--h,--host-name <HOST-NAME>： 外部访问本机的主机名
-
--n,--nat： 是否使用NAT转换，docker模式下必须设置（可选）
-
--s,--seed-nodes <SEED-NODES>：表示akka集群的seed node监听2551端口，默认seed node为localhost:2551
+ -a <AKKA-PORT> -h <HOST-NAME> [-m <MONGO-URI>] [-n] -s <SEED-NODES> -w
+       <WEB-PORT>
+ -a,--akka-port <AKKA-PORT>     akka cluster node port
+ -h,--host-name <HOST-NAME>     current web service external host name
+ -m,--mongo-uri <MONGO-URI>     mongodb connection uri, example:
+                                mongodb://localhost:27017/local
+ -n,--nat                       is nat network or in docker
+ -s,--seed-nodes <SEED-NODES>   akka cluster seed nodes, seperate with
+                                comma, example:
+                                localhost:2551,localhost:2552
+ -w,--web-port <WEB-PORT>       web service port
 
 ---
 
@@ -434,6 +444,16 @@ chatMsg:       {
 * CookIM支持MongoDB 3.4.4
 * 更新akka版本为2.5.2
 * 更新容器启动方式，只保留docker-compose方式启动集群
+
+---
+
+[返回目录](#目录)
+
+#### 0.2.4-SNAPSHOT
+
+* 支持发送语音消息，chrome和firefox以及最新的safari11支持
+* 支持命令行设置mongodb连接参数设置
+* 更新docker启动方式
 
 ---
 
