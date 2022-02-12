@@ -33,7 +33,7 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npm.taobao.org/angular/download/angular-1.5.8.tgz",
+  "_resolved": "https://registry.npmmirror.com/angular/download/angular-1.5.8.tgz",
   "_shasum": "925a5392b8c212d09572dc446db7e01264e094cb",
   "_shrinkwrap": null,
   "_spec": "angular@1.5.8",
@@ -53,7 +53,7 @@
     "noattachment": false,
     "shasum": "925a5392b8c212d09572dc446db7e01264e094cb",
     "size": 555606,
-    "tarball": "http://registry.npm.taobao.org/angular/download/angular-1.5.8.tgz"
+    "tarball": "https://registry.npmmirror.com/angular/download/angular-1.5.8.tgz"
   },
   "gitHead": "7e0e546eb6caedbb298c91a9f6bf7de7eeaa4ad2",
   "homepage": "http://angularjs.org",
